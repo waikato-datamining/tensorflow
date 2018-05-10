@@ -7,6 +7,8 @@
 
 ## Pre-requisites
 
+Installation based on: https://www.tensorflow.org/install/
+
 * create virtualenv
 
   ```
