@@ -1,5 +1,8 @@
 # MASK RCNN
 
+* [Github](https://github.com/matterport/Mask_RCNN)
+* [Blog post](https://engineering.matterport.com/splash-of-color-instance-segmentation-with-mask-r-cnn-and-tensorflow-7c761e238b46)
+
 ## Pre-requisites
 
 * create virtualenv
