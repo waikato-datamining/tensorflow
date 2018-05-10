@@ -2,6 +2,8 @@
 
 * [Github](https://github.com/matterport/Mask_RCNN)
 * [Blog post](https://engineering.matterport.com/splash-of-color-instance-segmentation-with-mask-r-cnn-and-tensorflow-7c761e238b46)
+* [Building Mask RCNN model](https://towardsdatascience.com/building-a-custom-mask-rcnn-model-with-tensorflow-object-detection-952f5b0c7ab4)
+* [Pixel annotation tool](https://github.com/abreheret/PixelAnnotationTool)
 
 ## Pre-requisites
 
