@@ -17,6 +17,8 @@ Installation based on: https://www.tensorflow.org/install/
 
 * modules to install (using `<virtualenv>/bin/pip install`):
 
+  * cython
+  * numpy
   * tensorflow
   * jupyter
   * scikit-image
@@ -24,7 +26,6 @@ Installation based on: https://www.tensorflow.org/install/
   * imgaug
   * opencv-python
   * pycocotools
-  * cython
 
 ## Installation
 
