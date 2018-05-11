@@ -9,6 +9,10 @@
 
 Installation based on: https://www.tensorflow.org/install/
 
+* On Windows, install Build Tools 2015 for compilation support
+
+  http://go.microsoft.com/fwlink/?LinkId=691126
+
 * create virtualenv
 
   ```
@@ -19,24 +23,27 @@ Installation based on: https://www.tensorflow.org/install/
 
   * cython
   * numpy
-  * tensorflow
+  * tensorflow (tensorflow_gpu for GPU support)
   * jupyter
   * scikit-image
   * keras
   * imgaug
   * opencv-python
-  * pycocotools
+  * pycocotools (not on Windows)
+  
+* installing pycocotools on Windows via a modified repo
+
+  ```
+  <virtualenv>\bin\pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
+  ```
 
 ## Installation
 
-* clone repo
+* install from repo
   
   ```
-  git clone https://github.com/matterport/Mask_RCNN.git
+  <virtualenv>/bin/pip install git+https://github.com/matterport/Mask_RCNN.git
   ```
-
-* change into `MASK_RCNN` directory
-* run `<virtualenv>/bin/python setup.py install`
 
 ## Jupyter
 
