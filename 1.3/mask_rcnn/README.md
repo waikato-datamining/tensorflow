@@ -23,7 +23,7 @@ Installation based on: https://www.tensorflow.org/install/
 
   * cython
   * numpy
-  * tensorflow
+  * tensorflow (tensorflow_gpu for GPU support)
   * jupyter
   * scikit-image
   * keras
