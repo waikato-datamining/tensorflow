@@ -52,3 +52,5 @@ Installation based on: https://www.tensorflow.org/install/
 * run `<virtualenv>/bin/jupyter`
 * select `demo.ipynb`
 
+**NB:** Use `%env CUDA_VISIBLE_DEVICES=2` to limit tensorflow to GPU with ID *2*, otherwise it will grab all the memory and thinks it is all available on a single GPU.
+
