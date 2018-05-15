@@ -44,13 +44,6 @@ sys.path.append(ROOT_DIR)  # To find local version of the library
 from mrcnn.config import Config
 from mrcnn import model as modellib, utils
 
-# Path to trained weights file
-COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
-
-# Directory to save logs and model checkpoints, if not provided
-# through the command line argument --logs
-DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
-
 ############################################################
 #  Configurations
 ############################################################
@@ -65,7 +58,7 @@ class ObjectConfig(Config):
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
-    IMAGES_PER_GPU = 2
+    IMAGES_PER_GPU = 1
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1  # Background + object
@@ -75,6 +68,25 @@ class ObjectConfig(Config):
 
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
+
+    # the model to use
+    COCO_WEIGHTS_PATH = None
+
+    # the log directory
+    LOGS = "./logs"
+
+    # avoid tensorflow grabbing too much memory
+    tf_gpu_options_per_process_gpu_memory_fraction = 0.4
+
+    def apply_yaml(self, yaml):
+        """
+        Applies the parameters from the YAML file.
+
+        :param yaml: the yaml file to load and apply
+        :type yaml: str
+        """
+        # TODO
+        pass
 
 
 ############################################################
@@ -289,16 +301,15 @@ if __name__ == '__main__':
     parser.add_argument('--weights', required=True,
                         metavar="/path/to/weights.h5",
                         help="Path to weights .h5 file or 'coco'")
-    parser.add_argument('--logs', required=False,
-                        default=DEFAULT_LOGS_DIR,
-                        metavar="/path/to/logs/",
-                        help='Logs and checkpoints directory (default=logs/)')
     parser.add_argument('--image', required=False,
                         metavar="path or URL to image",
                         help='Image to apply the color splash effect on')
     parser.add_argument('--video', required=False,
                         metavar="path or URL to video",
                         help='Video to apply the color splash effect on')
+    parser.add_argument('--config', required=False,
+                        metavar="path to YAML config file",
+                        help='Configuration file for overriding parameters')
     args = parser.parse_args()
 
     # Validate arguments
@@ -308,15 +319,9 @@ if __name__ == '__main__':
         assert args.image or args.video,\
                "Provide --image or --video to apply color splash"
 
+    print("Command: ", args.command)
     print("Weights: ", args.weights)
     print("Dataset: ", args.dataset)
-    print("Logs: ", args.logs)
-
-    # tensorflow tweaks
-    tfconfig = tf.ConfigProto()
-    # avoid tensorflow grabbing too much memory
-    tfconfig.gpu_options.per_process_gpu_memory_fraction = 0.4
-    session = tf.InteractiveSession(config=tfconfig)
 
     # Configurations
     if args.command == "train":
@@ -328,19 +333,28 @@ if __name__ == '__main__':
             GPU_COUNT = 1
             IMAGES_PER_GPU = 1
         config = InferenceConfig()
+    if args.config is not None:
+        config.apply_yaml(args.config)
     config.display()
+
+    sys.exit(0)
+
+    # tensorflow tweaks
+    tfconfig = tf.ConfigProto()
+    tfconfig.gpu_options.per_process_gpu_memory_fraction = config.tf_gpu_options_per_process_gpu_memory_fraction
+    session = tf.InteractiveSession(config=tfconfig)
 
     # Create model
     if args.command == "train":
         model = modellib.MaskRCNN(mode="training", config=config,
-                                  model_dir=args.logs)
+                                  model_dir=config.LOGS)
     else:
         model = modellib.MaskRCNN(mode="inference", config=config,
-                                  model_dir=args.logs)
+                                  model_dir=config.LOGS)
 
     # Select weights file to load
     if args.weights.lower() == "coco":
-        weights_path = COCO_WEIGHTS_PATH
+        weights_path = config.COCO_WEIGHTS_PATH
         # Download weights file
         if not os.path.exists(weights_path):
             utils.download_trained_weights(weights_path)
