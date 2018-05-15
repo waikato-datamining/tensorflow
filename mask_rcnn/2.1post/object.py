@@ -35,14 +35,10 @@ import datetime
 import numpy as np
 import skimage.draw
 import tensorflow as tf
-
-# Root directory of the project
-ROOT_DIR = os.path.abspath("../../")
-
-# Import Mask RCNN
-sys.path.append(ROOT_DIR)  # To find local version of the library
+import yaml
 from mrcnn.config import Config
 from mrcnn import model as modellib, utils
+
 
 ############################################################
 #  Configurations
@@ -63,6 +59,9 @@ class ObjectConfig(Config):
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1  # Background + object
 
+    # Number of epochs to perform
+    NUM_EPOCHS = 30
+
     # Number of training steps per epoch
     STEPS_PER_EPOCH = 100
 
@@ -78,15 +77,24 @@ class ObjectConfig(Config):
     # avoid tensorflow grabbing too much memory
     tf_gpu_options_per_process_gpu_memory_fraction = 0.4
 
-    def apply_yaml(self, yaml):
+    def apply_yaml(self, conf_file):
         """
         Applies the parameters from the YAML file.
 
-        :param yaml: the yaml file to load and apply
-        :type yaml: str
+        :param conf_file: the yaml file to load and apply
+        :type conf_file: str
         """
-        # TODO
-        pass
+        with open(conf_file, 'r') as f:
+            conf = yaml.load(f, Loader=yaml.Loader)
+            for k in conf:
+                if hasattr(self, k):
+                    if getattr(self, k) is tuple:
+                        # force tuple
+                        setattr(self, k, tuple(conf[k]))
+                    else:
+                        setattr(self, k, conf[k])
+                else:
+                    raise Exception("Unsupported parameter: " + k)
 
 
 ############################################################
@@ -204,7 +212,7 @@ def train(model):
     print("Training network heads")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=30,
+                epochs=config.NUM_EPOCHS,
                 layers='heads')
 
 
@@ -307,9 +315,12 @@ if __name__ == '__main__':
     parser.add_argument('--video', required=False,
                         metavar="path or URL to video",
                         help='Video to apply the color splash effect on')
-    parser.add_argument('--config', required=False,
+    parser.add_argument('--gpu', required=False,
+                        metavar="the GPU device ID to use",
+                        help='On multi-GPU devices, limit the devices that tensorflow uses')
+    parser.add_argument('--config', required=True,
                         metavar="path to YAML config file",
-                        help='Configuration file for overriding parameters')
+                        help='Configuration file for setting parameters')
     args = parser.parse_args()
 
     # Validate arguments
@@ -322,6 +333,11 @@ if __name__ == '__main__':
     print("Command: ", args.command)
     print("Weights: ", args.weights)
     print("Dataset: ", args.dataset)
+    print("Config : ", args.config)
+
+    # GPU device
+    if args.gpu is not None:
+        os.environ['CUDA_VISIBLE_DEVICES'] = int(args.cpu)
 
     # Configurations
     if args.command == "train":
