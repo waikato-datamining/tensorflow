@@ -1,8 +1,9 @@
 """
 Mask R-CNN
-Train on the toy Balloon dataset and implement color splash effect.
+Train on the toy Object dataset and implement color splash effect.
 
 Copyright (c) 2018 Matterport, Inc.
+Copyright (C) 2018 University of Waikato, Hamilton, NZ
 Licensed under the MIT License (see LICENSE for details)
 Written by Waleed Abdulla
 
@@ -12,19 +13,19 @@ Usage: import the module (see Jupyter notebooks for examples), or run from
        the command line as such:
 
     # Train a new model starting from pre-trained COCO weights
-    python3 balloon.py train --dataset=/path/to/balloon/dataset --weights=coco
+    python3 object.py train --dataset=/path/to/object/dataset --weights=coco
 
     # Resume training a model that you had trained earlier
-    python3 balloon.py train --dataset=/path/to/balloon/dataset --weights=last
+    python3 object.py train --dataset=/path/to/object/dataset --weights=last
 
     # Train a new model starting from ImageNet weights
-    python3 balloon.py train --dataset=/path/to/balloon/dataset --weights=imagenet
+    python3 object.py train --dataset=/path/to/object/dataset --weights=imagenet
 
     # Apply color splash to an image
-    python3 balloon.py splash --weights=/path/to/weights/file.h5 --image=<URL or path to file>
+    python3 object.py splash --weights=/path/to/weights/file.h5 --image=<URL or path to file>
 
     # Apply color splash to video using the last weights you trained
-    python3 balloon.py splash --weights=last --video=<URL or path to file>
+    python3 object.py splash --weights=last --video=<URL or path to file>
 """
 
 import os
@@ -33,6 +34,7 @@ import json
 import datetime
 import numpy as np
 import skimage.draw
+import tensorflow as tf
 
 # Root directory of the project
 ROOT_DIR = os.path.abspath("../../")
@@ -54,19 +56,19 @@ DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 ############################################################
 
 
-class BalloonConfig(Config):
+class ObjectConfig(Config):
     """Configuration for training on the toy  dataset.
     Derives from the base Config class and overrides some values.
     """
     # Give the configuration a recognizable name
-    NAME = "balloon"
+    NAME = "object"
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
     IMAGES_PER_GPU = 2
 
     # Number of classes (including background)
-    NUM_CLASSES = 1 + 1  # Background + balloon
+    NUM_CLASSES = 1 + 1  # Background + object
 
     # Number of training steps per epoch
     STEPS_PER_EPOCH = 100
@@ -79,15 +81,15 @@ class BalloonConfig(Config):
 #  Dataset
 ############################################################
 
-class BalloonDataset(utils.Dataset):
+class ObjectDataset(utils.Dataset):
 
-    def load_balloon(self, dataset_dir, subset):
-        """Load a subset of the Balloon dataset.
+    def load_object(self, dataset_dir, subset):
+        """Load a subset of the Object dataset.
         dataset_dir: Root directory of the dataset.
         subset: Subset to load: train or val
         """
         # Add classes. We have only one class to add.
-        self.add_class("balloon", 1, "balloon")
+        self.add_class("object", 1, "object")
 
         # Train or validation dataset?
         assert subset in ["train", "val"]
@@ -130,7 +132,7 @@ class BalloonDataset(utils.Dataset):
             height, width = image.shape[:2]
 
             self.add_image(
-                "balloon",
+                "object",
                 image_id=a['filename'],  # use file name as a unique image id
                 path=image_path,
                 width=width, height=height,
@@ -143,9 +145,9 @@ class BalloonDataset(utils.Dataset):
             one mask per instance.
         class_ids: a 1D array of class IDs of the instance masks.
         """
-        # If not a balloon dataset image, delegate to parent class.
+        # If not a object dataset image, delegate to parent class.
         image_info = self.image_info[image_id]
-        if image_info["source"] != "balloon":
+        if image_info["source"] != "object":
             return super(self.__class__, self).load_mask(image_id)
 
         # Convert polygons to a bitmap mask of shape
@@ -165,7 +167,7 @@ class BalloonDataset(utils.Dataset):
     def image_reference(self, image_id):
         """Return the path of the image."""
         info = self.image_info[image_id]
-        if info["source"] == "balloon":
+        if info["source"] == "object":
             return info["path"]
         else:
             super(self.__class__, self).image_reference(image_id)
@@ -174,13 +176,13 @@ class BalloonDataset(utils.Dataset):
 def train(model):
     """Train the model."""
     # Training dataset.
-    dataset_train = BalloonDataset()
-    dataset_train.load_balloon(args.dataset, "train")
+    dataset_train = ObjectDataset()
+    dataset_train.load_object(args.dataset, "train")
     dataset_train.prepare()
 
     # Validation dataset
-    dataset_val = BalloonDataset()
-    dataset_val.load_balloon(args.dataset, "val")
+    dataset_val = ObjectDataset()
+    dataset_val.load_object(args.dataset, "val")
     dataset_val.prepare()
 
     # *** This training schedule is an example. Update to your needs ***
@@ -253,6 +255,8 @@ def detect_and_color_splash(model, image_path=None, video_path=None):
             if success:
                 # OpenCV returns images as BGR, convert to RGB
                 image = image[..., ::-1]
+                # make sure that there is no alpha channel
+                image = image[:, :, :3]
                 # Detect objects
                 r = model.detect([image], verbose=0)[0]
                 # Color splash
@@ -275,13 +279,13 @@ if __name__ == '__main__':
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(
-        description='Train Mask R-CNN to detect balloons.')
+        description='Train Mask R-CNN to detect objects.')
     parser.add_argument("command",
                         metavar="<command>",
                         help="'train' or 'splash'")
     parser.add_argument('--dataset', required=False,
-                        metavar="/path/to/balloon/dataset/",
-                        help='Directory of the Balloon dataset')
+                        metavar="/path/to/object/dataset/",
+                        help='Directory of the Object dataset')
     parser.add_argument('--weights', required=True,
                         metavar="/path/to/weights.h5",
                         help="Path to weights .h5 file or 'coco'")
@@ -308,11 +312,17 @@ if __name__ == '__main__':
     print("Dataset: ", args.dataset)
     print("Logs: ", args.logs)
 
+    # tensorflow tweaks
+    tfconfig = tf.ConfigProto()
+    # avoid tensorflow grabbing too much memory
+    tfconfig.gpu_options.per_process_gpu_memory_fraction = 0.4
+    session = tf.InteractiveSession(config=tfconfig)
+
     # Configurations
     if args.command == "train":
-        config = BalloonConfig()
+        config = ObjectConfig()
     else:
-        class InferenceConfig(BalloonConfig):
+        class InferenceConfig(ObjectConfig):
             # Set batch size to 1 since we'll be running inference on
             # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
             GPU_COUNT = 1
