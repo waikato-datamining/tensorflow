@@ -19,23 +19,21 @@ Installation based on: https://www.tensorflow.org/install/
   virtualenv -p /usr/bin/python3.5
   ```
 
-* modules to install (using `<virtualenv>/bin/pip install`):
+* install dependencies:
 
-  * cython
-  * numpy
-  * tensorflow (tensorflow_gpu for GPU support)
-  * jupyter
-  * scikit-image
-  * keras
-  * imgaug
-  * opencv-python
-  * pycocotools (not on Windows)
+  ```
+  <virtualenv>/bin/pip install -r requirements.txt
+  ```
+
+* tensorflow
+
+  * CPU only: `<virtualenv>/bin/pip install tensorflow`
+  * GPU: `<virtualenv>/bin/pip install tensorflow_gpu`
   
-* installing pycocotools on Windows via a modified repo
+* MS COCO tools
 
-  ```
-  <virtualenv>\bin\pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
-  ```
+  * non-Windows: `<virtualenv>/bin/pip install pycocotools`
+  * Windows: `<virtualenv>\bin\pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI`
 
 ## Installation
 
@@ -47,6 +45,7 @@ Installation based on: https://www.tensorflow.org/install/
 
 ## Jupyter
 
+The following applies to the code from the original MASK_RCNN github repository:
 * go in `MASK_RCNN` directory
 * go into `samples`
 * run `<virtualenv>/bin/jupyter`
