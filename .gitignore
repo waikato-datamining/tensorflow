@@ -106,3 +106,4 @@ ENV/
 *.bak
 .idea
 *.iml
+logs/
