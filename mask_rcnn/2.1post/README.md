@@ -23,10 +23,6 @@ Apply splash effect on a video. Requires OpenCV 3.2+:
 python3 balloon.py splash --weights=/path/to/mask_rcnn/mask_rcnn_balloon.h5 --video=<file name or URL>
 ```
 
-
-## Run Jupyter notebooks
-Open the `inspect_balloon_data.ipynb` or `inspect_balloon_model.ipynb` Jupter notebooks. You can use these notebooks to explore the dataset and run through the detection pipelie step by step.
-
 ## Train the Balloon model
 
 Train a new model starting from pre-trained COCO weights
