@@ -279,15 +279,22 @@ def color_splash(image, mask):
     return splash
 
 
-def detect_and_color_splash(model, image_path=None, video_path=None):
+def detect_and_color_splash(model, image_path=None, video_path=None, output_dir=None):
     assert image_path or video_path
 
     # Image or video?
     if image_path:
+        # directory?
+        if os.path.isdir(image_path):
+            for f in os.listdir(image_path):
+                if f.lower().endswith(".png") or f.lower().endswith(".jpg"):
+                    detect_and_color_splash(model, image_path=os.path.join(image_path, f),
+                                            output_dir=output_dir)
+            return
         # Run model detection and generate the color splash effect
-        print("Running on {}".format(args.image))
+        print("Running on {}".format(image_path))
         # Read image
-        image = skimage.io.imread(args.image)
+        image = skimage.io.imread(image_path)
         # make sure that there is no alpha channel
         image = image[:, :, :3]
         # Detect objects
@@ -295,9 +302,16 @@ def detect_and_color_splash(model, image_path=None, video_path=None):
         # Color splash
         splash = color_splash(image, r['masks'])
         # Save output
-        file_name = "splash_{:%Y%m%dT%H%M%S}.png".format(datetime.datetime.now())
+        file_name = os.path.join(output_dir, os.path.basename(image_path))
         skimage.io.imsave(file_name, splash)
     elif video_path:
+        # directory?
+        if os.path.isdir(video_path):
+            for f in os.listdir(video_path):
+                if f.lower().endswith(".mp4") or f.lower().endswith(".avi"):
+                    detect_and_color_splash(model, video_path=os.path.join(video_path, f),
+                                            output_dir=output_dir)
+            return
         import cv2
         # Video capture
         vcapture = cv2.VideoCapture(video_path)
@@ -306,7 +320,7 @@ def detect_and_color_splash(model, image_path=None, video_path=None):
         fps = vcapture.get(cv2.CAP_PROP_FPS)
 
         # Define codec and create video writer
-        file_name = "splash_{:%Y%m%dT%H%M%S}.avi".format(datetime.datetime.now())
+        file_name = os.path.join(output_dir, os.path.basename(video_path))
         vwriter = cv2.VideoWriter(file_name,
                                   cv2.VideoWriter_fourcc(*'MJPG'),
                                   fps, (width, height))
@@ -355,11 +369,14 @@ if __name__ == '__main__':
                         metavar="/path/to/weights.h5",
                         help="Path to weights .h5 file or 'coco'")
     parser.add_argument('--image', required=False,
-                        metavar="path or URL to image",
-                        help='Image to apply the color splash effect on')
+                        metavar="path or URL to image or image directory",
+                        help='Image to apply the color splash effect on; if directory provided applies it to PNG and JPG images')
     parser.add_argument('--video', required=False,
                         metavar="path or URL to video",
-                        help='Video to apply the color splash effect on')
+                        help='Video to apply the color splash effect on; if directory provided applies it to MP4, AVI and MKV images')
+    parser.add_argument('--output_dir', required=False,
+                        metavar="output directory",
+                        help='The directory to use for storing the output from the "splash" command')
     parser.add_argument('--gpu', required=False,
                         metavar="the GPU device ID to use",
                         help='On multi-GPU devices, limit the devices that tensorflow uses')
@@ -436,7 +453,8 @@ if __name__ == '__main__':
         train(model)
     elif args.command == "splash":
         detect_and_color_splash(model, image_path=args.image,
-                                video_path=args.video)
+                                video_path=args.video,
+                                output_dir=args.output_dir)
     else:
         print("'{}' is not recognized. "
               "Use 'train' or 'splash'".format(args.command))
