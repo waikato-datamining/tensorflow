@@ -1,4 +1,6 @@
 # tensorflow
-Customizations for tensorflow, for various domains.
+Customizations of tensorflow-based applications.
 
-Sub-directories are versions of tensorflow.
+Currently available:
+* [MASK-RCNN](https://github.com/matterport/Mask_RCNN)
+
