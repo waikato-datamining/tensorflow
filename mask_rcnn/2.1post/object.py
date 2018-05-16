@@ -373,7 +373,7 @@ if __name__ == '__main__':
                         help='Image to apply the color splash effect on; if directory provided applies it to PNG and JPG images')
     parser.add_argument('--video', required=False,
                         metavar="path or URL to video",
-                        help='Video to apply the color splash effect on; if directory provided applies it to MP4, AVI and MKV images')
+                        help='Video to apply the color splash effect on; if directory provided applies it to MP4 or AVI videos')
     parser.add_argument('--output_dir', required=False,
                         metavar="output directory",
                         help='The directory to use for storing the output from the "splash" command')
