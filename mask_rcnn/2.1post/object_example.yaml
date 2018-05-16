@@ -46,7 +46,7 @@ BACKBONE_STRIDES:
   - 64
 
 # Number of classification classes (including background)
-NUM_CLASSES: 1  # Override in sub-classes
+NUM_CLASSES: 1
 
 # Length of square anchor side in pixels
 RPN_ANCHOR_SCALES:

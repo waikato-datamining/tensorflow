@@ -88,13 +88,19 @@ class ObjectConfig(Config):
             conf = yaml.load(f, Loader=yaml.Loader)
             for k in conf:
                 if hasattr(self, k):
-                    if getattr(self, k) is tuple:
-                        # force tuple
+                    curr = getattr(self, k)
+                    # force tuple
+                    if isinstance(curr, tuple):
                         setattr(self, k, tuple(conf[k]))
+                    # force ndarray
+                    elif isinstance(curr, np.ndarray):
+                        setattr(self, k, np.asarray(conf[k]))
+                    # as is
                     else:
                         setattr(self, k, conf[k])
                 else:
                     raise Exception("Unsupported parameter: " + k)
+            self.__init__()
 
 
 ############################################################
@@ -337,7 +343,7 @@ if __name__ == '__main__':
 
     # GPU device
     if args.gpu is not None:
-        os.environ['CUDA_VISIBLE_DEVICES'] = int(args.cpu)
+        os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
 
     # Configurations
     if args.command == "train":
@@ -353,7 +359,7 @@ if __name__ == '__main__':
         config.apply_yaml(args.config)
     config.display()
 
-    sys.exit(0)
+    #sys.exit(0)
 
     # tensorflow tweaks
     tfconfig = tf.ConfigProto()
