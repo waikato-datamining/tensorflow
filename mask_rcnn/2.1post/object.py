@@ -31,11 +31,11 @@ Usage: import the module (see Jupyter notebooks for examples), or run from
 import os
 import sys
 import json
-import datetime
 import numpy as np
 import skimage.draw
 import tensorflow as tf
 import yaml
+import cv2
 from mrcnn.config import Config
 from mrcnn import model as modellib, utils
 
@@ -236,16 +236,23 @@ class ObjectDataset(utils.Dataset):
             super(self.__class__, self).image_reference(image_id)
 
 
-def train(model):
-    """Train the model."""
+def train(model, dataset):
+    """
+    Train the model.
+
+    :param model: the model to load and train
+    :param dataset: the base directory of the dataset, above "train" and "val"
+    :type dataset: str
+    """
+
     # Training dataset.
     dataset_train = ObjectDataset()
-    dataset_train.load_object(args.dataset, "train")
+    dataset_train.load_object(dataset, "train")
     dataset_train.prepare()
 
     # Validation dataset
     dataset_val = ObjectDataset()
-    dataset_val.load_object(args.dataset, "val")
+    dataset_val.load_object(dataset, "val")
     dataset_val.prepare()
 
     # *** This training schedule is an example. Update to your needs ***
@@ -260,12 +267,14 @@ def train(model):
 
 
 def color_splash(image, mask):
-    """Apply color splash effect.
-    image: RGB image [height, width, 3]
-    mask: instance segmentation mask [height, width, instance count]
-
-    Returns result image.
     """
+    Apply color splash effect.
+
+    :param image: RGB image [height, width, 3]
+    :param mask: instance segmentation mask [height, width, instance count]
+    :return: result image.
+    """
+
     # Make a grayscale copy of the image. The grayscale copy still
     # has 3 RGB channels, though.
     gray = skimage.color.gray2rgb(skimage.color.rgb2gray(image)) * 255
@@ -280,7 +289,22 @@ def color_splash(image, mask):
 
 
 def detect_and_color_splash(model, image_path=None, video_path=None, output_dir=None):
+    """
+    Detects the objects and highlights them in the generated output.
+
+    :param model: the model to use
+    :param image_path: the image or image directory
+    :type image_path: str
+    :param video_path: the video or video directory
+    :type video_path: str
+    :param output_dir: the directory for storing the generated output
+    :type output_dir: str
+    """
+
     assert image_path or video_path
+
+    if output_dir is None:
+        output_dir = "."
 
     # Image or video?
     if image_path:
@@ -291,6 +315,7 @@ def detect_and_color_splash(model, image_path=None, video_path=None, output_dir=
                     detect_and_color_splash(model, image_path=os.path.join(image_path, f),
                                             output_dir=output_dir)
             return
+
         # Run model detection and generate the color splash effect
         print("Running on {}".format(image_path))
         # Read image
@@ -304,6 +329,7 @@ def detect_and_color_splash(model, image_path=None, video_path=None, output_dir=
         # Save output
         file_name = os.path.join(output_dir, os.path.basename(image_path))
         skimage.io.imsave(file_name, splash)
+
     elif video_path:
         # directory?
         if os.path.isdir(video_path):
@@ -312,7 +338,7 @@ def detect_and_color_splash(model, image_path=None, video_path=None, output_dir=
                     detect_and_color_splash(model, video_path=os.path.join(video_path, f),
                                             output_dir=output_dir)
             return
-        import cv2
+
         # Video capture
         vcapture = cv2.VideoCapture(video_path)
         width = int(vcapture.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -345,7 +371,110 @@ def detect_and_color_splash(model, image_path=None, video_path=None, output_dir=
                 # Add image to video writer
                 vwriter.write(splash)
                 count += 1
+        vcapture.release()
         vwriter.release()
+
+    print("Saved to ", file_name)
+
+
+def bbox_to_csv(id, rois, scores, csv_file, append=False):
+    """
+    Stores the bounding box in the specified CSV file.
+
+    :param id: the ID to use, eg image name or timeframe
+    :type id: str
+    :param rois: the bounding boxes (regions of interest aka rois)
+    :type rois: array of ndarray
+    :param scores: the scores (probabilities)
+    :type scores: array of ndarray
+    :param csv_file: the CSV file to store the the bounding box in
+    :type csv_file: str
+    :param append: if False, a head will get output, otherwise the data just gets appended
+    :type append: bool
+    """
+    if not append:
+        flags = 'w'
+    else:
+        flags = 'a'
+    with open(csv_file, flags) as f:
+        if not append:
+            f.write("id,index,x0,y0,x1,y1,score\n")
+        for idx, roi in enumerate(rois):
+            f.write("%s,%i,%f,%f,%f,%f,%f\n" % (id, idx, roi[1], roi[0], roi[3], roi[2], scores[idx]))
+
+
+def detect_and_bbox(model, image_path=None, video_path=None, output_dir=None):
+    """
+    Detects the objects and stores the bounding boxes in CSV file(s).
+
+    :param model: the model to use
+    :param image_path: the image or image directory
+    :type image_path: str
+    :param video_path: the video or video directory
+    :type video_path: str
+    :param output_dir: the directory for storing the generated output
+    :type output_dir: str
+    """
+
+    assert image_path or video_path
+
+    if output_dir is None:
+        output_dir = "."
+
+    # Image or video?
+    if image_path:
+        # directory?
+        if os.path.isdir(image_path):
+            for f in os.listdir(image_path):
+                if f.lower().endswith(".png") or f.lower().endswith(".jpg"):
+                    detect_and_bbox(model, image_path=os.path.join(image_path, f),
+                                            output_dir=output_dir)
+            return
+
+        # Run model detection and generate the color splash effect
+        print("Running on {}".format(image_path))
+        # Read image
+        image = skimage.io.imread(image_path)
+        # make sure that there is no alpha channel
+        image = image[:, :, :3]
+        # Detect objects
+        r = model.detect([image], verbose=1)[0]
+        # bbox output
+        file_name = os.path.join(output_dir, os.path.splitext(os.path.basename(image_path))[0] + ".csv")
+        bbox_to_csv(image_path, r['rois'], r['scores'], file_name)
+
+    elif video_path:
+        # directory?
+        if os.path.isdir(video_path):
+            for f in os.listdir(video_path):
+                if f.lower().endswith(".mp4") or f.lower().endswith(".avi"):
+                    detect_and_bbox(model, video_path=os.path.join(video_path, f),
+                                            output_dir=output_dir)
+            return
+
+        # Video capture
+        vcapture = cv2.VideoCapture(video_path)
+
+        # Define codec and create video writer
+        file_name = os.path.join(output_dir, os.path.splitext(os.path.basename(video_path))[0] + ".csv")
+        count = 0
+        success = True
+        while success:
+            print("frame: ", count)
+            # Read next image
+            success, image = vcapture.read()
+            if success:
+                # OpenCV returns images as BGR, convert to RGB
+                image = image[..., ::-1]
+                # make sure that there is no alpha channel
+                image = image[:, :, :3]
+                # Detect objects
+                r = model.detect([image], verbose=0)[0]
+                # bbox
+                bbox_to_csv(video_path + "|" + count, r['rois'], r['scores'], file_name, append=(count > 0))
+                count += 1
+        vcapture.release()
+
     print("Saved to ", file_name)
 
 
@@ -361,7 +490,7 @@ if __name__ == '__main__':
         description='Train Mask R-CNN to detect objects.')
     parser.add_argument("command",
                         metavar="<command>",
-                        help="'train' or 'splash'")
+                        help="'train', 'splash' or 'bbox'")
     parser.add_argument('--dataset', required=False,
                         metavar="/path/to/object/dataset/",
                         help='Directory of the Object dataset')
@@ -391,6 +520,9 @@ if __name__ == '__main__':
     elif args.command == "splash":
         assert args.image or args.video,\
                "Provide --image or --video to apply color splash"
+    elif args.command == "bbox":
+        assert args.image or args.video,\
+               "Provide --image or --video to generate bounding box output"
 
     print("Command: ", args.command)
     print("Weights: ", args.weights)
@@ -450,9 +582,13 @@ if __name__ == '__main__':
 
     # Train or evaluate
     if args.command == "train":
-        train(model)
+        train(model, args.dataset)
     elif args.command == "splash":
         detect_and_color_splash(model, image_path=args.image,
+                                video_path=args.video,
+                                output_dir=args.output_dir)
+    elif args.command == "bbox":
+        detect_and_bbox(model, image_path=args.image,
                                 video_path=args.video,
                                 output_dir=args.output_dir)
     else:
