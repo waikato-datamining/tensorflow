@@ -77,6 +77,23 @@ class ObjectConfig(Config):
     # avoid tensorflow grabbing too much memory
     tf_gpu_options_per_process_gpu_memory_fraction = 0.4
 
+    def reinitialize(self):
+        """
+        Re-initializes some parameters.
+        """
+        # Effective batch size
+        self.BATCH_SIZE = self.IMAGES_PER_GPU * self.GPU_COUNT
+
+        # Input image size
+        if self.IMAGE_RESIZE_MODE == "crop":
+            self.IMAGE_SHAPE = np.array([self.IMAGE_MIN_DIM, self.IMAGE_MIN_DIM, 3])
+        else:
+            self.IMAGE_SHAPE = np.array([self.IMAGE_MAX_DIM, self.IMAGE_MAX_DIM, 3])
+
+        # Image meta data length
+        # See compose_image_meta() for details
+        self.IMAGE_META_SIZE = 1 + 3 + 3 + 4 + 1 + self.NUM_CLASSES
+
     def apply_yaml(self, conf_file):
         """
         Applies the parameters from the YAML file.
@@ -100,7 +117,27 @@ class ObjectConfig(Config):
                         setattr(self, k, conf[k])
                 else:
                     raise Exception("Unsupported parameter: " + k)
-            self.__init__()
+        self.reinitialize()
+
+    def display(self):
+        """Display Configuration values."""
+        print("\nConfigurations:")
+        for a in dir(self):
+            if not a.startswith("__") and not callable(getattr(self, a)):
+                print("{:50} {}".format(a, getattr(self, a)))
+        print("\n")
+
+
+class InferenceConfig(ObjectConfig):
+    """
+    Set batch size to 1 since we'll be running inference on
+    one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
+    """
+
+    def reinitialize(self):
+        self.GPU_COUNT = 1
+        self.IMAGES_PER_GPU = 1
+        super().reinitialize()
 
 
 ############################################################
@@ -251,6 +288,8 @@ def detect_and_color_splash(model, image_path=None, video_path=None):
         print("Running on {}".format(args.image))
         # Read image
         image = skimage.io.imread(args.image)
+        # make sure that there is no alpha channel
+        image = image[:, :, :3]
         # Detect objects
         r = model.detect([image], verbose=1)[0]
         # Color splash
@@ -349,17 +388,9 @@ if __name__ == '__main__':
     if args.command == "train":
         config = ObjectConfig()
     else:
-        class InferenceConfig(ObjectConfig):
-            # Set batch size to 1 since we'll be running inference on
-            # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
-            GPU_COUNT = 1
-            IMAGES_PER_GPU = 1
         config = InferenceConfig()
-    if args.config is not None:
-        config.apply_yaml(args.config)
+    config.apply_yaml(args.config)
     config.display()
-
-    #sys.exit(0)
 
     # tensorflow tweaks
     tfconfig = tf.ConfigProto()
