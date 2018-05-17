@@ -144,7 +144,7 @@ class InferenceConfig(ObjectConfig):
 #  Dataset
 ############################################################
 
-class ObjectDataset(utils.Dataset):
+class ViaObjectDataset(utils.Dataset):
 
     def load_object(self, dataset_dir, subset):
         """Load a subset of the Object dataset.
@@ -246,12 +246,12 @@ def train(model, dataset):
     """
 
     # Training dataset.
-    dataset_train = ObjectDataset()
+    dataset_train = ViaObjectDataset()
     dataset_train.load_object(dataset, "train")
     dataset_train.prepare()
 
     # Validation dataset
-    dataset_val = ObjectDataset()
+    dataset_val = ViaObjectDataset()
     dataset_val.load_object(dataset, "val")
     dataset_val.prepare()
 
