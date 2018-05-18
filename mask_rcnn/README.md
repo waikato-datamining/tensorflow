@@ -15,41 +15,53 @@ Installation based on: https://www.tensorflow.org/install/
 
 * create virtualenv
 
-  ```
-  virtualenv -p /usr/bin/python3.5
-  ```
+  * using virtualenv
+  
+    ```
+    virtualenv -p /usr/bin/python3.5
+    ```
+    
+  * using anaconda
+  
+    ```
+    conda create --name tf-py35 python=3.5 numpy scipy h5py
+    ```
+
+* activate the environment
 
 * install dependencies:
 
   ```
-  <virtualenv>/bin/pip install -r requirements.txt
+  pip install -r requirements.txt
   ```
 
 * tensorflow
 
-  * CPU only: `<virtualenv>/bin/pip install tensorflow`
-  * GPU: `<virtualenv>/bin/pip install tensorflow_gpu`
+  * CPU only: `pip install tensorflow`
+  * GPU: `pip install tensorflow_gpu`
   
 * MS COCO tools
 
-  * non-Windows: `<virtualenv>/bin/pip install pycocotools`
-  * Windows: `<virtualenv>\bin\pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI`
+  * non-Windows: `pip install pycocotools`
+  * Windows: `pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI`
 
 ## Installation
 
 * install from repo
   
   ```
-  <virtualenv>/bin/pip install git+https://github.com/matterport/Mask_RCNN.git
+  pip install git+https://github.com/matterport/Mask_RCNN.git
   ```
 
 ## Jupyter
 
 The following applies to the code from the original MASK_RCNN github repository:
-* go in `MASK_RCNN` directory
+* clone the directory using `git clone https://github.com/matterport/Mask_RCNN`
+* go into `MASK_RCNN`
 * go into `samples`
-* run `<virtualenv>/bin/jupyter`
+* run `jupyter`
 * select `demo.ipynb`
 
-**NB:** Use `%env CUDA_VISIBLE_DEVICES=2` to limit tensorflow to GPU with ID *2*, otherwise it will grab all the memory and thinks it is all available on a single GPU.
+**NB:** Use `%env CUDA_VISIBLE_DEVICES=2` to limit tensorflow to GPU with ID *2*, 
+otherwise it will grab all the memory and thinks it is all available on a single GPU.
 
