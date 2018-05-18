@@ -59,6 +59,9 @@ def update_bboxes(model, image_path, bbox_path, label, out_path, verbose=0, mask
     :type mask: bool
     """
 
+    if verbose > 0:
+        print("Processing image:", image_path)
+
     # read image
     image = skimage.io.imread(image_path)
     image = image[:, :, :3]
@@ -137,20 +140,25 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Train Mask R-CNN to detect objects.')
     parser.add_argument('--image', required=True,
-                        metavar="path to image",
-                        help='The image with the objects to update the bounding boxes for.')
-    parser.add_argument('--bbox', required=True,
+                        metavar="path to image or directory with images",
+                        help='The image with the objects to update the bounding boxes for. '
+                             + 'When supplying a directory, all PNG and JPG images that have a '
+                             + 'corresponding .csv or -rois.csv file will get processed.')
+    parser.add_argument('--bbox', required=False,
                         metavar="path to CSV file",
-                        help='CSV file with bounding information. Expected column names: x,y,w,h,label_str,score')
+                        help='CSV file with bounding information. '
+                             + 'Required column names (can have more): x0,y0,x1,y1,label_str,score. '
+                             + 'Not required when "--image" points to directory.')
     parser.add_argument('--label', required=True,
                         metavar="the label to update",
                         help='The label to restrict the update to, eg "object"')
     parser.add_argument('--weights', required=True,
                         metavar="path to .h5 Keras file",
                         help="Path to Keras weights .h5 file")
-    parser.add_argument('--out', required=True,
+    parser.add_argument('--out', required=False,
                         metavar="output CSV file",
-                        help='The CSV file to store the updated bounding boxes in.')
+                        help='The CSV file to store the updated bounding boxes in. '
+                             + 'Not required when "--image" points to directory.')
     parser.add_argument('--mask', required=False,
                         default=False,
                         action='store_true',
@@ -193,5 +201,26 @@ if __name__ == '__main__':
     model.load_weights(args.weights, by_name=True)
 
     # perform update
-    update_bboxes(model, args.image, args.bbox, args.label, args.out,
-                  verbose=args.verbose, mask=args.mask)
+    if os.path.isdir(args.image):
+        for f in os.listdir(args.image):
+            if not os.path.isfile(os.path.join(args.image, f)):
+                continue
+            if f.lower().endswith(".png") or f.lower().endswith(".jpg"):
+                image = os.path.join(args.image, f)
+                bbox1 = os.path.splitext(image)[0] + ".csv"
+                bbox2 = os.path.splitext(image)[0] + "-rois.csv"
+                out = os.path.splitext(image)[0] + "-updated.csv"
+                if os.path.exists(bbox1):
+                    update_bboxes(model, image, bbox1, args.label, out,
+                                  verbose=args.verbose, mask=args.mask)
+                elif os.path.exists(bbox2):
+                    update_bboxes(model, image, bbox2, args.label, out,
+                                  verbose=args.verbose, mask=args.mask)
+
+    else:
+        if args.bbox is None:
+            raise Exception("No CSV file for bounding boxes provided!")
+        if args.out is None:
+            raise Exception("No output CSV file for updated bounding boxes provided!")
+        update_bboxes(model, args.image, args.bbox, args.label, args.out,
+                      verbose=args.verbose, mask=args.mask)
