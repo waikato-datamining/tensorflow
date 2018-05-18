@@ -18,26 +18,29 @@ from object import InferenceConfig
 from mrcnn import model as modellib
 
 
-def compress_mask(mask):
+def mask_to_string(roi, mask):
     """
-    Compresses the mask, using simple run length encoding:
-    X1:Y1;X2:Y2|...
-    X:Y - single compression block
-    Xn - the number of bits
-    Yn - the mask, 0 or 1
-    ; - separates compression blocks
-    | - new line separator
+    Turns the mask into a string, row-wise with rows separated by ';'
 
+    :param roi: the region of interest to restrict the mask to
+    :type roi: ndarray (y0, x0, y1, x1)
     :param mask: the mask array
     :type mask: ndarray
     :return: the mask
     :rtype: str
     """
 
-    return ""
+    all = list()
+    for y in range(roi[0], roi[2]):
+        line = list()
+        for x in range(roi[1], roi[3]):
+            line.append("1" if mask[y, x] else "0")
+        all.append("".join(line))
+
+    return ";".join(all)
 
 
-def update_bboxes(model, image_path, bbox_path, label, out_path, verbose=0):
+def update_bboxes(model, image_path, bbox_path, label, out_path, verbose=0, mask=False):
     """
     Updates the bounding boxes using the supplied model.
 
@@ -52,6 +55,8 @@ def update_bboxes(model, image_path, bbox_path, label, out_path, verbose=0):
     :type out_path: str
     :param verbose: the verbosity level, 0=off, higher number means more outout
     :type verbose: int
+    :param mask: whether to store the mask as well
+    :type mask: bool
     """
 
     # read image
@@ -76,7 +81,8 @@ def update_bboxes(model, image_path, bbox_path, label, out_path, verbose=0):
     # created sorted header
     with open(bbox_path, 'r') as csvfile:
         header_sorted = csvfile.readline().strip().split(",")
-        header_sorted.append("mask")
+        if mask:
+            header_sorted.append("mask")
 
     # update bboxes
     bbox_updated = list()
@@ -92,7 +98,7 @@ def update_bboxes(model, image_path, bbox_path, label, out_path, verbose=0):
         box = image[int(y0):int(y1), int(x0):int(x1)]
         # detect objects
         r = model.detect([box], verbose=verbose)[0]
-        mask = ""
+        mask_str = ""
         if len(r['rois']) > 0:
             roi = r['rois'][0]
             y0N = int(y0) + roi[0]
@@ -108,8 +114,10 @@ def update_bboxes(model, image_path, bbox_path, label, out_path, verbose=0):
             row['y1'] = str(y1N)
             row['x1'] = str(x1N)
             row['score'] = str(r['scores'][0])
-            mask = compress_mask(r['masks'][0])
-        row['mask'] = mask
+            if mask:
+                mask_str = mask_to_string(roi, r['masks'])
+        if mask:
+            row['mask'] = mask_str
         bbox_updated.append(row)
 
     # write output
@@ -143,6 +151,10 @@ if __name__ == '__main__':
     parser.add_argument('--out', required=True,
                         metavar="output CSV file",
                         help='The CSV file to store the updated bounding boxes in.')
+    parser.add_argument('--mask', required=False,
+                        default=False,
+                        action='store_true',
+                        help='Whether to store the mask as well (run length encoded format).')
     parser.add_argument('--gpu', required=False,
                         metavar="the GPU device ID to use",
                         help='On multi-GPU devices, limit the devices that tensorflow uses')
@@ -181,4 +193,5 @@ if __name__ == '__main__':
     model.load_weights(args.weights, by_name=True)
 
     # perform update
-    update_bboxes(model, args.image, args.bbox, args.label, args.out)
+    update_bboxes(model, args.image, args.bbox, args.label, args.out,
+                  verbose=args.verbose, mask=args.mask)
