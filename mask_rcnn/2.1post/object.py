@@ -236,13 +236,15 @@ class ViaObjectDataset(utils.Dataset):
             super(self.__class__, self).image_reference(image_id)
 
 
-def train(model, dataset):
+def train(model, dataset, verbose=0):
     """
     Train the model.
 
     :param model: the model to load and train
     :param dataset: the base directory of the dataset, above "train" and "val"
     :type dataset: str
+    :param verbose: the verbosity level (0=off, higher number means more output)
+    :type verbose: int
     """
 
     # Training dataset.
@@ -259,7 +261,8 @@ def train(model, dataset):
     # Since we're using a very small dataset, and starting from
     # COCO trained weights, we don't need to train too long. Also,
     # no need to train all layers, just the heads should do it.
-    print("Training network heads")
+    if verbose > 0:
+        print("Training network heads")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
                 epochs=config.NUM_EPOCHS,
@@ -288,7 +291,7 @@ def color_splash(image, mask):
     return splash
 
 
-def detect_and_color_splash(model, image_path=None, video_path=None, output_dir=None):
+def detect_and_color_splash(model, image_path=None, video_path=None, output_dir=None, verbose=0):
     """
     Detects the objects and highlights them in the generated output.
 
@@ -299,6 +302,8 @@ def detect_and_color_splash(model, image_path=None, video_path=None, output_dir=
     :type video_path: str
     :param output_dir: the directory for storing the generated output
     :type output_dir: str
+    :param verbose: the verbosity level (0=off, higher number means more output)
+    :type verbose: int
     """
 
     assert image_path or video_path
@@ -317,7 +322,8 @@ def detect_and_color_splash(model, image_path=None, video_path=None, output_dir=
             return
 
         # Run model detection and generate the color splash effect
-        print("Running on {}".format(image_path))
+        if verbose > 0:
+            print("Running on {}".format(image_path))
         # Read image
         image = skimage.io.imread(image_path)
         # make sure that there is no alpha channel
@@ -354,7 +360,8 @@ def detect_and_color_splash(model, image_path=None, video_path=None, output_dir=
         count = 0
         success = True
         while success:
-            print("frame: ", count)
+            if verbose > 1:
+                print("frame: ", count)
             # Read next image
             success, image = vcapture.read()
             if success:
@@ -374,7 +381,8 @@ def detect_and_color_splash(model, image_path=None, video_path=None, output_dir=
         vcapture.release()
         vwriter.release()
 
-    print("Saved to ", file_name)
+    if verbose > 0:
+        print("Saved to ", file_name)
 
 
 def bbox_to_csv(id, rois, scores, csv_file, append=False):
@@ -403,7 +411,7 @@ def bbox_to_csv(id, rois, scores, csv_file, append=False):
             f.write("%s,%i,%f,%f,%f,%f,%f\n" % (id, idx, roi[1], roi[0], roi[3], roi[2], scores[idx]))
 
 
-def detect_and_bbox(model, image_path=None, video_path=None, output_dir=None):
+def detect_and_bbox(model, image_path=None, video_path=None, output_dir=None, verbose=0):
     """
     Detects the objects and stores the bounding boxes in CSV file(s).
 
@@ -414,6 +422,8 @@ def detect_and_bbox(model, image_path=None, video_path=None, output_dir=None):
     :type video_path: str
     :param output_dir: the directory for storing the generated output
     :type output_dir: str
+    :param verbose: the verbosity level (0=off, higher number means more output)
+    :type verbose: int
     """
 
     assert image_path or video_path
@@ -431,8 +441,9 @@ def detect_and_bbox(model, image_path=None, video_path=None, output_dir=None):
                                             output_dir=output_dir)
             return
 
-        # Run model detection and generate the color splash effect
-        print("Running on {}".format(image_path))
+        # Run model detection and generate the bbox
+        if verbose > 0:
+            print("Running on {}".format(image_path))
         # Read image
         image = skimage.io.imread(image_path)
         # make sure that there is no alpha channel
@@ -460,7 +471,8 @@ def detect_and_bbox(model, image_path=None, video_path=None, output_dir=None):
         count = 0
         success = True
         while success:
-            print("frame: ", count)
+            if verbose > 1:
+                print("frame: ", count)
             # Read next image
             success, image = vcapture.read()
             if success:
@@ -475,7 +487,8 @@ def detect_and_bbox(model, image_path=None, video_path=None, output_dir=None):
                 count += 1
         vcapture.release()
 
-    print("Saved to ", file_name)
+    if verbose > 0:
+        print("Saved to ", file_name)
 
 
 ############################################################
@@ -512,6 +525,10 @@ if __name__ == '__main__':
     parser.add_argument('--config', required=True,
                         metavar="path to YAML config file",
                         help='Configuration file for setting parameters')
+    parser.add_argument('--verbose', required=False,
+                        default=1,
+                        metavar="verbosity level 0..N",
+                        help='Verbosity level: 0=off, higher number means more output')
     args = parser.parse_args()
 
     # Validate arguments
@@ -570,7 +587,8 @@ if __name__ == '__main__':
         weights_path = args.weights
 
     # Load weights
-    print("Loading weights ", weights_path)
+    if args.verbose > 0:
+        print("Loading weights ", weights_path)
     if args.weights.lower() == "coco":
         # Exclude the last layers because they require a matching
         # number of classes
@@ -586,11 +604,13 @@ if __name__ == '__main__':
     elif args.command == "splash":
         detect_and_color_splash(model, image_path=args.image,
                                 video_path=args.video,
-                                output_dir=args.output_dir)
+                                output_dir=args.output_dir,
+                                verbose=args.verbose)
     elif args.command == "bbox":
         detect_and_bbox(model, image_path=args.image,
-                                video_path=args.video,
-                                output_dir=args.output_dir)
+                        video_path=args.video,
+                        output_dir=args.output_dir,
+                        verbose=args.verbose)
     else:
         print("'{}' is not recognized. "
               "Use 'train' or 'splash'".format(args.command))

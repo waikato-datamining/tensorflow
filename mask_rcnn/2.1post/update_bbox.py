@@ -36,7 +36,8 @@ def compress_mask(mask):
 
     return ""
 
-def update_bboxes(model, image_path, bbox_path, label, out_path):
+
+def update_bboxes(model, image_path, bbox_path, label, out_path, verbose=0):
     """
     Updates the bounding boxes using the supplied model.
 
@@ -49,6 +50,8 @@ def update_bboxes(model, image_path, bbox_path, label, out_path):
     :type label: str
     :param out_path: the CSV to store the updated bounding boxes in
     :type out_path: str
+    :param verbose: the verbosity level, 0=off, higher number means more outout
+    :type verbose: int
     """
 
     # read image
@@ -88,7 +91,7 @@ def update_bboxes(model, image_path, bbox_path, label, out_path):
         y1 = float(row['y1'])
         box = image[int(y0):int(y1), int(x0):int(x1)]
         # detect objects
-        r = model.detect([box], verbose=1)[0]
+        r = model.detect([box], verbose=verbose)[0]
         mask = ""
         if len(r['rois']) > 0:
             roi = r['rois'][0]
@@ -96,9 +99,10 @@ def update_bboxes(model, image_path, bbox_path, label, out_path):
             x0N = int(x0) + roi[1]
             y1N = int(y0) + roi[2]
             x1N = int(x0) + roi[3]
-            print("original bbox coords (y0,x0,y1,x1):", y0, x0, y1, x1)
-            print("new coords inside bbox (y0,x0,y1,x1):", roi)
-            print("new bbox coords (y0,x0,y1,x1):", y0N, x0N, y1N, x1N)
+            if verbose > 1:
+                print("original bbox coords (y0,x0,y1,x1):", y0, x0, y1, x1)
+                print("new coords inside bbox (y0,x0,y1,x1):", roi)
+                print("new bbox coords (y0,x0,y1,x1):", y0N, x0N, y1N, x1N)
             row['y0'] = str(y0N)
             row['x0'] = str(x0N)
             row['y1'] = str(y1N)
@@ -109,7 +113,8 @@ def update_bboxes(model, image_path, bbox_path, label, out_path):
         bbox_updated.append(row)
 
     # write output
-    print("Saving updated bboxes to:", out_path)
+    if verbose > 0:
+        print("Saving updated bboxes to:", out_path)
     with open(out_path, 'w', newline='') as outfile:
         writer = csv.DictWriter(outfile, fieldnames=header_sorted)
         writer.writeheader()
@@ -144,6 +149,10 @@ if __name__ == '__main__':
     parser.add_argument('--config', required=True,
                         metavar="path to YAML config file",
                         help='Configuration file for setting parameters')
+    parser.add_argument('--verbose', required=False,
+                        default=1,
+                        metavar="verbosity level 0..N",
+                        help='Verbosity level: 0=off, higher number means more output')
     args = parser.parse_args()
 
     print("image: ", args.image)
