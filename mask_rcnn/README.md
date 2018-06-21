@@ -18,7 +18,7 @@ Installation based on: https://www.tensorflow.org/install/
   * using virtualenv
   
     ```
-    virtualenv -p /usr/bin/python3.5
+    virtualenv -p /usr/bin/python3.5 venv
     ```
     
   * using anaconda
