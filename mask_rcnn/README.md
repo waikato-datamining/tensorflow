@@ -69,7 +69,9 @@ otherwise it will grab all the memory and thinks it is all available on a single
 
 * Error: `module 'keras.engine.topology' has no attribute 'load_weights_from_hdf5_group_by_name'`
 
-    * Solution: 
+    * Cause: Keras >= 2.2
+    * Solution 1 - install Keras < 2.2
+    * Solution 2 - update source code:
    
         * open `mcrnn/model.py`
         * change `from keras.engine import topology` to `from keras.engine import saving`
