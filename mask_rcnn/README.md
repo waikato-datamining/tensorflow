@@ -65,3 +65,15 @@ The following applies to the code from the original MASK_RCNN github repository:
 **NB:** Use `%env CUDA_VISIBLE_DEVICES=2` to limit tensorflow to GPU with ID *2*, 
 otherwise it will grab all the memory and thinks it is all available on a single GPU.
 
+## Troubleshooting
+
+* Error: `module 'keras.engine.topology' has no attribute 'load_weights_from_hdf5_group_by_name'`
+
+    * Solution: 
+   
+        * open `mcrnn/model.py`
+        * change `from keras.engine import topology` to `from keras.engine import saving`
+        * change `topology.load_weights_from_hdf5_group_by_name` to `saving.load_weights_from_hdf5_group_by_name`
+        * change `topology.load_weights_from_hdf5_group` to `saving.load_weights_from_hdf5_group`
+        * Based on [pull request](https://github.com/matterport/Mask_RCNN/pull/662/commits/bd780b5b13509ff057672ff41d936396e6128ccf)
+
