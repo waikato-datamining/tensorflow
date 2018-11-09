@@ -99,11 +99,14 @@ def determine_labels(input_dir, labels=None, verbose=False):
                 objects = read_objects(os.path.join(input_dir, subdir, f), labels=labels, verbose=verbose)
                 for o in objects.values():
                     if "type" in o:
-                        if labelsc is not None:
-                            if labelsc.match(o["type"]):
-                                resultset.add(o["type"])
-                        else:
-                            resultset.add(o["type"])
+                        l = o["type"]
+                    else:
+                        l = "object"
+                    if labelsc is not None:
+                        if labelsc.match(l):
+                            resultset.add(l)
+                    else:
+                        resultset.add(l)
 
     # create sorted list
     result = list(resultset)
@@ -176,7 +179,7 @@ def create_tf_example(imgpath, imgtype, objects, labels, verbose):
     return tf_example
 
 
-def convert(input_dir, output_dir, remove_alpha=False, labels=None, shards=10, verbose=False):
+def convert(input_dir, output_dir, remove_alpha=False, labels=None, verbose=False):
     """
     Converts the images and annotations (.report) files into TFRecords.
 
@@ -188,8 +191,6 @@ def convert(input_dir, output_dir, remove_alpha=False, labels=None, shards=10, v
     :type remove_alpha: bool
     :param labels: the regular expression to use for limiting the labels stored
     :type labels: str
-    :param shards: the number of images per record file
-    :type shards: int
     :param verbose: whether to have a more verbose record generation
     :type verbose: bool
     """
@@ -202,6 +203,7 @@ def convert(input_dir, output_dir, remove_alpha=False, labels=None, shards=10, v
     if verbose:
         print("determined labels:", all_labels)
 
+    writer = tf.python_io.TFRecordWriter(os.path.join(output_dir, 'data.tfrecord'))
     for subdir, dirs, files in os.walk(input_dir):
         for f in files:
             if f.endswith(".report"):
@@ -217,11 +219,12 @@ def convert(input_dir, output_dir, remove_alpha=False, labels=None, shards=10, v
                     img = png
                     imgtype = b'png'
                 if img is not None:
+                    if verbose:
+                        print("storing", img)
                     objects = read_objects(report, labels=labels, verbose=verbose)
                     example = create_tf_example(img, imgtype, objects, all_indices, verbose)
-                    if verbose:
-                        print(example)
-                    # TODO write to shards
+                    writer.write(example.SerializeToString())
+    writer.close()
 
 
 def main():
@@ -246,9 +249,6 @@ def main():
         "-l", "--labels", metavar="labels", dest="labels", required=False,
         help="regular expression for using only a subset of labels", default="")
     parser.add_argument(
-        "-s", "--shards", metavar="shards", dest="shards", type=int, required=False,
-        help="the number of images to store in a single TFRecord file", default=10)
-    parser.add_argument(
         "-v", "--verbose", action="store_true", dest="verbose", required=False,
         help="whether to be more verbose when generating the records")
     parsed = parser.parse_args()
@@ -265,8 +265,7 @@ def main():
 
     convert(
         input_dir=parsed.input, output_dir=parsed.output,
-        remove_alpha=parsed.remove_alpha,
-        labels=parsed.labels, shards=parsed.shards, verbose=parsed.verbose)
+        remove_alpha=parsed.remove_alpha, labels=parsed.labels, verbose=parsed.verbose)
 
 if __name__ == "__main__":
     try:
