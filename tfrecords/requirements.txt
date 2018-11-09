@@ -1,0 +1,9 @@
+Cython
+javaproperties
+argparse
+contextlib2
+pillow
+lxml
+jupyter
+matplotlib
+numpy
