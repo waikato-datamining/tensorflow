@@ -43,5 +43,5 @@
 
 ## Usage
 
-Execute the script with '-h' to see the help screen.
+Execute the `adams/convert.py` script with `-h` to see the help screen.
 
