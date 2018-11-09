@@ -43,4 +43,5 @@
 
 ## Usage
 
-TODO
+Execute the script with '-h' to see the help screen.
+
