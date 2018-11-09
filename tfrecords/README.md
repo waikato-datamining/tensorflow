@@ -28,7 +28,7 @@
     ./venv/bin/pip install tensorflow
     ```
     
-* install object detection framework ()[instructions](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md))
+* install object detection framework ([instructions](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md))
 
   ```commandline
   git clone https://github.com/tensorflow/models
