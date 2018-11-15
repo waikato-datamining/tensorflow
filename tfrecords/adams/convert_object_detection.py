@@ -30,6 +30,7 @@ import tensorflow as tf
 from object_detection.utils import dataset_util
 from report import read_objects, determine_labels
 from report import SUFFIX_TYPE, SUFFIX_X, SUFFIX_Y, SUFFIX_WIDTH, SUFFIX_HEIGHT, REPORT_EXT
+from report import PREFIX_OBJECT, DEFAULT_LABEL
 
 # logging setup
 logging.basicConfig()
@@ -109,23 +110,23 @@ def create_record(imgpath, imgtype, objects, labels, verbose):
     return tf_example
 
 
-def convert(input_dir, output_dir, remove_alpha=False, labels=None, verbose=False):
+def convert(input_dir, input_files, output_file, labels=None, verbose=False):
     """
     Converts the images and annotations (.report) files into TFRecords.
 
     :param input_dir: the input directory (PNG/JPG, .report)
     :type input_dir: str
-    :param output_dir: the output directory for TFRecords
-    :type output_dir: str
-    :param remove_alpha: whether to remove the alpha channel
-    :type remove_alpha: bool
+    :param input_files: the file containing the report files to use
+    :type input_files: str
+    :param output_file: the output file for TFRecords
+    :type output_file: str
     :param labels: the regular expression to use for limiting the labels stored
     :type labels: str
     :param verbose: whether to have a more verbose record generation
     :type verbose: bool
     """
 
-    all_labels = determine_labels(input_dir, labels=labels, verbose=verbose)
+    all_labels = determine_labels(input_dir=input_dir, input_files=input_files, labels=labels, verbose=verbose)
     all_indices = dict()
     for i, l in enumerate(all_labels):
         all_indices[l] = i
@@ -133,27 +134,35 @@ def convert(input_dir, output_dir, remove_alpha=False, labels=None, verbose=Fals
     if verbose:
         logging.info("determined labels: %s", all_labels)
 
-    writer = tf.python_io.TFRecordWriter(os.path.join(output_dir, 'data.tfrecord'))
-    for subdir, dirs, files in os.walk(input_dir):
-        for f in files:
-            if f.endswith(REPORT_EXT):
-                report = os.path.join(input_dir, subdir, f)
-                jpg = os.path.join(input_dir, subdir, f.replace(REPORT_EXT, ".jpg"))
-                png = os.path.join(input_dir, subdir, f.replace(REPORT_EXT, ".png"))
-                img = None
-                imgtype = None
-                if os.path.exists(jpg):
-                    img = jpg
-                    imgtype = b'jpg'
-                elif os.path.exists(png):
-                    img = png
-                    imgtype = b'png'
-                if img is not None:
-                    if verbose:
-                        logger.info("storing: %s", img)
-                    objects = read_objects(report, verbose=verbose)
-                    example = create_record(img, imgtype, objects, all_indices, verbose)
-                    writer.write(example.SerializeToString())
+    # determine files
+    if input_dir is not None:
+        report_files = list()
+        for subdir, dirs, files in os.walk(input_dir):
+            for f in files:
+                if f.endswith(REPORT_EXT):
+                    report_files.append(os.path.join(input_dir, subdir, f))
+    else:
+        report_files = input_files[:]
+
+    writer = tf.python_io.TFRecordWriter(output_file)
+    for report in report_files:
+        jpg = report.replace(REPORT_EXT, ".jpg")
+        png = report.replace(REPORT_EXT, ".png")
+        img = None
+        imgtype = None
+        if os.path.exists(jpg):
+            img = jpg
+            imgtype = b'jpg'
+        elif os.path.exists(png):
+            img = png
+            imgtype = b'png'
+        if img is not None:
+            objects = read_objects(report, verbose=verbose)
+            if len(objects) > 0:
+                if verbose:
+                    logger.info("storing: %s", img)
+                example = create_record(img, imgtype, objects, all_indices, verbose)
+                writer.write(example.SerializeToString())
     writer.close()
 
 
@@ -163,20 +172,19 @@ def main():
     """
 
     parser = argparse.ArgumentParser(
-        description='Converts ADAMS annotations (image and .report files) into TFRecords for the Object Detection framework.\n' +
-                    'Assumes "Object." as prefix and ".type" for the label. If no ".type" present, ' +
-                    'the generic label "object" will be used instead.')
+        description='Converts ADAMS annotations (image and .report files) into TFRecords for the '
+                    + 'Object Detection framework.\n'
+                    + 'Assumes "' + PREFIX_OBJECT + '" as prefix and "' + SUFFIX_TYPE + '" for the label. '
+                    + 'If no "' + SUFFIX_TYPE + '" present, the generic label "' + DEFAULT_LABEL + '" will '
+                    + 'be used instead.')
     parser.add_argument(
-        "-i", "--input", metavar="input", dest="input", required=True,
-        help="input directory with ADAMS annotations")
+        "-i", "--input", metavar="dir_or_file", dest="input", required=True,
+        help="input directory with report files or text file with one absolute report file name per line")
     parser.add_argument(
-        "-a", "--remove_alpha", action="store_true", dest="remove_alpha", required=False,
-        help="whether to remove the alpha channel")
+        "-o", "--output", metavar="file", dest="output", required=True,
+        help="name of output file for TFRecords")
     parser.add_argument(
-        "-o", "--output", metavar="ouput", dest="output", required=True,
-        help="output directory for TFRecords")
-    parser.add_argument(
-        "-l", "--labels", metavar="labels", dest="labels", required=False,
+        "-l", "--labels", metavar="regexp", dest="labels", required=False,
         help="regular expression for using only a subset of labels", default="")
     parser.add_argument(
         "-v", "--verbose", action="store_true", dest="verbose", required=False,
@@ -185,17 +193,24 @@ def main():
 
     # checks
     if not os.path.exists(parsed.input):
-        raise IOError("Input directory does not exist:", parsed.input)
-    if not os.path.isdir(parsed.input):
-        raise IOError("Input is not a directory:", parsed.input)
-    if not os.path.exists(parsed.output):
-        raise IOError("Output directory does not exist:", parsed.output)
-    if not os.path.isdir(parsed.output):
-        raise IOError("Output is not a directory:", parsed.output)
+        raise IOError("Input does not exist:", parsed.input)
+    if os.path.isdir(parsed.output):
+        raise IOError("Output is a directory:", parsed.output)
+
+    # interpret input (dir or file with report file names?)
+    if os.path.isdir(parsed.input):
+        input_dir = parsed.input
+        input_files = None
+    else:
+        input_dir = None
+        input_files = list()
+        with open(parsed.input) as fp:
+            for line in fp:
+                input_files.append(line.strip())
 
     convert(
-        input_dir=parsed.input, output_dir=parsed.output,
-        remove_alpha=parsed.remove_alpha, labels=parsed.labels, verbose=parsed.verbose)
+        input_dir=input_dir, input_files=input_files, output_file=parsed.output,
+        labels=parsed.labels, verbose=parsed.verbose)
 
 if __name__ == "__main__":
     try:
