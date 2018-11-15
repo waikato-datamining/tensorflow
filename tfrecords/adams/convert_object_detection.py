@@ -20,102 +20,17 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
 import argparse
-import javaproperties
 import os
-import re
 import io
 import traceback
 import numpy as np
 import PIL.Image as pil
 import tensorflow as tf
 from object_detection.utils import dataset_util
-
-def read_objects(report_file, labels=None, verbose=False):
-    """
-    Reads the report file and returns a list of all the objects (each object is a dictionary).
-
-    :param report_file: the report file to read
-    :type report_file: str
-    :param labels: the regular expression to use for limiting the labels stored
-    :type labels: str
-    :param verbose: whether to have a more verbose record generation
-    :type verbose: bool
-    :return: the dictionary of objects that matched
-    :rtype: dict
-    """
-
-    result = dict()
-
-    with open(report_file, 'r') as rf:
-        props = javaproperties.load(rf)
-        for k in props.keys():
-            if k.startswith("Object"):
-                idx = k[len("Object")+1:]
-                idx = idx[0:idx.index(".")]
-                if idx not in result:
-                    result[idx] = dict()
-                subkey = k[len("Object." + idx) + 1:]
-                if subkey.endswith("DataType"):
-                    continue
-                value = props[k]
-                # try guess type
-                if (value.lower() == "true") or (value.lower() == "false"):
-                    result[idx][subkey] = bool(props[k])
-                else:
-                    try:
-                        result[idx][subkey] = float(props[k])
-                    except:
-                        result[idx][subkey] = props[k]
-
-    if verbose:
-        print(report_file, result)
-
-    return result
+from report import read_objects, determine_labels
 
 
-def determine_labels(input_dir, labels=None, verbose=False):
-    """
-    Determines all the labels present in the reports and returns them.
-
-    :param input_dir: the input directory (PNG/JPG, .report)
-    :type input_dir: str
-    :param labels: the regular expression to use for limiting the labels stored
-    :type labels: str
-    :param verbose: whether to have a more verbose record generation
-    :type verbose: bool
-    :return: the list of labels
-    :rtype: list
-    """
-
-    if labels is not None:
-        labelsc = re.compile(labels)
-    else:
-        labelsc = None
-
-    resultset = set()
-    for subdir, dirs, files in os.walk(input_dir):
-        for f in files:
-            if f.endswith(".report"):
-                objects = read_objects(os.path.join(input_dir, subdir, f), labels=labels, verbose=verbose)
-                for o in objects.values():
-                    if "type" in o:
-                        l = o["type"]
-                    else:
-                        l = "object"
-                    if labelsc is not None:
-                        if labelsc.match(l):
-                            resultset.add(l)
-                    else:
-                        resultset.add(l)
-
-    # create sorted list
-    result = list(resultset)
-    result.sort()
-
-    return result
-
-
-def create_tf_example(imgpath, imgtype, objects, labels, verbose):
+def create_record(imgpath, imgtype, objects, labels, verbose):
     """
     Creates a tf.Example proto from image.
 
@@ -161,6 +76,14 @@ def create_tf_example(imgpath, imgtype, objects, labels, verbose):
             ymaxs.append((o['y'] + o['height'] - 1) / height)
             classes_text.append(o['type'].encode('utf8'))
             classes.append(labels[o['type']])
+    if verbose:
+        print(imgpath)
+        print("xmins:", xmins)
+        print("xmaxs:", xmaxs)
+        print("ymins:", ymins)
+        print("ymaxs:", ymaxs)
+        print("classes_text:", classes_text)
+        print("classes:", classes)
 
     tf_example = tf.train.Example(features=tf.train.Features(feature={
         'image/height': dataset_util.int64_feature(height),
@@ -221,8 +144,8 @@ def convert(input_dir, output_dir, remove_alpha=False, labels=None, verbose=Fals
                 if img is not None:
                     if verbose:
                         print("storing", img)
-                    objects = read_objects(report, labels=labels, verbose=verbose)
-                    example = create_tf_example(img, imgtype, objects, all_indices, verbose)
+                    objects = read_objects(report, verbose=verbose)
+                    example = create_record(img, imgtype, objects, all_indices, verbose)
                     writer.write(example.SerializeToString())
     writer.close()
 
