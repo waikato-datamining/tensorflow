@@ -80,12 +80,13 @@ def create_record(imgpath, imgtype, objects, labels, verbose):
     classes = []
     for o in objects.values():
         if SUFFIX_TYPE in o:
-            xmins.append(o[SUFFIX_X] / width)
-            xmaxs.append((o[SUFFIX_X] + o[SUFFIX_WIDTH] - 1) / width)
-            ymins.append(o[SUFFIX_Y] / height)
-            ymaxs.append((o[SUFFIX_Y] + o[SUFFIX_HEIGHT] - 1) / height)
-            classes_text.append(o[SUFFIX_TYPE].encode('utf8'))
-            classes.append(labels[o[SUFFIX_TYPE]])
+            if o[SUFFIX_TYPE] in labels:
+                xmins.append(o[SUFFIX_X] / width)
+                xmaxs.append((o[SUFFIX_X] + o[SUFFIX_WIDTH] - 1) / width)
+                ymins.append(o[SUFFIX_Y] / height)
+                ymaxs.append((o[SUFFIX_Y] + o[SUFFIX_HEIGHT] - 1) / height)
+                classes_text.append(o[SUFFIX_TYPE].encode('utf8'))
+                classes.append(labels[o[SUFFIX_TYPE]])
     if verbose:
         logger.info(imgpath)
         logger.info("xmins: %s", xmins)
@@ -137,7 +138,7 @@ def determine_image(report):
     return img, imgtype
 
 
-def convert(input_dir, input_files, output_file, mappings=None, labels=None, shards=-1, verbose=False):
+def convert(input_dir, input_files, output_file, mappings=None, regexp=None, shards=-1, verbose=False):
     """
     Converts the images and annotations (.report) files into TFRecords.
 
@@ -149,8 +150,8 @@ def convert(input_dir, input_files, output_file, mappings=None, labels=None, sha
     :type output_file: str
     :param mappings: the label mappings for replacing labels (key: old label, value: new label)
     :type mappings: dict
-    :param labels: the regular expression to use for limiting the labels stored
-    :type labels: str
+    :param regexp: the regular expression to use for limiting the labels stored
+    :type regexp: str
     :param shards: the number of shards to generate, <= 1 for just single file
     :type shards: int
     :param verbose: whether to have a more verbose record generation
@@ -158,7 +159,7 @@ def convert(input_dir, input_files, output_file, mappings=None, labels=None, sha
     """
 
     all_labels = determine_labels(input_dir=input_dir, input_files=input_files, mappings=mappings,
-                                  labels=labels, verbose=verbose)
+                                  regexp=regexp, verbose=verbose)
     all_indices = dict()
     for i, l in enumerate(all_labels):
         all_indices[l] = i
@@ -231,7 +232,7 @@ def main():
         "-m", "--mapping", metavar="old=new", dest="mapping", action='append', type=str, required=False,
         help="mapping for labels, for replacing one label string with another (eg when fixing/collapsing labels)", default=list())
     parser.add_argument(
-        "-l", "--labels", metavar="regexp", dest="labels", required=False,
+        "-r", "--regexp", metavar="regexp", dest="regexp", required=False,
         help="regular expression for using only a subset of labels", default="")
     parser.add_argument(
         "-s", "--shards", metavar="num", dest="shards", required=False, type=int,
@@ -271,7 +272,7 @@ def main():
 
     convert(
         input_dir=input_dir, input_files=input_files, output_file=parsed.output,
-        labels=parsed.labels, shards=parsed.shards, mappings=mappings, verbose=parsed.verbose)
+        regexp=parsed.regexp, shards=parsed.shards, mappings=mappings, verbose=parsed.verbose)
 
 if __name__ == "__main__":
     try:

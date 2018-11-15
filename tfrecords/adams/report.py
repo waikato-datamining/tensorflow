@@ -114,7 +114,7 @@ def fix_labels(objects, mappings):
                 o[SUFFIX_TYPE] = mappings[l]
 
 
-def determine_labels(input_dir=None, input_files=None, mappings=None, labels=None, verbose=False):
+def determine_labels(input_dir=None, input_files=None, mappings=None, regexp=None, verbose=False):
     """
     Determines all the labels present in the reports and returns them.
     Can either locate report files recursively in a directory or directly use
@@ -125,18 +125,18 @@ def determine_labels(input_dir=None, input_files=None, mappings=None, labels=Non
     :type input_dir: str
     :param mappings: the label mappings for replacing labels (key: old label, value: new label)
     :type mappings: dict
-    :param labels: the regular expression to use for limiting the labels stored
-    :type labels: str
+    :param regexp: the regular expression to use for limiting the labels stored
+    :type regexp: str
     :param verbose: whether to have a more verbose record generation
     :type verbose: bool
     :return: the list of labels
     :rtype: list
     """
 
-    if labels is not None:
-        labelsc = re.compile(labels)
+    if regexp is not None:
+        regexpc = re.compile(regexp)
     else:
-        labelsc = None
+        regexpc = None
 
     # determine files
     if input_dir is not None:
@@ -160,8 +160,8 @@ def determine_labels(input_dir=None, input_files=None, mappings=None, labels=Non
                 l = DEFAULT_LABEL
 
             # add label (if allowed)
-            if labelsc is not None:
-                if labelsc.match(l):
+            if regexpc is not None:
+                if regexpc.match(l):
                     result_set.add(l)
             else:
                 result_set.add(l)
