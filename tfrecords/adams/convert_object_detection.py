@@ -27,7 +27,9 @@ import logging
 import numpy as np
 import PIL.Image as pil
 import tensorflow as tf
+import contextlib2
 from object_detection.utils import dataset_util
+from object_detection.dataset_tools import tf_record_creation_util
 from report import read_objects, determine_labels
 from report import SUFFIX_TYPE, SUFFIX_X, SUFFIX_Y, SUFFIX_WIDTH, SUFFIX_HEIGHT, REPORT_EXT
 from report import PREFIX_OBJECT, DEFAULT_LABEL
@@ -110,7 +112,32 @@ def create_record(imgpath, imgtype, objects, labels, verbose):
     return tf_example
 
 
-def convert(input_dir, input_files, output_file, labels=None, verbose=False):
+def determine_image(report):
+    """
+    Determines the image and image type that is associated with the report file.
+
+    :param report: the report file to get the image/type for
+    :type report: str
+    :return: image and image type (str and bytearray)
+    :rtype: tuple
+    """
+
+    jpg = report.replace(REPORT_EXT, ".jpg")
+    png = report.replace(REPORT_EXT, ".png")
+    img = None
+    imgtype = None
+
+    if os.path.exists(jpg):
+        img = jpg
+        imgtype = b'jpg'
+    elif os.path.exists(png):
+        img = png
+        imgtype = b'png'
+
+    return img, imgtype
+
+
+def convert(input_dir, input_files, output_file, labels=None, shards=-1, verbose=False):
     """
     Converts the images and annotations (.report) files into TFRecords.
 
@@ -122,6 +149,8 @@ def convert(input_dir, input_files, output_file, labels=None, verbose=False):
     :type output_file: str
     :param labels: the regular expression to use for limiting the labels stored
     :type labels: str
+    :param shards: the number of shards to generate, <= 1 for just single file
+    :type shards: int
     :param verbose: whether to have a more verbose record generation
     :type verbose: bool
     """
@@ -144,26 +173,34 @@ def convert(input_dir, input_files, output_file, labels=None, verbose=False):
     else:
         report_files = input_files[:]
 
-    writer = tf.python_io.TFRecordWriter(output_file)
-    for report in report_files:
-        jpg = report.replace(REPORT_EXT, ".jpg")
-        png = report.replace(REPORT_EXT, ".png")
-        img = None
-        imgtype = None
-        if os.path.exists(jpg):
-            img = jpg
-            imgtype = b'jpg'
-        elif os.path.exists(png):
-            img = png
-            imgtype = b'png'
-        if img is not None:
-            objects = read_objects(report, verbose=verbose)
-            if len(objects) > 0:
-                if verbose:
-                    logger.info("storing: %s", img)
-                example = create_record(img, imgtype, objects, all_indices, verbose)
-                writer.write(example.SerializeToString())
-    writer.close()
+    if shards > 1:
+        index = 0
+        with contextlib2.ExitStack() as tf_record_close_stack:
+            output_tfrecords = tf_record_creation_util.open_sharded_output_tfrecords(
+                tf_record_close_stack, output_file, shards)
+            for report in report_files:
+                img, imgtype = determine_image(report)
+                if img is not None:
+                    objects = read_objects(report, verbose=verbose)
+                    if len(objects) > 0:
+                        if verbose:
+                            logger.info("storing: %s", img)
+                        example = create_record(img, imgtype, objects, all_indices, verbose)
+                        output_shard_index = index % shards
+                        output_tfrecords[output_shard_index].write(example.SerializeToString())
+                        index += 1
+    else:
+        writer = tf.python_io.TFRecordWriter(output_file)
+        for report in report_files:
+            img, imgtype = determine_image(report)
+            if img is not None:
+                objects = read_objects(report, verbose=verbose)
+                if len(objects) > 0:
+                    if verbose:
+                        logger.info("storing: %s", img)
+                    example = create_record(img, imgtype, objects, all_indices, verbose)
+                    writer.write(example.SerializeToString())
+        writer.close()
 
 
 def main():
@@ -187,6 +224,9 @@ def main():
         "-l", "--labels", metavar="regexp", dest="labels", required=False,
         help="regular expression for using only a subset of labels", default="")
     parser.add_argument(
+        "-s", "--shards", metavar="num", dest="shards", required=False, type=int,
+        help="number of shards to split the images into (<= 1 for off)", default=-1)
+    parser.add_argument(
         "-v", "--verbose", action="store_true", dest="verbose", required=False,
         help="whether to be more verbose when generating the records")
     parsed = parser.parse_args()
@@ -208,9 +248,12 @@ def main():
             for line in fp:
                 input_files.append(line.strip())
 
+    if parsed.verbose:
+        logger.info("sharding off" if parsed.shards <= 1 else "# shards: " + str(parsed.shards))
+
     convert(
         input_dir=input_dir, input_files=input_files, output_file=parsed.output,
-        labels=parsed.labels, verbose=parsed.verbose)
+        labels=parsed.labels, shards=parsed.shards, verbose=parsed.verbose)
 
 if __name__ == "__main__":
     try:
