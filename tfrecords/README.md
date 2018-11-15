@@ -43,5 +43,7 @@
 
 ## Usage
 
-Execute the `adams/convert.py` script with `-h` to see the help screen.
+### Object Detection framework
+
+Execute the `adams/object_detection.py` script with `-h` to see the help screen.
 

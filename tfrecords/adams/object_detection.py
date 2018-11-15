@@ -233,7 +233,7 @@ def main():
     """
 
     parser = argparse.ArgumentParser(
-        description='Converts ADAMS annotations (image and .report files) into TFRecords.\n' +
+        description='Converts ADAMS annotations (image and .report files) into TFRecords for the Object Detection framework.\n' +
                     'Assumes "Object." as prefix and ".type" for the label. If no ".type" present, ' +
                     'the generic label "object" will be used instead.')
     parser.add_argument(
