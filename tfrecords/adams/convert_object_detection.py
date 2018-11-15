@@ -23,11 +23,17 @@ import argparse
 import os
 import io
 import traceback
+import logging
 import numpy as np
 import PIL.Image as pil
 import tensorflow as tf
 from object_detection.utils import dataset_util
 from report import read_objects, determine_labels
+
+# logging setup
+logging.basicConfig()
+logger = logging.getLogger("tfrecords.adams.convert_object_detection")
+logger.setLevel(logging.INFO)
 
 
 def create_record(imgpath, imgtype, objects, labels, verbose):
@@ -77,13 +83,13 @@ def create_record(imgpath, imgtype, objects, labels, verbose):
             classes_text.append(o['type'].encode('utf8'))
             classes.append(labels[o['type']])
     if verbose:
-        print(imgpath)
-        print("xmins:", xmins)
-        print("xmaxs:", xmaxs)
-        print("ymins:", ymins)
-        print("ymaxs:", ymaxs)
-        print("classes_text:", classes_text)
-        print("classes:", classes)
+        logger.info(imgpath)
+        logger.info("xmins: %s", xmins)
+        logger.info("xmaxs: %s", xmaxs)
+        logger.info("ymins: %s", ymins)
+        logger.info("ymaxs: %s", ymaxs)
+        logger.info("classes_text: %s", classes_text)
+        logger.info("classes: %s", classes)
 
     tf_example = tf.train.Example(features=tf.train.Features(feature={
         'image/height': dataset_util.int64_feature(height),
@@ -124,7 +130,7 @@ def convert(input_dir, output_dir, remove_alpha=False, labels=None, verbose=Fals
         all_indices[l] = i
 
     if verbose:
-        print("determined labels:", all_labels)
+        logging.info("determined labels: %s", all_labels)
 
     writer = tf.python_io.TFRecordWriter(os.path.join(output_dir, 'data.tfrecord'))
     for subdir, dirs, files in os.walk(input_dir):
@@ -143,7 +149,7 @@ def convert(input_dir, output_dir, remove_alpha=False, labels=None, verbose=Fals
                     imgtype = b'png'
                 if img is not None:
                     if verbose:
-                        print("storing", img)
+                        logger.info("storing: %s", img)
                     objects = read_objects(report, verbose=verbose)
                     example = create_record(img, imgtype, objects, all_indices, verbose)
                     writer.write(example.SerializeToString())

@@ -22,6 +22,7 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import javaproperties
 import os
 import re
+import logging
 
 REPORT_EXT = ".report"
 """ extension for report files. """
@@ -37,6 +38,11 @@ SUFFIX_DATATYPE = "DataType"
 
 DEFAULT_LABEL = "object"
 """ the default label to use if no 'type' present. """
+
+# logging setup
+logging.basicConfig()
+logger = logging.getLogger("tfrecords.adams.report")
+logger.setLevel(logging.INFO)
 
 
 def read_objects(report_file, verbose=False):
@@ -75,7 +81,7 @@ def read_objects(report_file, verbose=False):
                         result[idx][subkey] = props[k]
 
     if verbose:
-        print(report_file, result)
+        logger.info("%s: %s" % (report_file, result))
 
     return result
 
