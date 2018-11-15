@@ -29,6 +29,7 @@ import PIL.Image as pil
 import tensorflow as tf
 from object_detection.utils import dataset_util
 from report import read_objects, determine_labels
+from report import SUFFIX_TYPE, SUFFIX_X, SUFFIX_Y, SUFFIX_WIDTH, SUFFIX_HEIGHT, REPORT_EXT
 
 # logging setup
 logging.basicConfig()
@@ -75,13 +76,13 @@ def create_record(imgpath, imgtype, objects, labels, verbose):
     classes_text = []
     classes = []
     for o in objects.values():
-        if 'type' in o:
-            xmins.append(o['x'] / width)
-            xmaxs.append((o['x'] + o['width'] - 1) / width)
-            ymins.append(o['y'] / height)
-            ymaxs.append((o['y'] + o['height'] - 1) / height)
-            classes_text.append(o['type'].encode('utf8'))
-            classes.append(labels[o['type']])
+        if SUFFIX_TYPE in o:
+            xmins.append(o[SUFFIX_X] / width)
+            xmaxs.append((o[SUFFIX_X] + o[SUFFIX_WIDTH] - 1) / width)
+            ymins.append(o[SUFFIX_Y] / height)
+            ymaxs.append((o[SUFFIX_Y] + o[SUFFIX_HEIGHT] - 1) / height)
+            classes_text.append(o[SUFFIX_TYPE].encode('utf8'))
+            classes.append(labels[o[SUFFIX_TYPE]])
     if verbose:
         logger.info(imgpath)
         logger.info("xmins: %s", xmins)
@@ -135,10 +136,10 @@ def convert(input_dir, output_dir, remove_alpha=False, labels=None, verbose=Fals
     writer = tf.python_io.TFRecordWriter(os.path.join(output_dir, 'data.tfrecord'))
     for subdir, dirs, files in os.walk(input_dir):
         for f in files:
-            if f.endswith(".report"):
+            if f.endswith(REPORT_EXT):
                 report = os.path.join(input_dir, subdir, f)
-                jpg = os.path.join(input_dir, subdir, f.replace(".report", ".jpg"))
-                png = os.path.join(input_dir, subdir, f.replace(".report", ".png"))
+                jpg = os.path.join(input_dir, subdir, f.replace(REPORT_EXT, ".jpg"))
+                png = os.path.join(input_dir, subdir, f.replace(REPORT_EXT, ".png"))
                 img = None
                 imgtype = None
                 if os.path.exists(jpg):

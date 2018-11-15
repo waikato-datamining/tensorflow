@@ -33,6 +33,18 @@ PREFIX_OBJECT = "Object."
 SUFFIX_TYPE = "type"
 """ the suffix for the label of objects. """
 
+SUFFIX_WIDTH = "width"
+""" the suffix for the width of objects. """
+
+SUFFIX_HEIGHT = "height"
+""" the suffix for the height of objects. """
+
+SUFFIX_X = "x"
+""" the suffix for the x coordinate. """
+
+SUFFIX_Y = "y"
+""" the suffix for the y coordinate. """
+
 SUFFIX_DATATYPE = "DataType"
 """ the suffix for the data type of a property in the report. """
 
