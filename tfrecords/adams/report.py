@@ -98,14 +98,33 @@ def read_objects(report_file, verbose=False):
     return result
 
 
-def determine_labels(input_dir=None, input_files=None, labels=None, verbose=False):
+def fix_labels(objects, mappings):
+    """
+    Fixes the labels in the parsed objects, using the specified mappings (old: new).
+
+    :param objects: the parsed objects
+    :type objects: dict
+    :param mappings: the label mappings (old: new)
+    :type mappings: dict
+    """
+    for o in objects.values():
+        if SUFFIX_TYPE in o:
+            l = o[SUFFIX_TYPE]
+            if l in mappings:
+                o[SUFFIX_TYPE] = mappings[l]
+
+
+def determine_labels(input_dir=None, input_files=None, mappings=None, labels=None, verbose=False):
     """
     Determines all the labels present in the reports and returns them.
     Can either locate report files recursively in a directory or directly use
-    a list of report file names.
+    a list of report file names. The labels get updated using the mappings
+    before the label regexp is tested.
 
     :param input_dir: the input directory (PNG/JPG, .report)
     :type input_dir: str
+    :param mappings: the label mappings for replacing labels (key: old label, value: new label)
+    :type mappings: dict
     :param labels: the regular expression to use for limiting the labels stored
     :type labels: str
     :param verbose: whether to have a more verbose record generation
@@ -132,11 +151,15 @@ def determine_labels(input_dir=None, input_files=None, labels=None, verbose=Fals
     result_set = set()
     for report_file in report_files:
         objects = read_objects(report_file, verbose=verbose)
+        if mappings is not None:
+            fix_labels(objects, mappings)
         for o in objects.values():
             if SUFFIX_TYPE in o:
                 l = o[SUFFIX_TYPE]
             else:
                 l = DEFAULT_LABEL
+
+            # add label (if allowed)
             if labelsc is not None:
                 if labelsc.match(l):
                     result_set.add(l)

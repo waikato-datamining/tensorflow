@@ -30,7 +30,7 @@ import tensorflow as tf
 import contextlib2
 from object_detection.utils import dataset_util
 from object_detection.dataset_tools import tf_record_creation_util
-from report import read_objects, determine_labels
+from report import read_objects, determine_labels, fix_labels
 from report import SUFFIX_TYPE, SUFFIX_X, SUFFIX_Y, SUFFIX_WIDTH, SUFFIX_HEIGHT, REPORT_EXT
 from report import PREFIX_OBJECT, DEFAULT_LABEL
 
@@ -137,7 +137,7 @@ def determine_image(report):
     return img, imgtype
 
 
-def convert(input_dir, input_files, output_file, labels=None, shards=-1, verbose=False):
+def convert(input_dir, input_files, output_file, mappings=None, labels=None, shards=-1, verbose=False):
     """
     Converts the images and annotations (.report) files into TFRecords.
 
@@ -147,6 +147,8 @@ def convert(input_dir, input_files, output_file, labels=None, shards=-1, verbose
     :type input_files: str
     :param output_file: the output file for TFRecords
     :type output_file: str
+    :param mappings: the label mappings for replacing labels (key: old label, value: new label)
+    :type mappings: dict
     :param labels: the regular expression to use for limiting the labels stored
     :type labels: str
     :param shards: the number of shards to generate, <= 1 for just single file
@@ -155,7 +157,8 @@ def convert(input_dir, input_files, output_file, labels=None, shards=-1, verbose
     :type verbose: bool
     """
 
-    all_labels = determine_labels(input_dir=input_dir, input_files=input_files, labels=labels, verbose=verbose)
+    all_labels = determine_labels(input_dir=input_dir, input_files=input_files, mappings=mappings,
+                                  labels=labels, verbose=verbose)
     all_indices = dict()
     for i, l in enumerate(all_labels):
         all_indices[l] = i
@@ -182,6 +185,8 @@ def convert(input_dir, input_files, output_file, labels=None, shards=-1, verbose
                 img, imgtype = determine_image(report)
                 if img is not None:
                     objects = read_objects(report, verbose=verbose)
+                    if mappings is not None:
+                        fix_labels(objects, mappings)
                     if len(objects) > 0:
                         if verbose:
                             logger.info("storing: %s", img)
@@ -195,6 +200,8 @@ def convert(input_dir, input_files, output_file, labels=None, shards=-1, verbose
             img, imgtype = determine_image(report)
             if img is not None:
                 objects = read_objects(report, verbose=verbose)
+                if mappings is not None:
+                    fix_labels(objects, mappings)
                 if len(objects) > 0:
                     if verbose:
                         logger.info("storing: %s", img)
@@ -220,6 +227,9 @@ def main():
     parser.add_argument(
         "-o", "--output", metavar="file", dest="output", required=True,
         help="name of output file for TFRecords")
+    parser.add_argument(
+        "-m", "--mapping", metavar="old=new", dest="mapping", action='append', type=str, required=False,
+        help="mapping for labels, for replacing one label string with another (eg when fixing/collapsing labels)", default=list())
     parser.add_argument(
         "-l", "--labels", metavar="regexp", dest="labels", required=False,
         help="regular expression for using only a subset of labels", default="")
@@ -248,12 +258,20 @@ def main():
             for line in fp:
                 input_files.append(line.strip())
 
+    # generate label mappings
+    mappings = None
+    if len(parsed.mapping) > 0:
+        mappings = dict()
+        for m in parsed.mapping:
+            old, new = m.split("=")
+            mappings[old] = new
+
     if parsed.verbose:
         logger.info("sharding off" if parsed.shards <= 1 else "# shards: " + str(parsed.shards))
 
     convert(
         input_dir=input_dir, input_files=input_files, output_file=parsed.output,
-        labels=parsed.labels, shards=parsed.shards, verbose=parsed.verbose)
+        labels=parsed.labels, shards=parsed.shards, mappings=mappings, verbose=parsed.verbose)
 
 if __name__ == "__main__":
     try:
