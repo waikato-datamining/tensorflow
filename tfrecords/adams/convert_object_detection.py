@@ -192,8 +192,7 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
                     if mappings is not None:
                         fix_labels(objects, mappings)
                     if len(objects) > 0:
-                        if verbose:
-                            logger.info("storing: %s", img)
+                        logger.info("storing: %s", img)
                         example = create_record(img, imgtype, objects, label_indices, verbose)
                         output_shard_index = index % shards
                         output_tfrecords[output_shard_index].write(example.SerializeToString())
@@ -207,8 +206,7 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
                 if mappings is not None:
                     fix_labels(objects, mappings)
                 if len(objects) > 0:
-                    if verbose:
-                        logger.info("storing: %s", img)
+                    logger.info("storing: %s", img)
                     example = create_record(img, imgtype, objects, label_indices, verbose)
                     writer.write(example.SerializeToString())
         writer.close()
