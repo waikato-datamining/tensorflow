@@ -138,7 +138,7 @@ def determine_image(report):
     return img, imgtype
 
 
-def convert(input_dir, input_files, output_file, mappings=None, regexp=None, shards=-1, verbose=False):
+def convert(input_dir, input_files, output_file, mappings=None, regexp=None, labels=None, shards=-1, verbose=False):
     """
     Converts the images and annotations (.report) files into TFRecords.
 
@@ -152,20 +152,23 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, sha
     :type mappings: dict
     :param regexp: the regular expression to use for limiting the labels stored
     :type regexp: str
+    :param labels: the predefined list of labels to use
+    :type labels: list
     :param shards: the number of shards to generate, <= 1 for just single file
     :type shards: int
     :param verbose: whether to have a more verbose record generation
     :type verbose: bool
     """
 
-    all_labels = determine_labels(input_dir=input_dir, input_files=input_files, mappings=mappings,
+    if labels is None:
+        labels = determine_labels(input_dir=input_dir, input_files=input_files, mappings=mappings,
                                   regexp=regexp, verbose=verbose)
-    all_indices = dict()
-    for i, l in enumerate(all_labels):
-        all_indices[l] = i
+    label_indices = dict()
+    for i, l in enumerate(labels):
+        label_indices[l] = i
 
     if verbose:
-        logging.info("determined labels: %s", all_labels)
+        logging.info("labels considered: %s", labels)
 
     # determine files
     if input_dir is not None:
@@ -191,7 +194,7 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, sha
                     if len(objects) > 0:
                         if verbose:
                             logger.info("storing: %s", img)
-                        example = create_record(img, imgtype, objects, all_indices, verbose)
+                        example = create_record(img, imgtype, objects, label_indices, verbose)
                         output_shard_index = index % shards
                         output_tfrecords[output_shard_index].write(example.SerializeToString())
                         index += 1
@@ -206,7 +209,7 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, sha
                 if len(objects) > 0:
                     if verbose:
                         logger.info("storing: %s", img)
-                    example = create_record(img, imgtype, objects, all_indices, verbose)
+                    example = create_record(img, imgtype, objects, label_indices, verbose)
                     writer.write(example.SerializeToString())
         writer.close()
 
@@ -234,6 +237,9 @@ def main():
     parser.add_argument(
         "-r", "--regexp", metavar="regexp", dest="regexp", required=False,
         help="regular expression for using only a subset of labels", default="")
+    parser.add_argument(
+        "-l", "--labels", metavar="label1,label2,...", dest="labels", required=False,
+        help="comma-separated list of labels to use", default="")
     parser.add_argument(
         "-s", "--shards", metavar="num", dest="shards", required=False, type=int,
         help="number of shards to split the images into (<= 1 for off)", default=-1)
@@ -267,12 +273,18 @@ def main():
             old, new = m.split("=")
             mappings[old] = new
 
+    # predefined labels?
+    labels = None
+    if len(parsed.labels) > 0:
+        labels = list(parsed.labels.split(","))
+        logger.info("labels: " + str(labels))
+
     if parsed.verbose:
         logger.info("sharding off" if parsed.shards <= 1 else "# shards: " + str(parsed.shards))
 
     convert(
-        input_dir=input_dir, input_files=input_files, output_file=parsed.output,
-        regexp=parsed.regexp, shards=parsed.shards, mappings=mappings, verbose=parsed.verbose)
+        input_dir=input_dir, input_files=input_files, output_file=parsed.output, regexp=parsed.regexp,
+        shards=parsed.shards, mappings=mappings, labels=labels, verbose=parsed.verbose)
 
 if __name__ == "__main__":
     try:
