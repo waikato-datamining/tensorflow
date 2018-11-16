@@ -138,7 +138,8 @@ def determine_image(report):
     return img, imgtype
 
 
-def convert(input_dir, input_files, output_file, mappings=None, regexp=None, labels=None, shards=-1, verbose=False):
+def convert(input_dir, input_files, output_file, mappings=None, regexp=None, labels=None, protobuf_label_map=None,
+            shards=-1, verbose=False):
     """
     Converts the images and annotations (.report) files into TFRecords.
 
@@ -154,6 +155,8 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
     :type regexp: str
     :param labels: the predefined list of labels to use
     :type labels: list
+    :param protobuf_label_map: the (optional) file to store the label mapping (in protobuf format)
+    :type protobuf_label_map: str
     :param shards: the number of shards to generate, <= 1 for just single file
     :type shards: int
     :param verbose: whether to have a more verbose record generation
@@ -166,6 +169,13 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
     label_indices = dict()
     for i, l in enumerate(labels):
         label_indices[l] = i
+
+    if protobuf_label_map is not None:
+        protobuf = list()
+        for l in label_indices:
+            protobuf.append('{\n  name: "%s"\n  id: %d\n}\n' % (l, label_indices[l]))
+        with open(protobuf_label_map, 'w') as f:
+            f.writelines(protobuf)
 
     if verbose:
         logging.info("labels considered: %s", labels)
@@ -230,6 +240,9 @@ def main():
         "-o", "--output", metavar="file", dest="output", required=True,
         help="name of output file for TFRecords")
     parser.add_argument(
+        "-p", "--protobuf_label_map", metavar="file", dest="protobuf_label_map", required=False,
+        help="for storing the label strings and IDs", default=None)
+    parser.add_argument(
         "-m", "--mapping", metavar="old=new", dest="mapping", action='append', type=str, required=False,
         help="mapping for labels, for replacing one label string with another (eg when fixing/collapsing labels)", default=list())
     parser.add_argument(
@@ -282,7 +295,8 @@ def main():
 
     convert(
         input_dir=input_dir, input_files=input_files, output_file=parsed.output, regexp=parsed.regexp,
-        shards=parsed.shards, mappings=mappings, labels=labels, verbose=parsed.verbose)
+        shards=parsed.shards, mappings=mappings, labels=labels, protobuf_label_map=parsed.protobuf_label_map,
+        verbose=parsed.verbose)
 
 if __name__ == "__main__":
     try:
