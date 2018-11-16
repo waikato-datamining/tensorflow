@@ -83,12 +83,18 @@ def create_record(imgpath, imgtype, objects, labels, verbose):
             if o[SUFFIX_TYPE] in labels:
                 if (o[SUFFIX_X] < 0) or (o[SUFFIX_Y] < 0) or (o[SUFFIX_WIDTH] < 0) or (o[SUFFIX_HEIGHT] < 0):
                     continue
-                xmins.append(o[SUFFIX_X] / width)
-                xmaxs.append((o[SUFFIX_X] + o[SUFFIX_WIDTH] - 1) / width)
-                ymins.append(o[SUFFIX_Y] / height)
-                ymaxs.append((o[SUFFIX_Y] + o[SUFFIX_HEIGHT] - 1) / height)
-                classes_text.append(o[SUFFIX_TYPE].encode('utf8'))
-                classes.append(labels[o[SUFFIX_TYPE]])
+                x0 = o[SUFFIX_X] / width
+                x1 = (o[SUFFIX_X] + o[SUFFIX_WIDTH] - 1) / width
+                y0 = o[SUFFIX_Y] / height
+                y1 = (o[SUFFIX_Y] + o[SUFFIX_HEIGHT] - 1) / height
+                if ((x0 >= 0) and (x0 <= 1.0) and (x1 >= 0) and (x1 <= 1.0) and (x0 < x1)) \
+                        and ((y0 >= 0) and (y0 <= 1.0) and (y1 >= 0) and (y1 <= 1.0) and (y0 < y1)):
+                    xmins.append(x0)
+                    xmaxs.append(x1)
+                    ymins.append(y0)
+                    ymaxs.append(y1)
+                    classes_text.append(o[SUFFIX_TYPE].encode('utf8'))
+                    classes.append(labels[o[SUFFIX_TYPE]])
     if len(xmins) == 0:
         logger.warning("No annotations in '" + str(imgpath) + "', skipping!")
         return None
