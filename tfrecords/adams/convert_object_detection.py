@@ -81,12 +81,18 @@ def create_record(imgpath, imgtype, objects, labels, verbose):
     for o in objects.values():
         if SUFFIX_TYPE in o:
             if o[SUFFIX_TYPE] in labels:
+                if (o[SUFFIX_X] < 0) or (o[SUFFIX_Y] < 0) or (o[SUFFIX_WIDTH] < 0) or (o[SUFFIX_HEIGHT] < 0):
+                    continue
                 xmins.append(o[SUFFIX_X] / width)
                 xmaxs.append((o[SUFFIX_X] + o[SUFFIX_WIDTH] - 1) / width)
                 ymins.append(o[SUFFIX_Y] / height)
                 ymaxs.append((o[SUFFIX_Y] + o[SUFFIX_HEIGHT] - 1) / height)
                 classes_text.append(o[SUFFIX_TYPE].encode('utf8'))
                 classes.append(labels[o[SUFFIX_TYPE]])
+    if len(xmins) == 0:
+        logger.warning("No annotations in '" + str(imgpath) + "', skipping!")
+        return None
+
     if verbose:
         logger.info(imgpath)
         logger.info("xmins: %s", xmins)
@@ -202,8 +208,10 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
                     if mappings is not None:
                         fix_labels(objects, mappings)
                     if len(objects) > 0:
-                        logger.info("storing: %s", img)
                         example = create_record(img, imgtype, objects, label_indices, verbose)
+                        if example is None:
+                            continue
+                        logger.info("storing: %s", img)
                         output_shard_index = index % shards
                         output_tfrecords[output_shard_index].write(example.SerializeToString())
                         index += 1
@@ -216,8 +224,10 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
                 if mappings is not None:
                     fix_labels(objects, mappings)
                 if len(objects) > 0:
-                    logger.info("storing: %s", img)
                     example = create_record(img, imgtype, objects, label_indices, verbose)
+                    if example is None:
+                        continue
+                    logger.info("storing: %s", img)
                     writer.write(example.SerializeToString())
         writer.close()
 
