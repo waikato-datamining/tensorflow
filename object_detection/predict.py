@@ -1,16 +1,15 @@
+# Original Code from
+# https://github.com/tensorflow/models/blob/master/research/object_detection/object_detection_tutorial.ipynb
+# Licensed under Apache 2.0 (Most likely, since tensorflow is Apache 2.0)
+# Modifications Copyright (C) 2018 University of Waikato, Hamilton, NZ
+
 import numpy as np
 import os
-import six.moves.urllib as urllib
 import sys
-import tarfile
 import tensorflow as tf
-import zipfile
 import argparse
 from glob import glob
 
-from collections import defaultdict
-from io import StringIO
-from matplotlib import pyplot as plt
 from PIL import Image
 
 # This is needed since the notebook is stored in the object_detection folder.
@@ -18,7 +17,6 @@ sys.path.append("..")
 from object_detection.utils import ops as utils_ops
 
 from object_detection.utils import label_map_util
-from object_detection.utils import visualization_utils as vis_util
 
 
 def load_image_into_numpy_array(image):
@@ -80,6 +78,7 @@ if __name__ == '__main__':
     parser.add_argument('--labels', help='Path to the label map', required=True, default=None)
     parser.add_argument('--prediction_in', help='Path to the test images', required=True, default=None)
     parser.add_argument('--prediction_out', help='Path to the output csv files folder', required=True, default=None)
+    parser.add_argument('--score', type=float, help='Score threshold to include in csv file', required=False, default=0.0)
     args = vars(parser.parse_args())
 
     # Path to frozen detection graph. This is the actual model that is used for the object detection.
@@ -89,6 +88,8 @@ if __name__ == '__main__':
     PATH_TO_LABELS = args['labels']
 
     NUM_CLASSES = 1
+
+    score_threshold = args['score']
 
     detection_graph = tf.Graph()
     with detection_graph.as_default():
@@ -132,6 +133,9 @@ if __name__ == '__main__':
                 label = classes[index]
                 label_str = categories[label - 1]['name']
                 score = scores[index]
+
+                if score < score_threshold:
+                    continue
 
                 x0 = x0 * width
                 y0 = y0 * height
