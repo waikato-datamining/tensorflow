@@ -168,12 +168,12 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
                                   regexp=regexp, verbose=verbose)
     label_indices = dict()
     for i, l in enumerate(labels):
-        label_indices[l] = i
+        label_indices[l] = i+1
 
     if protobuf_label_map is not None:
         protobuf = list()
         for l in label_indices:
-            protobuf.append('{\n  name: "%s"\n  id: %d\n}\n' % (l, label_indices[l]))
+            protobuf.append("item {\n  id: %d\n  name: '%s'\n}\n" % (label_indices[l], l))
         with open(protobuf_label_map, 'w') as f:
             f.writelines(protobuf)
 
