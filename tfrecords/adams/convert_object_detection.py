@@ -81,12 +81,24 @@ def create_record(imgpath, imgtype, objects, labels, verbose):
     for o in objects.values():
         if SUFFIX_TYPE in o:
             if o[SUFFIX_TYPE] in labels:
-                xmins.append(o[SUFFIX_X] / width)
-                xmaxs.append((o[SUFFIX_X] + o[SUFFIX_WIDTH] - 1) / width)
-                ymins.append(o[SUFFIX_Y] / height)
-                ymaxs.append((o[SUFFIX_Y] + o[SUFFIX_HEIGHT] - 1) / height)
-                classes_text.append(o[SUFFIX_TYPE].encode('utf8'))
-                classes.append(labels[o[SUFFIX_TYPE]])
+                if (o[SUFFIX_X] < 0) or (o[SUFFIX_Y] < 0) or (o[SUFFIX_WIDTH] < 0) or (o[SUFFIX_HEIGHT] < 0):
+                    continue
+                x0 = o[SUFFIX_X] / width
+                x1 = (o[SUFFIX_X] + o[SUFFIX_WIDTH] - 1) / width
+                y0 = o[SUFFIX_Y] / height
+                y1 = (o[SUFFIX_Y] + o[SUFFIX_HEIGHT] - 1) / height
+                if ((x0 >= 0) and (x0 <= 1.0) and (x1 >= 0) and (x1 <= 1.0) and (x0 < x1)) \
+                        and ((y0 >= 0) and (y0 <= 1.0) and (y1 >= 0) and (y1 <= 1.0) and (y0 < y1)):
+                    xmins.append(x0)
+                    xmaxs.append(x1)
+                    ymins.append(y0)
+                    ymaxs.append(y1)
+                    classes_text.append(o[SUFFIX_TYPE].encode('utf8'))
+                    classes.append(labels[o[SUFFIX_TYPE]])
+    if len(xmins) == 0:
+        logger.warning("No annotations in '" + str(imgpath) + "', skipping!")
+        return None
+
     if verbose:
         logger.info(imgpath)
         logger.info("xmins: %s", xmins)
@@ -138,7 +150,8 @@ def determine_image(report):
     return img, imgtype
 
 
-def convert(input_dir, input_files, output_file, mappings=None, regexp=None, labels=None, shards=-1, verbose=False):
+def convert(input_dir, input_files, output_file, mappings=None, regexp=None, labels=None, protobuf_label_map=None,
+            shards=-1, verbose=False):
     """
     Converts the images and annotations (.report) files into TFRecords.
 
@@ -154,6 +167,8 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
     :type regexp: str
     :param labels: the predefined list of labels to use
     :type labels: list
+    :param protobuf_label_map: the (optional) file to store the label mapping (in protobuf format)
+    :type protobuf_label_map: str
     :param shards: the number of shards to generate, <= 1 for just single file
     :type shards: int
     :param verbose: whether to have a more verbose record generation
@@ -165,7 +180,14 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
                                   regexp=regexp, verbose=verbose)
     label_indices = dict()
     for i, l in enumerate(labels):
-        label_indices[l] = i
+        label_indices[l] = i+1
+
+    if protobuf_label_map is not None:
+        protobuf = list()
+        for l in label_indices:
+            protobuf.append("item {\n  id: %d\n  name: '%s'\n}\n" % (label_indices[l], l))
+        with open(protobuf_label_map, 'w') as f:
+            f.writelines(protobuf)
 
     if verbose:
         logging.info("labels considered: %s", labels)
@@ -192,8 +214,10 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
                     if mappings is not None:
                         fix_labels(objects, mappings)
                     if len(objects) > 0:
-                        logger.info("storing: %s", img)
                         example = create_record(img, imgtype, objects, label_indices, verbose)
+                        if example is None:
+                            continue
+                        logger.info("storing: %s", img)
                         output_shard_index = index % shards
                         output_tfrecords[output_shard_index].write(example.SerializeToString())
                         index += 1
@@ -206,8 +230,10 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
                 if mappings is not None:
                     fix_labels(objects, mappings)
                 if len(objects) > 0:
-                    logger.info("storing: %s", img)
                     example = create_record(img, imgtype, objects, label_indices, verbose)
+                    if example is None:
+                        continue
+                    logger.info("storing: %s", img)
                     writer.write(example.SerializeToString())
         writer.close()
 
@@ -229,6 +255,9 @@ def main():
     parser.add_argument(
         "-o", "--output", metavar="file", dest="output", required=True,
         help="name of output file for TFRecords")
+    parser.add_argument(
+        "-p", "--protobuf_label_map", metavar="file", dest="protobuf_label_map", required=False,
+        help="for storing the label strings and IDs", default=None)
     parser.add_argument(
         "-m", "--mapping", metavar="old=new", dest="mapping", action='append', type=str, required=False,
         help="mapping for labels, for replacing one label string with another (eg when fixing/collapsing labels)", default=list())
@@ -282,7 +311,8 @@ def main():
 
     convert(
         input_dir=input_dir, input_files=input_files, output_file=parsed.output, regexp=parsed.regexp,
-        shards=parsed.shards, mappings=mappings, labels=labels, verbose=parsed.verbose)
+        shards=parsed.shards, mappings=mappings, labels=labels, protobuf_label_map=parsed.protobuf_label_map,
+        verbose=parsed.verbose)
 
 if __name__ == "__main__":
     try:
