@@ -16,6 +16,7 @@ import tensorflow as tf
 import argparse
 from PIL import Image
 from tensorflow import Graph
+from datetime import datetime
 
 sys.path.append("..")
 from object_detection.utils import ops as utils_ops
@@ -88,8 +89,10 @@ def load_frozen_graph(frozen_graph_path):
     return detection_graph
 
 # Method performing predictions on all images ony by one
-def predict_on_images(test_images_directory, detection_graph, output_path, score_threshold, categories):
+def predict_on_images(test_images_directory, detection_graph, output_path, score_threshold, categories, file):
     image_no = 1    # A variable used only to print out the progress
+    time_delta_total = 0
+    images_total = 0
     # Iterate through all files present in "test_images_directory"
     for image_path in os.listdir(test_images_directory):
         print("Processing image {}\n".format(image_no))
@@ -104,8 +107,16 @@ def predict_on_images(test_images_directory, detection_graph, output_path, score
                 image = image.convert('RGB')
             # Convert the image into a numpy array
             image_np = load_image_into_numpy_array(image)
+            # Record current time
+            time_start = datetime.now()
             # Actual detection
             output_dict = run_inference_for_single_image(image_np, detection_graph)
+            # Compute time needed to predict per image in ms
+            time_end = datetime.now()
+            time_delta = time_end - time_start
+            if image_no != 2:
+                time_delta_total += int(time_delta.total_seconds() * 1000)
+                images_total += 1
 
             # Loading results
             boxes = output_dict['detection_boxes']
@@ -136,6 +147,8 @@ def predict_on_images(test_images_directory, detection_graph, output_path, score
                     roi_file.write(
                         "{},{},{},{},{},{},{},{}\n".format(os.path.basename(image_path), x0, y0, x1, y1, label, label_str,
                                                            score))
+    # Save average elapsed time to file
+    file.write(str(int(time_delta_total / images_total)) + " ms")
 
 if __name__ == '__main__':
 
@@ -164,16 +177,20 @@ if __name__ == '__main__':
     categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES,
                                                                 use_display_name=True)
 
+    # Loading the path to images to perform prediction on
+    test_images_directory = args['prediction_in']
+
+    # Output directory for the csv files
+    output_path = args['prediction_out']
+
+    # File to save prediction time in
+    f = open(output_path + "/prediction_time.txt", "w")
+
     while True:
-        # Loading the path to images to perform prediction on
-        test_images_directory = args['prediction_in']
-
-        # Output directory for the csv files
-        output_path = args['prediction_out']
-
         # Performing the prediction and producing the csv files
-        predict_on_images(test_images_directory, detection_graph, output_path, score_threshold, categories)
+        predict_on_images(test_images_directory, detection_graph, output_path, score_threshold, categories, f)
 
         # Exit if not continuous
         if not args['continuous']:
             break
+    f.close()
