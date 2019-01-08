@@ -16,7 +16,7 @@ setup(
     ],
     license='MIT License',
     packages=[
-        "adams",
+        "adams2objectdetection",
     ],
     version="0.0.1",
     author='Peter Reutemann',

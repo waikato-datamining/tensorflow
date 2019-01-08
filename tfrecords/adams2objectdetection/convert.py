@@ -30,9 +30,9 @@ import tensorflow as tf
 import contextlib2
 from object_detection.utils import dataset_util
 from object_detection.dataset_tools import tf_record_creation_util
-from report import read_objects, determine_labels, fix_labels
-from report import SUFFIX_TYPE, SUFFIX_X, SUFFIX_Y, SUFFIX_WIDTH, SUFFIX_HEIGHT, REPORT_EXT
-from report import PREFIX_OBJECT, DEFAULT_LABEL
+from adams2objectdetection.report import read_objects, determine_labels, fix_labels
+from adams2objectdetection.report import SUFFIX_TYPE, SUFFIX_X, SUFFIX_Y, SUFFIX_WIDTH, SUFFIX_HEIGHT, REPORT_EXT
+from adams2objectdetection.report import PREFIX_OBJECT, DEFAULT_LABEL
 
 # logging setup
 logging.basicConfig()
