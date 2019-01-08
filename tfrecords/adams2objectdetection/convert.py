@@ -1,5 +1,5 @@
 """
-Copyright 2018 University of Waikato, Hamilton, NZ
+Copyright 2018-2019 University of Waikato, Hamilton, NZ
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,6 +19,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import sys
 import argparse
 import os
 import io
@@ -238,9 +239,12 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
         writer.close()
 
 
-def main():
+def main(args):
     """
     Runs the conversion from command-line. Use -h/--help to see all options.
+
+    :param args: the command-line arguments to parse
+    :type args: list
     """
 
     parser = argparse.ArgumentParser(
@@ -273,7 +277,7 @@ def main():
     parser.add_argument(
         "-v", "--verbose", action="store_true", dest="verbose", required=False,
         help="whether to be more verbose when generating the records")
-    parsed = parser.parse_args()
+    parsed = parser.parse_args(args=args)
 
     # checks
     if not os.path.exists(parsed.input):
@@ -316,6 +320,6 @@ def main():
 
 if __name__ == "__main__":
     try:
-        main()
+        main(sys.argv[1:])
     except Exception as ex:
         print(traceback.format_exc())
