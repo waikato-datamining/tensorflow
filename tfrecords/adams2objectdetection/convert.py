@@ -71,7 +71,7 @@ def create_record(imgpath, imgtype, objects, labels, verbose):
 
     height = int(image.shape[0])
     width = int(image.shape[1])
-    filename = os.path.basename(imgpath)
+    filename = (os.path.basename(imgpath)).encode('utf8')
 
     xmins = []
     xmaxs = []
