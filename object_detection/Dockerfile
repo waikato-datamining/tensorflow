@@ -1,0 +1,17 @@
+# Ubuntu 16.04, CUDA 10.1, Python 3.5
+FROM tensorflow/tensorflow:latest-gpu-py3
+
+RUN apt-get update && apt-get install -y --no-install-recommends git-core wget && \
+	rm -rf /var/lib/apt/lists/* && \
+	pip install Cython contextlib2 Pillow lxml javaproperties matplotlib
+
+RUN cd /opt && git clone https://github.com/waikato-datamining/tensorflow.git && cd tensorflow && \
+	git clone https://github.com/tensorflow/models && cd models/research && \
+	wget -O protobuf.zip https://github.com/google/protobuf/releases/download/v3.0.0/protoc-3.0.0-linux-x86_64.zip && \
+	unzip protobuf.zip && rm protobuf.zip && ./bin/protoc object_detection/protos/*.proto --python_out=. && \
+	git clone https://github.com/cocodataset/cocoapi.git && cd cocoapi/PythonAPI && make && \
+	cp -r pycocotools /opt/tensorflow/models/research/
+	
+ENV PYTHONPATH=/opt/tensorflow/models/research:/opt/tensorflow/models/research/slim:/opt/tensorflow/models/research/object_detection
+	
+WORKDIR /opt/tensorflow/models/research/
