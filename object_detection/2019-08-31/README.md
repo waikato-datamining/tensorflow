@@ -130,3 +130,9 @@ COCO API github repo hash:
   ```commandline
   docker login public-push.aml-repo.cms.waikato.ac.nz:443
   ```
+  
+* Run
+
+  ```commandline
+  docker run -it tensorflow/object_detection:2019-08-31
+  ```
