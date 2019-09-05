@@ -134,5 +134,6 @@ COCO API github repo hash:
 * Run
 
   ```commandline
-  docker run --runtime=nvidia -it tensorflow/object_detection:2019-08-31
+  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection:2019-08-31
   ```
+  "/local:/container" maps a local disk directory into a directory inside the container
