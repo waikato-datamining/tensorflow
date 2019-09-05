@@ -134,5 +134,5 @@ COCO API github repo hash:
 * Run
 
   ```commandline
-  docker run -it tensorflow/object_detection:2019-08-31
+  docker run --runtime=nvidia -it tensorflow/object_detection:2019-08-31
   ```
