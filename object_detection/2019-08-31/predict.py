@@ -122,6 +122,11 @@ def predict_on_images(test_images_directory, detection_graph, output_path, score
                     img2 = Image.open(combined[0])
                     img1 = Image.open(im_list[i-1])
                 i -= 1
+                # Remove alpha channel if present
+                if img1.mode is 'RGBA' or 'ARGB':
+                    img1 = img1.convert('RGB')
+                if img2.mode is 'RGBA' or 'ARGB':
+                    img2 = img2.convert('RGB')
                 w1, h1 = img1.size
                 w2, h2 = img2.size
                 comb_img = np.zeros((h1+h2, max(w1, w2), 3), np.uint8)
