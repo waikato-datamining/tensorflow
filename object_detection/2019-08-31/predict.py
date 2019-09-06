@@ -89,7 +89,6 @@ def load_frozen_graph(frozen_graph_path):
 # Method performing predictions on all images ony by one or combined as specified by the int value of num_imgs
 def predict_on_images(test_images_directory, detection_graph, output_path, score_threshold, categories, num_imgs):
     image_no = 1    # A variable used only to print out the progress
-    images_total = 0
     # Iterate through all files present in "test_images_directory"
     time_file_path = os.path.join(output_path, "inference_time.csv")
     with open(time_file_path, "w") as time_file:
