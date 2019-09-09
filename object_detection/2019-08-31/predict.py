@@ -158,30 +158,32 @@ def predict_on_images(test_images_directory, detection_graph, output_path, score
             scores = output_dict['detection_scores']
             classes = output_dict['detection_classes']
 
-            # Original code for writing results into a csv file for the combined image, storing it in "output_path" directory (kept to verify csv's after splitting)
-            roi_path = "{}/{}-rois.csv".format(output_path, os.path.splitext(os.path.basename(im_name))[0])
-            with open(roi_path, "w") as roi_file:
-                # File header
-                roi_file.write("file,x0,y0,x1,y1,label,label_str,score\n")
-                for index in range(output_dict['num_detections']):
-                    y0, x0, y1, x1 = boxes[index]
-                    label = classes[index]
-                    label_str = categories[label - 1]['name']
-                    score = scores[index]
+            # Original code for writing results into a csv file for the combined image, storing it in "output_path" directory
+            # Uncomment below block if you want to verify csv's after splitting
+            
+            # roi_path = "{}/{}-rois.csv".format(output_path, os.path.splitext(os.path.basename(im_name))[0])
+            # with open(roi_path, "w") as roi_file:
+                # # File header
+                # roi_file.write("file,x0,y0,x1,y1,label,label_str,score\n")
+                # for index in range(output_dict['num_detections']):
+                    # y0, x0, y1, x1 = boxes[index]
+                    # label = classes[index]
+                    # label_str = categories[label - 1]['name']
+                    # score = scores[index]
 
-                    # Ignore this roi if the score is less than the provided threshold
-                    if score < score_threshold:
-                        continue
+                    # # Ignore this roi if the score is less than the provided threshold
+                    # if score < score_threshold:
+                        # continue
 
-                    # Translate roi coordinates into image coordinates
-                    x0 = x0 * image.width
-                    y0 = y0 * image.height
-                    x1 = x1 * image.width
-                    y1 = y1 * image.height
+                    # # Translate roi coordinates into image coordinates
+                    # x0 = x0 * image.width
+                    # y0 = y0 * image.height
+                    # x1 = x1 * image.width
+                    # y1 = y1 * image.height
 
-                    roi_file.write(
-                        "{},{},{},{},{},{},{},{}\n".format(os.path.basename(im_name), x0, y0, x1, y1, label, label_str,
-                                                           score))
+                    # roi_file.write(
+                        # "{},{},{},{},{},{},{},{}\n".format(os.path.basename(im_name), x0, y0, x1, y1, label, label_str,
+                                                           # score))
                                                            
             # Code for splitting rois to multiple csv's, one csv per image before combining
             min_height = 0
@@ -233,9 +235,12 @@ def predict_on_images(test_images_directory, detection_graph, output_path, score
             inference_time = end_time - start_time
             inference_time = int(inference_time.total_seconds() * 1000)
             time_per_image = int(inference_time / len(im_list))
+            images_names = ""
             for i in range(len(im_list)):
                 time_file.write("{}&&".format(os.path.basename(im_list[i])))
+                images_names += (os.path.basename(im_list[i]) + " / ")
             time_file.write(",{},{},{}\n".format(inference_time, len(im_list), time_per_image))
+            print("{}: Inference + I/O time for image(s) ({}) is {} ms\n".format(str(datetime.now()), images_names, inference_time))
             total_time += inference_time
     
     total_time_file_path = os.path.join(output_path, "total_time.txt")
