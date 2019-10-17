@@ -19,13 +19,13 @@
   * with GPU
   
     ```commandline
-    ./venv/bin/pip install tensorflow-gpu
+    ./venv/bin/pip install "tensorflow-gpu<2.0.0"
     ```
     
   * CPU only
   
     ```commandline
-    ./venv/bin/pip install tensorflow
+    ./venv/bin/pip install "tensorflow<2.0.0"
     ```
     
 * install object detection framework ([instructions](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md))
