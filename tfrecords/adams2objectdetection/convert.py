@@ -136,25 +136,21 @@ def determine_image(report):
     :rtype: tuple
     """
 
-    jpgLower = report.replace(REPORT_EXT, ".jpg")
-    jpgUpper = report.replace(REPORT_EXT, ".JPG")
-    pngLower = report.replace(REPORT_EXT, ".png")
-    pngUpper = report.replace(REPORT_EXT, ".PNG")
     img = None
     imgtype = None
-
-    if os.path.exists(jpgLower):
-        img = jpgLower
-        imgtype = b'jpg'
-    elif os.path.exists(jpgUpper):
-        img = jpgUpper
-        imgtype = b'jpg'
-    elif os.path.exists(pngLower):
-        img = pngLower
-        imgtype = b'png'
-    elif os.path.exists(pngUpper):
-        img = pngUpper
-        imgtype = b'png'
+    formats = dict()
+    formats[".jpg"] = b"jpg"
+    formats[".JPG"] = b"jpg"
+    formats[".jpeg"] = b"jpg"
+    formats[".JPEG"] = b"jpg"
+    formats[".png"] = b"png"
+    formats[".PNG"] = b"png"
+    for f in formats:
+        imgfile = os.path.splitext(report)[0] + f
+        if os.path.exists(imgfile):
+            img = imgfile
+            imgtype = formats[f]
+            break
 
     return img, imgtype
 
