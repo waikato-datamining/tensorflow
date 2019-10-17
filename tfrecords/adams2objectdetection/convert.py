@@ -136,16 +136,24 @@ def determine_image(report):
     :rtype: tuple
     """
 
-    jpg = report.replace(REPORT_EXT, ".jpg")
-    png = report.replace(REPORT_EXT, ".png")
+    jpgLower = report.replace(REPORT_EXT, ".jpg")
+    jpgUpper = report.replace(REPORT_EXT, ".JPG")
+    pngLower = report.replace(REPORT_EXT, ".png")
+    pngUpper = report.replace(REPORT_EXT, ".PNG")
     img = None
     imgtype = None
 
-    if os.path.exists(jpg):
-        img = jpg
+    if os.path.exists(jpgLower):
+        img = jpgLower
         imgtype = b'jpg'
-    elif os.path.exists(png):
-        img = png
+    elif os.path.exists(jpgUpper):
+        img = jpgUpper
+        imgtype = b'jpg'
+    elif os.path.exists(pngLower):
+        img = pngLower
+        imgtype = b'png'
+    elif os.path.exists(pngUpper):
+        img = pngUpper
         imgtype = b'png'
 
     return img, imgtype
@@ -191,7 +199,7 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
             f.writelines(protobuf)
 
     if verbose:
-        logging.info("labels considered: %s", labels)
+        logger.info("labels considered: %s", labels)
 
     # determine files
     if input_dir is not None:
@@ -201,7 +209,12 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
                 if f.endswith(REPORT_EXT):
                     report_files.append(os.path.join(input_dir, subdir, f))
     else:
-        report_files = input_files[:]
+        report_files = list()
+        for input_file in input_files:
+            report_files.append(os.path.splitext(input_file)[0] + REPORT_EXT)
+
+    if verbose:
+        logger.info("# report files: %d", len(report_files))
 
     if shards > 1:
         index = 0
@@ -222,6 +235,8 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
                         output_shard_index = index % shards
                         output_tfrecords[output_shard_index].write(example.SerializeToString())
                         index += 1
+                else:
+                    logger.warning("Failed to determine image for report: %s", report)
     else:
         writer = tf.python_io.TFRecordWriter(output_file)
         for report in report_files:
@@ -236,6 +251,8 @@ def convert(input_dir, input_files, output_file, mappings=None, regexp=None, lab
                         continue
                     logger.info("storing: %s", img)
                     writer.write(example.SerializeToString())
+            else:
+                logger.warning("Failed to determine image for report: %s", report)
         writer.close()
 
 
