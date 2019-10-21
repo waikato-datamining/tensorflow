@@ -185,13 +185,13 @@ def predict_on_images(input_dir, sess, output_dir, score_threshold, categories, 
         comb_img = None
         if i > 1:
             while i != 0:
-                if len(combined) == 0:
+                if comb_img is None:
                     img2 = Image.open(im_list[i-1])
                     img1 = Image.open(im_list[i-2])
                     i -= 1
                     combined.append(os.path.join(output_dir, "combined.png"))
                 else:
-                    img2 = Image.open(combined[0])
+                    img2 = comb_img
                     img1 = Image.open(im_list[i-1])
                 i -= 1
                 # Remove alpha channel if present
@@ -204,7 +204,7 @@ def predict_on_images(input_dir, sess, output_dir, score_threshold, categories, 
                 comb_img[h1:h1+h2, :w2, :3] = img2
                 comb_img = Image.fromarray(comb_img)
 
-        if len(combined) == 0:
+        if comb_img is None:
             im_name = im_list[0]
             image = Image.open(im_name)
             image = remove_alpha_channel(image)
