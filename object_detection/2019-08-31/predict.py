@@ -24,56 +24,59 @@ from object_detection.utils import ops as utils_ops
 from object_detection.utils import label_map_util
 
 # Method to convert the image into a numpy array
+# faster solution via np.fromstring found here:
+# https://stackoverflow.com/a/42036542/4698227
 def load_image_into_numpy_array(image):
-    (im_width, im_height) = image.size
-    return np.array(image.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
+    im_arr = np.fromstring(image.tobytes(), dtype=np.uint8)
+    im_arr = im_arr.reshape((image.size[1], image.size[0], 3))
+    return im_arr
+
 
 # This is where the actual prediction occur
-def run_inference_for_single_image(image, graph):
-    with graph.as_default():
-        with tf.Session() as sess:
-            # Get handles to input and output tensors
-            ops = tf.get_default_graph().get_operations()
-            all_tensor_names = {output.name for op in ops for output in op.outputs}
-            tensor_dict = {}
-            for key in [
-                'num_detections', 'detection_boxes', 'detection_scores',
-                'detection_classes', 'detection_masks'
-            ]:
-                tensor_name = key + ':0'
-                if tensor_name in all_tensor_names:
-                    tensor_dict[key] = tf.get_default_graph().get_tensor_by_name(
-                        tensor_name)
-            if 'detection_masks' in tensor_dict:
-                # The following processing is only for single image
-                detection_boxes = tf.squeeze(tensor_dict['detection_boxes'], [0])
-                detection_masks = tf.squeeze(tensor_dict['detection_masks'], [0])
-                # Reframe is required to translate mask from box coordinates to image coordinates and fit the image size.
-                real_num_detection = tf.cast(tensor_dict['num_detections'][0], tf.int32)
-                detection_boxes = tf.slice(detection_boxes, [0, 0], [real_num_detection, -1])
-                detection_masks = tf.slice(detection_masks, [0, 0, 0], [real_num_detection, -1, -1])
-                detection_masks_reframed = utils_ops.reframe_box_masks_to_image_masks(
-                    detection_masks, detection_boxes, image.shape[0], image.shape[1])
-                detection_masks_reframed = tf.cast(
-                    tf.greater(detection_masks_reframed, 0.5), tf.uint8)
-                # Follow the convention by adding back the batch dimension
-                tensor_dict['detection_masks'] = tf.expand_dims(
-                    detection_masks_reframed, 0)
-            image_tensor = tf.get_default_graph().get_tensor_by_name('image_tensor:0')
+def run_inference_for_single_image(image, sess):
+    # Get handles to input and output tensors
+    ops = tf.get_default_graph().get_operations()
+    all_tensor_names = {output.name for op in ops for output in op.outputs}
+    tensor_dict = {}
+    for key in [
+        'num_detections', 'detection_boxes', 'detection_scores',
+        'detection_classes', 'detection_masks'
+    ]:
+        tensor_name = key + ':0'
+        if tensor_name in all_tensor_names:
+            tensor_dict[key] = tf.get_default_graph().get_tensor_by_name(
+                tensor_name)
+    if 'detection_masks' in tensor_dict:
+        # The following processing is only for single image
+        detection_boxes = tf.squeeze(tensor_dict['detection_boxes'], [0])
+        detection_masks = tf.squeeze(tensor_dict['detection_masks'], [0])
+        # Reframe is required to translate mask from box coordinates to image coordinates and fit the image size.
+        real_num_detection = tf.cast(tensor_dict['num_detections'][0], tf.int32)
+        detection_boxes = tf.slice(detection_boxes, [0, 0], [real_num_detection, -1])
+        detection_masks = tf.slice(detection_masks, [0, 0, 0], [real_num_detection, -1, -1])
+        detection_masks_reframed = utils_ops.reframe_box_masks_to_image_masks(
+            detection_masks, detection_boxes, image.shape[0], image.shape[1])
+        detection_masks_reframed = tf.cast(
+            tf.greater(detection_masks_reframed, 0.5), tf.uint8)
+        # Follow the convention by adding back the batch dimension
+        tensor_dict['detection_masks'] = tf.expand_dims(
+            detection_masks_reframed, 0)
+    image_tensor = tf.get_default_graph().get_tensor_by_name('image_tensor:0')
 
-            # Run inference
-            output_dict = sess.run(tensor_dict,
-                                   feed_dict={image_tensor: np.expand_dims(image, 0)})
+    # Run inference
+    output_dict = sess.run(tensor_dict,
+                           feed_dict={image_tensor: np.expand_dims(image, 0)})
 
-            # all outputs are float32 numpy arrays, so convert types as appropriate
-            output_dict['num_detections'] = int(output_dict['num_detections'][0])
-            output_dict['detection_classes'] = output_dict[
-                'detection_classes'][0].astype(np.uint8)
-            output_dict['detection_boxes'] = output_dict['detection_boxes'][0]
-            output_dict['detection_scores'] = output_dict['detection_scores'][0]
-            if 'detection_masks' in output_dict:
-                output_dict['detection_masks'] = output_dict['detection_masks'][0]
+    # all outputs are float32 numpy arrays, so convert types as appropriate
+    output_dict['num_detections'] = int(output_dict['num_detections'][0])
+    output_dict['detection_classes'] = output_dict[
+        'detection_classes'][0].astype(np.uint8)
+    output_dict['detection_boxes'] = output_dict['detection_boxes'][0]
+    output_dict['detection_scores'] = output_dict['detection_scores'][0]
+    if 'detection_masks' in output_dict:
+        output_dict['detection_masks'] = output_dict['detection_masks'][0]
     return output_dict
+
 
 # Loads the provided frozen graph into detection_graph to use with prediction
 def load_frozen_graph(frozen_graph_path):
@@ -86,8 +89,9 @@ def load_frozen_graph(frozen_graph_path):
             tf.import_graph_def(od_graph_def, name='')
     return detection_graph
 
+
 # Method performing predictions on all images ony by one or combined as specified by the int value of num_imgs
-def predict_on_images(test_images_directory, detection_graph, output_path, score_threshold, categories, num_imgs):
+def predict_on_images(test_images_directory, sess, output_path, score_threshold, categories, num_imgs):
     image_no = 1    # A variable used only to print out the progress
     # Iterate through all files present in "test_images_directory"
     time_file_path = os.path.join(output_path, "inference_time.csv")
@@ -142,7 +146,7 @@ def predict_on_images(test_images_directory, detection_graph, output_path, score
                 im_name = im_list[0]
             else:
                 im_name = combined[0]
-                
+
             image = Image.open(im_name)
 
             # Remove alpha channel if present
@@ -151,7 +155,7 @@ def predict_on_images(test_images_directory, detection_graph, output_path, score
             # Convert the image into a numpy array
             image_np = load_image_into_numpy_array(image)
             # Actual detection
-            output_dict = run_inference_for_single_image(image_np, detection_graph)
+            output_dict = run_inference_for_single_image(image_np, sess)
 
             # Loading results
             boxes = output_dict['detection_boxes']
@@ -247,6 +251,7 @@ def predict_on_images(test_images_directory, detection_graph, output_path, score
     with open(total_time_file_path, "w") as total_time_file:
         total_time_file.write("Total inference and I/O time: {} ms".format(total_time))
 
+
 if __name__ == '__main__':
 
     # Arguments to be provided by the user
@@ -288,16 +293,18 @@ if __name__ == '__main__':
         # Number of images to combine
         num_imgs = args['num_imgs']
 
-        while True:
-            # Performing the prediction and producing the csv files
-            predict_on_images(test_images_directory, detection_graph, output_path, score_threshold, categories, num_imgs)
+        with detection_graph.as_default():
+            with tf.Session() as sess:
+                while True:
+                    # Performing the prediction and producing the csv files
+                    predict_on_images(test_images_directory, sess, output_path, score_threshold, categories, num_imgs)
 
-            # Exit if not continuous
-            if not args['continuous']:
-                break
-        if args['status'] is not None:
-            with open(args['status'], 'w') as f:
-                f.write("Success")
+                    # Exit if not continuous
+                    if not args['continuous']:
+                        break
+                if args['status'] is not None:
+                    with open(args['status'], 'w') as f:
+                        f.write("Success")
     except Exception as e:
         print(e)
         if args['status'] is not None:
