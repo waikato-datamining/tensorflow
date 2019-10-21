@@ -18,22 +18,45 @@ import argparse
 from PIL import Image
 from tensorflow import Graph
 from datetime import datetime
+import time
 
 sys.path.append("..")
 from object_detection.utils import ops as utils_ops
 from object_detection.utils import label_map_util
 
-# Method to convert the image into a numpy array
-# faster solution via np.fromstring found here:
-# https://stackoverflow.com/a/42036542/4698227
+OUTPUT_COMBINED = False
+""" Whether to output CSV file with ROIs for combined images as well (only for debugging). """
+
+
 def load_image_into_numpy_array(image):
+    """
+    Method to convert the image into a numpy array.
+    faster solution via np.fromstring found here:
+    https://stackoverflow.com/a/42036542/4698227
+
+    :param image: the image object to convert
+    :type image: Image
+    :return: the numpy array
+    :rtype: nd.array
+    """
+
     im_arr = np.fromstring(image.tobytes(), dtype=np.uint8)
     im_arr = im_arr.reshape((image.size[1], image.size[0], 3))
     return im_arr
 
 
-# This is where the actual prediction occur
 def run_inference_for_single_image(image, sess):
+    """
+    Obtain predictions for image.
+
+    :param image: the image to generate predictions for
+    :type image: str
+    :param sess: the tensorflow session
+    :type sess: tf.Session
+    :return: the predictions
+    :rtype: dict
+    """
+
     # Get handles to input and output tensors
     ops = tf.get_default_graph().get_operations()
     all_tensor_names = {output.name for op in ops for output in op.outputs}
@@ -78,183 +101,223 @@ def run_inference_for_single_image(image, sess):
     return output_dict
 
 
-# Loads the provided frozen graph into detection_graph to use with prediction
-def load_frozen_graph(frozen_graph_path):
-    detection_graph = tf.Graph()  # type: Graph
-    with detection_graph.as_default():
+def load_frozen_graph(graph_path):
+    """
+    Loads the provided frozen graph into detection_graph to use with prediction.
+
+    :param graph_path: the path to the frozen graph
+    :type graph_path: str
+    :return: the graph
+    :rtype: tf.Graph
+    """
+
+    graph = tf.Graph()  # type: Graph
+    with graph.as_default():
         od_graph_def = tf.GraphDef()
-        with tf.gfile.GFile(frozen_graph_path, 'rb') as fid:
+        with tf.gfile.GFile(graph_path, 'rb') as fid:
             serialized_graph = fid.read()
             od_graph_def.ParseFromString(serialized_graph)
             tf.import_graph_def(od_graph_def, name='')
-    return detection_graph
+    return graph
 
 
-# Method performing predictions on all images ony by one or combined as specified by the int value of num_imgs
-def predict_on_images(test_images_directory, sess, output_path, score_threshold, categories, num_imgs):
-    image_no = 1    # A variable used only to print out the progress
+def remove_alpha_channel(image):
+    """
+    Converts the Image object to RGB.
+
+    :param image: the image object to convert if necessary
+    :type image: Image
+    :return: the converted object
+    :rtype: Image
+    """
+    if image.mode is 'RGBA' or 'ARGB':
+        return image.convert('RGB')
+    else:
+        return image
+
+
+def predict_on_images(input_dir, sess, output_dir, score_threshold, categories, num_imgs, inference_times, delete_input):
+    """
+    Method performing predictions on all images ony by one or combined as specified by the int value of num_imgs.
+
+    :param input_dir: the directory with the images
+    :type input_dir: str
+    :param sess: the tensorflow session
+    :type sess: tf.Session
+    :param output_dir: the output directory to move the images to and store the predictions
+    :type output_dir: str
+    :param score_threshold: the minimum score predictions have to have
+    :type score_threshold: float
+    :param categories: the label map
+    :param num_imgs: the number of images to combine into one before presenting to graph
+    :type num_imgs: int
+    :param inference_times: whether to output a CSV file with the inference times
+    :type inference_times: bool
+    :param delete_input: whether to delete the input images rather than moving them to the output directory
+    :type delete_input: bool
+    """
+
     # Iterate through all files present in "test_images_directory"
-    time_file_path = os.path.join(output_path, "inference_time.csv")
-    with open(time_file_path, "w") as time_file:
-        total_time = 0
-        time_file.write("Image(s)_file_name(s),Total_time(ms),Number_of_images,Time_per_image(ms)\n")
-        while True:
-            start_time = datetime.now()
-            im_list = []
-            # Loop to pick up images equal to num_imgs or the remaining images if less
-            for image_path in os.listdir(test_images_directory):
-                # Load images only, currently supporting only jpg and png
-                if image_path.lower().endswith(".jpg") or image_path.lower().endswith(".png"):
-                    im_list.append(os.path.join(test_images_directory, image_path))
-                    print("Processing image {}\n".format(image_no))
-                    image_no += 1
-                if len(im_list) == num_imgs:
-                    break
-            
-            if len(im_list) == 0:
+    total_time = 0
+    times = list()
+    times.append("Image(s)_file_name(s),Total_time(ms),Number_of_images,Time_per_image(ms)\n")
+    while True:
+        start_time = datetime.now()
+        im_list = []
+        # Loop to pick up images equal to num_imgs or the remaining images if less
+        for image_path in os.listdir(input_dir):
+            # Load images only, currently supporting only jpg and png
+            # TODO image complete?
+            if image_path.lower().endswith(".jpg") or image_path.lower().endswith(".png"):
+                im_list.append(os.path.join(input_dir, image_path))
+            if len(im_list) == num_imgs:
                 break
-            
-            # Combining picked up images
-            i = len(im_list)
-            combined = []
-            if i > 1:
-                comb_file = os.path.join(output_path, "combined.png")
-                while i != 0:
-                    if len(combined) == 0:
-                        img2 = Image.open(im_list[i-1])
-                        img1 = Image.open(im_list[i-2])
-                        i -= 1
-                        combined.append(comb_file)
-                    else:
-                        img2 = Image.open(combined[0])
-                        img1 = Image.open(im_list[i-1])
+
+        if len(im_list) == 0:
+            time.sleep(1)
+            break
+        else:
+            print("%s - %s" % (str(datetime.now()), ", ".join(os.path.basename(x) for x in im_list)))
+
+        # Combining picked up images
+        i = len(im_list)
+        combined = []
+        comb_img = None
+        if i > 1:
+            while i != 0:
+                if len(combined) == 0:
+                    img2 = Image.open(im_list[i-1])
+                    img1 = Image.open(im_list[i-2])
                     i -= 1
-                    # Remove alpha channel if present
-                    if img1.mode is 'RGBA' or 'ARGB':
-                        img1 = img1.convert('RGB')
-                    if img2.mode is 'RGBA' or 'ARGB':
-                        img2 = img2.convert('RGB')
-                    w1, h1 = img1.size
-                    w2, h2 = img2.size
-                    comb_img = np.zeros((h1+h2, max(w1, w2), 3), np.uint8)
-                    comb_img[:h1, :w1, :3] = img1
-                    comb_img[h1:h1+h2, :w2, :3] = img2
-                    comb_img = Image.fromarray(comb_img)
-                    comb_img.save(comb_file)
-                    
-            if len(combined) == 0:
-                im_name = im_list[0]
-            else:
-                im_name = combined[0]
+                    combined.append(os.path.join(output_dir, "combined.png"))
+                else:
+                    img2 = Image.open(combined[0])
+                    img1 = Image.open(im_list[i-1])
+                i -= 1
+                # Remove alpha channel if present
+                img1 = remove_alpha_channel(img1)
+                img2 = remove_alpha_channel(img2)
+                w1, h1 = img1.size
+                w2, h2 = img2.size
+                comb_img = np.zeros((h1+h2, max(w1, w2), 3), np.uint8)
+                comb_img[:h1, :w1, :3] = img1
+                comb_img[h1:h1+h2, :w2, :3] = img2
+                comb_img = Image.fromarray(comb_img)
 
+        if len(combined) == 0:
+            im_name = im_list[0]
             image = Image.open(im_name)
+            image = remove_alpha_channel(image)
+        else:
+            im_name = combined[0]
+            image = remove_alpha_channel(comb_img)
 
-            # Remove alpha channel if present
-            if im_name.lower().endswith(".png") and (image.mode is 'RGBA' or 'ARGB'):
-                image = image.convert('RGB')
-            # Convert the image into a numpy array
-            image_np = load_image_into_numpy_array(image)
-            # Actual detection
-            output_dict = run_inference_for_single_image(image_np, sess)
+        image_np = load_image_into_numpy_array(image)
+        output_dict = run_inference_for_single_image(image_np, sess)
 
-            # Loading results
-            boxes = output_dict['detection_boxes']
-            scores = output_dict['detection_scores']
-            classes = output_dict['detection_classes']
+        # Loading results
+        boxes = output_dict['detection_boxes']
+        scores = output_dict['detection_scores']
+        classes = output_dict['detection_classes']
 
-            # Original code for writing results into a csv file for the combined image, storing it in "output_path" directory
-            # Uncomment below block if you want to verify csv's after splitting
-            
-            # roi_path = "{}/{}-rois.csv".format(output_path, os.path.splitext(os.path.basename(im_name))[0])
-            # with open(roi_path, "w") as roi_file:
-                # # File header
-                # roi_file.write("file,x0,y0,x1,y1,label,label_str,score\n")
-                # for index in range(output_dict['num_detections']):
-                    # y0, x0, y1, x1 = boxes[index]
-                    # label = classes[index]
-                    # label_str = categories[label - 1]['name']
-                    # score = scores[index]
+        if OUTPUT_COMBINED:
+            roi_path = "{}/{}-rois-combined.csv".format(output_dir, os.path.splitext(os.path.basename(im_name))[0])
+            with open(roi_path, "w") as roi_file:
+                # File header
+                roi_file.write("file,x0,y0,x1,y1,label,label_str,score\n")
+                for index in range(output_dict['num_detections']):
+                    y0, x0, y1, x1 = boxes[index]
+                    label = classes[index]
+                    label_str = categories[label - 1]['name']
+                    score = scores[index]
 
-                    # # Ignore this roi if the score is less than the provided threshold
-                    # if score < score_threshold:
-                        # continue
+                    # Ignore this roi if the score is less than the provided threshold
+                    if score < score_threshold:
+                        continue
 
-                    # # Translate roi coordinates into image coordinates
-                    # x0 = x0 * image.width
-                    # y0 = y0 * image.height
-                    # x1 = x1 * image.width
-                    # y1 = y1 * image.height
+                    # Translate roi coordinates into image coordinates
+                    x0 = x0 * image.width
+                    y0 = y0 * image.height
+                    x1 = x1 * image.width
+                    y1 = y1 * image.height
 
-                    # roi_file.write(
-                        # "{},{},{},{},{},{},{},{}\n".format(os.path.basename(im_name), x0, y0, x1, y1, label, label_str,
-                                                           # score))
-                                                           
-            # Code for splitting rois to multiple csv's, one csv per image before combining
-            min_height = 0
-            max_height = 0
-            prev_min = 0
-            translation = 0
+                    roi_file.write(
+                        "{},{},{},{},{},{},{},{}\n".format(os.path.basename(im_name), x0, y0, x1, y1,
+                                                           label, label_str, score))
+
+        # Code for splitting rois to multiple csv's, one csv per image before combining
+        min_height = 0
+        max_height = 0
+        prev_min = 0
+        translation = 0
+        for i in range(len(im_list)):
+            img = Image.open(im_list[i])
+            img_height = img.height
+            min_height = prev_min
+            max_height += img_height
+            prev_min = max_height
+            roi_path = "{}/{}-rois.csv".format(output_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
+            roi_path_tmp = "{}/{}-rois.tmp".format(output_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
+            with open(roi_path_tmp, "w") as roi_file:
+                # File header
+                roi_file.write("file,x0,y0,x1,y1,label,label_str,score\n")
+                # rois
+                for index in range(output_dict['num_detections']):
+                    y0, x0, y1, x1 = boxes[index]
+                    label = classes[index]
+                    label_str = categories[label - 1]['name']
+                    score = scores[index]
+
+                    # Ignore this roi if the score is less than the provided threshold
+                    if score < score_threshold:
+                        continue
+
+                    # Translate roi coordinates into combined image coordinates
+                    x0 = x0 * image.width
+                    y0 = y0 * image.height
+                    x1 = x1 * image.width
+                    y1 = y1 * image.height
+
+                    if y0 > max_height or y1 > max_height:
+                        continue
+                    elif y0 < min_height or y1 < min_height:
+                        continue
+
+                    # output
+                    roi_file.write("{},{},{},{},{},{},{},{}\n".format(os.path.basename(im_list[i]), x0, y0-translation,
+                                                                      x1, y1-translation, label, label_str, score))
+            os.rename(roi_path_tmp, roi_path)
+            translation += img_height
+
+        # Move finished images to output_path or delete it
+        for i in range(len(im_list)):
+            if delete_input:
+                os.remove(im_list[i])
+            else:
+                os.rename(im_list[i], os.path.join(output_dir, os.path.basename(im_list[i])))
+
+        end_time = datetime.now()
+        inference_time = end_time - start_time
+        inference_time = int(inference_time.total_seconds() * 1000)
+        time_per_image = int(inference_time / len(im_list))
+        if inference_times:
+            l = ""
             for i in range(len(im_list)):
-                img = Image.open(im_list[i])
-                img_height = img.height
-                min_height = prev_min
-                max_height += img_height
-                prev_min = max_height
-                roi_path = "{}/{}-rois.csv".format(output_path, os.path.splitext(os.path.basename(im_list[i]))[0])
-                with open(roi_path, "w") as roi_file:
-                    # File header
-                    roi_file.write("file,x0,y0,x1,y1,label,label_str,score\n")
-                    # rois
-                    for index in range(output_dict['num_detections']):
-                        y0, x0, y1, x1 = boxes[index]
-                        label = classes[index]
-                        label_str = categories[label - 1]['name']
-                        score = scores[index]
+                l += ("{}|".format(os.path.basename(im_list[i])))
+            l += ",{},{},{}\n".format(inference_time, len(im_list), time_per_image)
+            times.append(l)
+        print("  Inference + I/O time: {} ms\n".format(inference_time))
+        total_time += inference_time
 
-                        # Ignore this roi if the score is less than the provided threshold
-                        if score < score_threshold:
-                            continue
-                            
-                        # Translate roi coordinates into combined image coordinates
-                        x0 = x0 * image.width
-                        y0 = y0 * image.height
-                        x1 = x1 * image.width
-                        y1 = y1 * image.height
-                        
-                        if y0 > max_height or y1 > max_height:
-                            continue
-                        elif y0 < min_height or y1 < min_height:
-                            continue
-
-                        # output
-                        roi_file.write("{},{},{},{},{},{},{},{}\n".format(os.path.basename(im_list[i]), x0, y0-translation, x1, y1-translation,
-                                label, label_str, score))
-                translation += img_height
-            
-            # Move finished images to output_path
-            for i in range(len(im_list)):
-                os.rename(im_list[i], os.path.join(output_path, os.path.basename(im_list[i])))
-                
-            end_time = datetime.now()
-            inference_time = end_time - start_time
-            inference_time = int(inference_time.total_seconds() * 1000)
-            time_per_image = int(inference_time / len(im_list))
-            images_names = ""
-            for i in range(len(im_list)):
-                time_file.write("{}&&".format(os.path.basename(im_list[i])))
-                images_names += (os.path.basename(im_list[i]) + " / ")
-            time_file.write(",{},{},{}\n".format(inference_time, len(im_list), time_per_image))
-            print("{}: Inference + I/O time for image(s) ({}) is {} ms\n".format(str(datetime.now()), images_names, inference_time))
-            total_time += inference_time
-    
-    total_time_file_path = os.path.join(output_path, "total_time.txt")
-    with open(total_time_file_path, "w") as total_time_file:
-        total_time_file.write("Total inference and I/O time: {} ms".format(total_time))
+    if inference_times:
+        with open(os.path.join(output_dir, "inference_time.csv"), "w") as time_file:
+            for l in times:
+                time_file.write(l)
+        with open(os.path.join(output_dir, "total_time.txt"), "w") as total_time_file:
+            total_time_file.write("Total inference and I/O time: {} ms\n".format(total_time))
 
 
 if __name__ == '__main__':
-
-    # Arguments to be provided by the user
     parser = argparse.ArgumentParser()
     parser.add_argument('--graph', help='Path to the frozen detection graph', required=True, default=None)
     parser.add_argument('--labels', help='Path to the labels map', required=True, default=None)
@@ -265,48 +328,36 @@ if __name__ == '__main__':
     parser.add_argument('--num_imgs', type=int, help='Number of images to combine', required=False, default=1)
     parser.add_argument('--status', help='file path for predict exit status file', required=False, default=None)
     parser.add_argument('--continuous', action='store_true', help='Whether to continuously load test images and perform prediction', required=False, default=False)
-    args = vars(parser.parse_args())
+    parser.add_argument('--output_inference_time', action='store_true', help='Whether to output a CSV file with inference times in the --prediction_output directory', required=False, default=False)
+    parser.add_argument('--delete_input', action='store_true', help='Whether to delete the input images rather than move them to --prediction_out directory', required=False, default=False)
+    parsed = parser.parse_args()
 
     try:
         # Path to frozen detection graph. This is the actual model that is used for the object detection
-        frozen_graph_path = args['graph']
-        detection_graph = load_frozen_graph(frozen_graph_path)
-
-        # List of the strings that is used to add correct label for each box
-        labels_map_path = args['labels']
-
-        # The threshold of including the detected roi in the output csv
-        score_threshold = args['score']
+        detection_graph = load_frozen_graph(parsed.graph)
 
         # Getting classes strings from the label map
-        num_classes = args['num_classes']
-        label_map = label_map_util.load_labelmap(labels_map_path)
-        categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=num_classes,
+        label_map = label_map_util.load_labelmap(parsed.labels)
+        categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=parsed.num_classes,
                                                                     use_display_name=True)
-
-        # Loading the path to images to perform prediction on
-        test_images_directory = args['prediction_in']
-
-        # Output directory for the csv files
-        output_path = args['prediction_out']
-        
-        # Number of images to combine
-        num_imgs = args['num_imgs']
 
         with detection_graph.as_default():
             with tf.Session() as sess:
                 while True:
                     # Performing the prediction and producing the csv files
-                    predict_on_images(test_images_directory, sess, output_path, score_threshold, categories, num_imgs)
+                    predict_on_images(parsed.prediction_in, sess, parsed.prediction_out, parsed.score,
+                                      categories, parsed.num_imgs, parsed.output_inference_time,
+                                      parsed.delete_input)
 
                     # Exit if not continuous
-                    if not args['continuous']:
+                    if not parsed.continuous:
                         break
-                if args['status'] is not None:
-                    with open(args['status'], 'w') as f:
+                if parsed.status is not None:
+                    with open(parsed.status, 'w') as f:
                         f.write("Success")
+
     except Exception as e:
         print(e)
-        if args['status'] is not None:
-            with open(args['status'], 'w') as f:
+        if parsed.status is not None:
+            with open(parsed.status, 'w') as f:
                 f.write(str(e))
