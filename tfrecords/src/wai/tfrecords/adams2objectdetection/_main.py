@@ -17,13 +17,13 @@ def main(args: Optional[List[str]] = None):
     # Parse the arguments
     parsed = setup_parser().parse_args(args=args)
 
-    # checks
+    # Check the input and output are valid
     if not os.path.exists(parsed.input):
         raise IOError("Input does not exist:", parsed.input)
     if os.path.isdir(parsed.output):
         raise IOError("Output is a directory:", parsed.output)
 
-    # interpret input (dir or file with report file names?)
+    # Interpret input (dir or file with report file names?)
     if os.path.isdir(parsed.input):
         input_dir = parsed.input
         input_files = None
@@ -32,7 +32,7 @@ def main(args: Optional[List[str]] = None):
         with open(parsed.input) as fp:
             input_files = [line.strip() for line in fp]
 
-    # generate label mappings
+    # Generate label mappings
     mappings: Optional[Dict[str, str]] = None
     if len(parsed.mapping) > 0:
         mappings = dict()
@@ -40,7 +40,7 @@ def main(args: Optional[List[str]] = None):
             old, new = m.split("=")
             mappings[old] = new
 
-    # predefined labels?
+    # Extract the labels if given
     labels = None
     if len(parsed.labels) > 0:
         labels = list(parsed.labels.split(","))
@@ -50,6 +50,7 @@ def main(args: Optional[List[str]] = None):
     if parsed.verbose:
         logger.info("sharding off" if parsed.shards <= 1 else "# shards: " + str(parsed.shards))
 
+    # Convert using the specified arguments
     convert(
         input_dir=input_dir,
         input_files=input_files,

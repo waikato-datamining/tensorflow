@@ -9,13 +9,18 @@ def fix_labels(objects: LocatedObjects, mappings: Dict[str, str]):
     """
     Fixes the labels in the parsed objects, using the specified mappings (old: new).
 
-    :param objects: the parsed objects
-    :type objects: dict
-    :param mappings: the label mappings (old: new)
-    :type mappings: dict
+    :param objects:     The parsed objects.
+    :param mappings:    The label mappings (old: new).
     """
+    # Process each object
     for object in objects:
-        if SUFFIX_TYPE in object.metadata:
-            label: str = object.metadata[SUFFIX_TYPE]
-            if label in mappings:
-                object.metadata[SUFFIX_TYPE] = mappings[label]
+        # If the object doesn't have a label, skip it
+        if SUFFIX_TYPE not in object.metadata:
+            continue
+
+        # Get the object's current label
+        label: str = object.metadata[SUFFIX_TYPE]
+
+        # If there is a mapping for this label, change it
+        if label in mappings:
+            object.metadata[SUFFIX_TYPE] = mappings[label]

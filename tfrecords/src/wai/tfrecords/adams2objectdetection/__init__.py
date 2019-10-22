@@ -1,5 +1,6 @@
 """
-Package for converting TODO
+Package for converting images and their associated annotations (in ADAMS .report format)
+to Tensorflow TFRecords format.
 """
 from ._convert import convert
 from ._determine_labels import determine_labels

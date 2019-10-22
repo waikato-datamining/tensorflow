@@ -25,19 +25,14 @@ def to_tf_example(imgpath: str,
     https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/using_your_own_dataset.md
     https://github.com/tensorflow/models/blob/master/research/object_detection/dataset_tools/create_kitti_tf_record.py
 
-    :param imgpath: the path to the image
-    :type imgpath: str
-    :param imgtype: the image type (jpg/png)
-    :type imgtype: bytearray
-    :param objects: the associated objects
-    :type objects: dict
-    :param labels: lookup for the numeric label indices via their label
-    :type labels: dict
-    :param verbose: whether to be verbose when creating the example
-    :type verbose: bool
-    :return: the generated example
-    :rtype: tf.Example
+    :param imgpath:     The path to the image.
+    :param imgtype:     The image type (jpg/png).
+    :param objects:     The associated objects.
+    :param labels:      Lookup for the numeric label indices via their label.
+    :param verbose:     Whether to be verbose when creating the example.
+    :return:            The generated example.
     """
+    # Load the image as a Numpy array
     with tf.gfile.GFile(imgpath, 'rb') as fid:
         encoded_img = fid.read()
     encoded_img_io = io.BytesIO(encoded_img)
@@ -48,6 +43,7 @@ def to_tf_example(imgpath: str,
     width = int(image.shape[1])
     filename = (os.path.basename(imgpath)).encode('utf-8')
 
+    # Format and extract the relevant annotation parameters
     xmins = []
     xmaxs = []
     ymins = []
@@ -77,10 +73,12 @@ def to_tf_example(imgpath: str,
             classes_text.append(o.metadata[SUFFIX_TYPE].encode('utf8'))
             classes.append(labels[o.metadata[SUFFIX_TYPE]])
 
+    # Skip this image if not annotations are found
     if len(xmins) == 0:
-        logger.warning("No annotations in '" + str(imgpath) + "', skipping!")
+        logger.warning(f"No annotations in '{imgpath}', skipping!")
         return None
 
+    # Logging
     if verbose:
         logger.info(imgpath)
         logger.info("xmins: %s", xmins)
@@ -90,19 +88,24 @@ def to_tf_example(imgpath: str,
         logger.info("classes_text: %s", classes_text)
         logger.info("classes: %s", classes)
 
-    tf_example = tf.train.Example(features=tf.train.Features(feature={
-        'image/height': dataset_util.int64_feature(height),
-        'image/width': dataset_util.int64_feature(width),
-        'image/filename': dataset_util.bytes_feature(filename),
-        'image/source_id': dataset_util.bytes_feature(filename),
-        'image/encoded': dataset_util.bytes_feature(encoded_img),
-        'image/format': dataset_util.bytes_feature(imgtype.name.lower().encode("utf-8")),
-        'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
-        'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
-        'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
-        'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
-        'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
-        'image/object/class/label': dataset_util.int64_list_feature(classes),
-    }))
+    # Create the example
+    tf_example = tf.train.Example(
+        features=tf.train.Features(
+            feature={
+                'image/height': dataset_util.int64_feature(height),
+                'image/width': dataset_util.int64_feature(width),
+                'image/filename': dataset_util.bytes_feature(filename),
+                'image/source_id': dataset_util.bytes_feature(filename),
+                'image/encoded': dataset_util.bytes_feature(encoded_img),
+                'image/format': dataset_util.bytes_feature(imgtype.name.lower().encode("utf-8")),
+                'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
+                'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
+                'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
+                'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
+                'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
+                'image/object/class/label': dataset_util.int64_list_feature(classes),
+            }
+        )
+    )
 
     return tf_example

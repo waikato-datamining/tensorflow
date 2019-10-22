@@ -23,10 +23,15 @@ class ImageFormat(Enum):
         # Remove the extension from the filename
         filename = os.path.splitext(filename)[0]
 
+        # Check each variation of the extension for each format
         for image_format in ImageFormat:
             for extension in image_format.value:
+                # Get the hypothetical filename for an image of this format
                 image_filename: str = f"{filename}.{extension}"
+
+                # If an image of this format exists, return it
                 if os.path.exists(image_filename):
                     return image_filename, image_format
 
+        # No image found
         return None, None

@@ -10,22 +10,15 @@ from .constants import SUFFIX_TYPE, DEFAULT_LABEL, PREFIX_OBJECT
 
 def determine_labels(input_files: List[str],
                      mappings: Optional[Dict[str, str]] = None,
-                     regexp: Optional[str] = None,
-                     verbose: bool = False):
+                     regexp: Optional[str] = None):
     """
     Determines all the labels present in the reports and returns them.
     The labels get updated using the mappings before the label regexp is tested.
 
-    :param input_files:     TODO
-    :type input_files:      list
-    :param mappings: the label mappings for replacing labels (key: old label, value: new label)
-    :type mappings: dict
-    :param regexp: the regular expression to use for limiting the labels stored
-    :type regexp: str
-    :param verbose: whether to have a more verbose record generation
-    :type verbose: bool
-    :return: the list of labels
-    :rtype: list
+    :param input_files:     The list of report files to read labels from.
+    :param mappings:        The label mappings for replacing labels (key: old label, value: new label).
+    :param regexp:          The regular expression to use for limiting the labels stored.
+    :return:                The list of labels.
     """
     # Compile the regex if given
     regexpc: Pattern = re.compile(regexp) if regexp is not None else None

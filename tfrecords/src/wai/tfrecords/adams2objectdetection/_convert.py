@@ -31,23 +31,14 @@ def convert(input_dir: Optional[str],
     Converts the images and annotations (.report) files into TFRecords.
 
     :param input_dir: the input directory (PNG/JPG, .report)
-    :type input_dir: str
     :param input_files: the file containing the report files to use
-    :type input_files: str
     :param output_file: the output file for TFRecords
-    :type output_file: str
     :param mappings: the label mappings for replacing labels (key: old label, value: new label)
-    :type mappings: dict
     :param regexp: the regular expression to use for limiting the labels stored
-    :type regexp: str
     :param labels: the predefined list of labels to use
-    :type labels: list
     :param protobuf_label_map: the (optional) file to store the label mapping (in protobuf format)
-    :type protobuf_label_map: str
     :param shards: the number of shards to generate, <= 1 for just single file
-    :type shards: int
     :param verbose: whether to have a more verbose record generation
-    :type verbose: bool
     """
     # Determine the list of files to convert
     if input_dir is not None:
@@ -55,13 +46,13 @@ def convert(input_dir: Optional[str],
     else:
         report_files = [os.path.splitext(input_file)[0] + REPORT_EXT for input_file in input_files]
 
-    # Logging
+    # Log the report files
     if verbose:
         logger.info(f"# report files: {len(report_files)}")
 
     # Determine the labels if they are not given
     if labels is None:
-        labels = determine_labels(report_files, mappings, regexp, verbose)
+        labels = determine_labels(report_files, mappings, regexp)
 
     # Create a map from label to its index
     label_index_map: Dict[str, int] = {label: index + 1 for index, label in enumerate(labels)}
@@ -70,60 +61,129 @@ def convert(input_dir: Optional[str],
     if protobuf_label_map is not None:
         write_protobuf_label_map(label_index_map, protobuf_label_map)
 
-    # Logging
+    # Log the labels
     if verbose:
         logger.info(f"labels considered: {labels}")
 
     if shards > 1:
-        with contextlib2.ExitStack() as tf_record_close_stack:
-            output_tfrecords = tf_record_creation_util.open_sharded_output_tfrecords(tf_record_close_stack, output_file, shards)
-
-            class Writer:
-                def __init__(self):
-                    self.index = 0
-
-                def __call__(self, example: tf.train.Example):
-                    output_tfrecords[self.index % shards].write(example.SerializeToString())
-                    self.index += 1
-
-            do_convert(report_files, mappings, label_index_map, verbose, Writer())
-
+        # Sharded output
+        convert_sharded(report_files, output_file, mappings, label_index_map, verbose, shards)
     else:
-        writer = tf.python_io.TFRecordWriter(output_file)
+        # Unsharded output
+        convert_unsharded(report_files, output_file, mappings, label_index_map, verbose)
 
-        def write(example: tf.train.Example):
-            writer.write(example.SerializeToString())
 
-        do_convert(report_files, mappings, label_index_map, verbose, write)
+def convert_sharded(report_files: List[str],
+                    output_file: str,
+                    mappings: Optional[Dict[str, str]],
+                    label_index_map: Dict[str, int],
+                    verbose: bool,
+                    shards: int):
+    """
+    Performs the conversion in a sharded manner.
 
-        writer.close()
+    :param report_files:        The list of report files to convert.
+    :param output_file:         The file to write the conversion results to.
+    :param mappings:            Label mappings.
+    :param label_index_map:     The label index lookup.
+    :param verbose:             Whether to log verbose messages.
+    :param shards:              The number of shards.
+    """
+    with contextlib2.ExitStack() as tf_record_close_stack:
+        # Open the output file for sharded writing
+        output_tfrecords = tf_record_creation_util.open_sharded_output_tfrecords(tf_record_close_stack,
+                                                                                 output_file,
+                                                                                 shards)
+
+        # Functor for sharded writing
+        class Writer:
+            def __init__(self):
+                self.index = 0
+
+            def __call__(self, example: tf.train.Example):
+                output_tfrecords[self.index % shards].write(example.SerializeToString())
+                self.index += 1
+
+        # Perform the conversion
+        do_convert(report_files, mappings, label_index_map, verbose, Writer())
+
+
+def convert_unsharded(report_files: List[str],
+                      output_file: str,
+                      mappings: Optional[Dict[str, str]],
+                      label_index_map: Dict[str, int],
+                      verbose: bool):
+    """
+    Performs the conversion in an unsharded manner.
+
+    :param report_files:        The list of report files to convert.
+    :param output_file:         The file to write the conversion results to.
+    :param mappings:            Label mappings.
+    :param label_index_map:     The label index lookup.
+    :param verbose:             Whether to log verbose messages.
+    """
+    # Create an unsharded writer
+    writer = tf.python_io.TFRecordWriter(output_file)
+
+    # Create a function to perform writing for do_convert
+    def write(example: tf.train.Example):
+        writer.write(example.SerializeToString())
+
+    # Perform the conversion
+    do_convert(report_files, mappings, label_index_map, verbose, write)
+
+    # Close the writer
+    writer.close()
 
 
 def do_convert(report_files: List[str],
-               mappings: Dict[str, str],
+               mappings: Optional[Dict[str, str]],
                label_index_map: Dict[str, int],
                verbose: bool,
                write: Callable[[tf.train.Example], None]):
+    """
+    Performs the actual conversion of the report files, using the given
+    write function to output the results.
+
+    :param report_files:        The list of report files to convert.
+    :param mappings:            Label mappings.
+    :param label_index_map:     The label index lookup.
+    :param verbose:             Whether to log verbose messages.
+    :param write:               The function to call to output an example.
+    """
+    # Process each file
     for report_file in report_files:
+        # Get the image associated to this report
         image_file, image_format = ImageFormat.get_associated_image(report_file)
 
+        # Log a warning if the image wasn't found
         if image_file is None:
             logger.warning(f"Failed to determine image for report: {report_file}")
             continue
 
+        # Load the report
         report: Report = loadf(report_file)
 
+        # Get the annotated objects from the report
         objects: LocatedObjects = LocatedObjects.from_report(report, PREFIX_OBJECT)
 
+        # Skip reports with no annotated objects
+        if len(objects) == 0:
+            continue
+
+        # Apply any label mappings
         if mappings is not None:
             fix_labels(objects, mappings)
 
-        if len(objects) > 0:
-            example = to_tf_example(image_file, image_format, objects, label_index_map, verbose)
+        # Create a Tensorflow example from the image and annotations
+        example: tf.train.Example = to_tf_example(image_file, image_format, objects, label_index_map, verbose)
 
-            if example is None:
-                continue
+        # Continue if example-creation failed
+        if example is None:
+            continue
 
-            logger.info(f"storing: {image_file}")
+        # Logging
+        logger.info(f"storing: {image_file}")
 
-            write(example)
+        # Output the example
+        write(example)
