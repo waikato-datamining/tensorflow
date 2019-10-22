@@ -1,17 +1,18 @@
 import argparse
 import os
-from typing import Dict, Optional
+import traceback
+from typing import Dict, Optional, List
 
 from wai.tfrecords.adams2objectdetection import logger, convert
 from wai.tfrecords.adams2objectdetection.constants import PREFIX_OBJECT, SUFFIX_TYPE, DEFAULT_LABEL
 
 
-def main(args):
+def main(args: Optional[List[str]] = None):
     """
     Runs the conversion from command-line. Use -h/--help to see all options.
 
-    :param args: the command-line arguments to parse
-    :type args: list
+    :param args:    The command-line arguments to parse, or None to
+                    use the system args.
     """
     # Parse the arguments
     parsed = setup_parser().parse_args(args=args)
@@ -60,6 +61,21 @@ def main(args):
         protobuf_label_map=parsed.protobuf_label_map,
         verbose=parsed.verbose
     )
+
+
+def sys_main() -> int:
+    """
+    Runs the main function using the system cli arguments, and
+    returns a system error code.
+
+    :return:    0 for success, 1 for failure.
+    """
+    try:
+        main()
+        return 0
+    except Exception as e:
+        print(traceback.format_exc())
+        return 1
 
 
 def setup_parser() -> argparse.ArgumentParser:
