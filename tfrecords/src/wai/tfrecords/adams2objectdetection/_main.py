@@ -74,7 +74,7 @@ def sys_main() -> int:
     try:
         main()
         return 0
-    except Exception as e:
+    except Exception:
         print(traceback.format_exc())
         return 1
 
