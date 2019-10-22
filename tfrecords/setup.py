@@ -1,11 +1,11 @@
 # setup.py
 # Copyright (C) 2019 Fracpete (fracpete at waikato dot ac dot nz)
 
-from setuptools import setup
+from setuptools import setup, find_namespace_packages
 
 
 setup(
-    name="tfrecords",
+    name="wai.tfrecords",
     description="Converting ADAMS annotations to tfrecords.",
     url="https://github.com/waikato-datamining/tensorflow/tfrecords",
     classifiers=[
@@ -15,8 +15,12 @@ setup(
         'Programming Language :: Python :: 3',
     ],
     license='MIT License',
-    packages=[
-        "adams2objectdetection",
+    package_dir={
+        '': 'src'
+    },
+    packages=find_namespace_packages(where="src"),
+    namespace_packages=[
+        "wai"
     ],
     version="0.0.1",
     author='Peter Reutemann',
@@ -31,5 +35,9 @@ setup(
         "jupyter",
         "matplotlib",
         "numpy",
+        "wai.common"
     ],
+    entry_points={
+        "tfrecords-a2od": "wai.tfrecords.adams2objectdetection"
+    }
 )
