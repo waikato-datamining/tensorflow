@@ -9,6 +9,7 @@ RUN apt-get update && \
 
 RUN cd /opt && \
     git clone https://github.com/waikato-datamining/tensorflow.git && \
+    git checkout wai-tfrecords && \
     cd tensorflow/tfrecords && \
     pip install . && \
     cd .. && \
