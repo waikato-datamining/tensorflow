@@ -16,7 +16,8 @@ setup(
     ],
     license='MIT License',
     packages=[
-        "wai.tf.imageclassification",
+        #"wai.tf.imageclassification",
+        "",
     ],
     version="0.0.1",
     author='Peter Reutemann',
@@ -25,5 +26,6 @@ setup(
         "argparse",
         "numpy",
         "pillow",
+        "tensorflow_hub",
     ],
 )
