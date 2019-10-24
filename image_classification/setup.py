@@ -20,7 +20,7 @@ setup(
         "",
     ],
     version="0.0.1",
-    author='Peter Reutemann',
+    author='Peter Reutemann and TensorFlow Team',
     author_email='fracpete@waikato.ac.nz',
     install_requires=[
         "argparse",
