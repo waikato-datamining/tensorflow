@@ -15,6 +15,6 @@ RUN cd /opt && git clone https://github.com/waikato-datamining/tensorflow.git &&
 	git reset --hard 636becdc73d54283b3aac6d4ec363cffbb6f9b20 && make && \
 	cp -r pycocotools /opt/tensorflow/models/research/
 	
-ENV PYTHONPATH=/opt/tensorflow/models/research:/opt/tensorflow/models/research/slim:/opt/tensorflow/models/research/object_detection
+ENV PYTHONPATH=/opt/tensorflow/models/research:/opt/tensorflow/models/research/slim:/opt/tensorflow/models/research/object_detection:/opt/tensorflow/tfrecords/
 	
-WORKDIR /opt/tensorflow/models/research/
+WORKDIR /opt/tensorflow/

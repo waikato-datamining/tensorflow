@@ -77,34 +77,43 @@ COCO API github repo hash:
   /path_to/local_disk/contianing_data:/path_to/mount/inside/docker_container tf bash
   ```
 
-* Update the config file and then start training (assuming your data and tfrecords are ready)
+* Generate tfrecords
 
   ```commandline
-  python object_detection/model_main.py --pipeline_config_path=/path_to/your_data.config \
-  --model_dir=/path_to/your_data/output --num_train_steps=50000 \
-  --sample_1_of_n_eval_examples=1 --alsologtostderr
+  ./convert_obj_det.sh "-i /path_to/images_and_reports_directory" \
+  "-o /path_to/name_of_output_file.tfrecords" "-s number_of_shards" \
+  "-p /path_to/name_of_output_labels_file.pbtxt" "-m mapping_old_label=new_label" \
+  "-r regexp_for_using_only_subset_of_labels"
+  ```
+  Run with "-h" for all available options.
+  Above command need to run twice, once for training set and again for validation set.
+
+* Update the config file and then start training
+
+  ```commandline
+  ./train_obj_det.sh "--pipeline_config_path=/path_to/your_data.config" \
+  "--model_dir=/path_to/your_data/output" "--num_train_steps=50000" \
+  "--sample_1_of_n_eval_examples=1" "--alsologtostderr"
   ```
 
 * Export frozen_inference_graph.pb
 
   ```commandline
-  python object_detection/export_inference_graph.py --input_type image_tensor \
-  --pipeline_config_path /path_to/your_data.config \
-  --trained_checkpoint_prefix /path_to/your_data/output/model.ckpt-50000 \
-  --output_directory /path_to/your_data/output/exported_graphs
+  ./export_obj_det.sh "--input_type image_tensor" "--pipeline_config_path /path_to/your_data.config \"
+  "--trained_checkpoint_prefix /path_to/your_data/output/model.ckpt-50000" \
+  "--output_directory /path_to/your_data/output/exported_graphs"
   ```
 
-* Predict and produce csv files (from within /opt/tensorflow/object_detection/2019-08-31)
+* Predict and produce csv files
 
   ```commandline
-  python predict.py --graph /path_to/your_data/output/exported_graphs/frozen_inference_graph.pb \
-  --labels /path_to/your_data_label_map.pbtxt --prediction_in /path_to/your_data/test_images/ \
-  --prediction_out /path_to/your_data/output/results --score 0.1 --num_imgs 3 --num_classes 2
+  ./predict_obj_det.sh "--graph /path_to/your_data/output/exported_graphs/frozen_inference_graph.pb" \
+  "--labels /path_to/your_data_label_map.pbtxt" "--prediction_in /path_to/your_data/test_images/" \
+  "--prediction_out /path_to/your_data/output/results" "--score 0.1" "--num_imgs 3" "--num_classes 1"
   ```
+  Run with "-h" for all available options.
 
-* Execute the `predict.py` script with `-h` to see the help screen.
-
-## Docker Image Push to aml-repo
+## Docker Image in aml-repo
 
 * Build
 
@@ -131,7 +140,27 @@ COCO API github repo hash:
   docker login public-push.aml-repo.cms.waikato.ac.nz:443
   ```
   
-* Run
+* Pull
+
+  If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
+
+  ```commandline
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:2019-08-31
+  ```
+  If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
+  
+  ```commandline
+  docker login public.aml-repo.cms.waikato.ac.nz:443
+  ```
+  Then tag by running:
+  
+  ```commandline
+  docker tag \
+  public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:2019-08-31 \
+  tensorflow/object_detection:2019-08-31
+  ```
+  
+* <a name="run">Run</a>
 
   ```commandline
   docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection:2019-08-31
