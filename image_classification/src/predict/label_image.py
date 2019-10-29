@@ -34,7 +34,7 @@ if __name__ == "__main__":
     parser.add_argument("--input_std", type=int, help="input std", default=255)
     parser.add_argument("--input_layer", help="name of input layer", default="Placeholder")
     parser.add_argument("--output_layer", help="name of output layer", default="final_result")
-    parser.add_argument("--top_x", type=int, help="output only the top K labels; use -1 for all", default=5)
+    parser.add_argument("--top_x", type=int, help="output only the top K labels; use <1 for all", default=5)
     args = parser.parse_args()
 
     graph = load_graph(args.graph)
@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     results = tensor_to_probs(graph, args.input_layer, args.output_layer, tensor)
     top_x = top_k_probs(results, args.top_x)
-    if (args.top_x > -1):
+    if args.top_x > 0:
         print("Top " + str(args.top_x) + " labels")
     else:
         print("All labels")

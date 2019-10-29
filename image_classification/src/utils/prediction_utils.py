@@ -123,7 +123,7 @@ def tensor_to_probs(graph, input_layer, output_layer, tensor):
 
 def top_k_probs(probs, k):
     """
-    Returns the top K range of probabilities.
+    Returns the top K probabilities.
 
     :param probs: the ndarray with the probabilities
     :type probs: ndarray
@@ -132,7 +132,7 @@ def top_k_probs(probs, k):
     :return: the
     """
 
-    if k > -1:
+    if k > 0:
         return probs.argsort()[-k:][::-1]
     else:
         return probs.argsort()[:][::-1]
