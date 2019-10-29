@@ -43,7 +43,8 @@ def read_tensor_from_image_file(file_name,
                                 input_height,
                                 input_width,
                                 input_mean=0,
-                                input_std=255):
+                                input_std=255,
+                                sess=None):
     """
     Reads the tensor from the image file.
 
@@ -74,7 +75,8 @@ def read_tensor_from_image_file(file_name,
     dims_expander = tf.expand_dims(float_caster, 0)
     resized = tf.compat.v1.image.resize_bilinear(dims_expander, [input_height, input_width])
     normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
-    sess = tf.compat.v1.Session()
+    if sess is None:
+        sess = tf.compat.v1.Session()
     result = sess.run(normalized)
 
     return result
@@ -97,7 +99,7 @@ def load_labels(label_file):
     return label
 
 
-def tensor_to_probs(graph, input_layer, output_layer, tensor):
+def tensor_to_probs(graph, input_layer, output_layer, tensor, sess=None):
     """
     Turns the image tensor into probabilities.
 
@@ -114,10 +116,16 @@ def tensor_to_probs(graph, input_layer, output_layer, tensor):
     input_operation = graph.get_operation_by_name("import/" + input_layer)
     output_operation = graph.get_operation_by_name("import/" + output_layer)
 
-    with tf.compat.v1.Session(graph=graph) as sess:
+    if sess is None:
+        with tf.compat.v1.Session(graph=graph) as sess:
+            results = sess.run(output_operation.outputs[0], {
+                input_operation.outputs[0]: tensor
+            })
+    else:
         results = sess.run(output_operation.outputs[0], {
             input_operation.outputs[0]: tensor
         })
+
     return np.squeeze(results)
 
 
