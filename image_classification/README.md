@@ -44,3 +44,18 @@ https://www.tensorflow.org/hub/tutorials/image_retraining
     ```commandline
     ./venv/bin/pip install "tensorflow>=2.0.0"
     ```
+
+## Usage
+
+All scripts support `--help` option to list all available options.
+
+### Train
+
+* For training, use the following script: `train.retrain`
+
+### Predict
+
+Once you have built a model, you can use as follows:
+
+* For making predictions for a single image, use: `predict.label_image`
+* For polling images in a directory and making continous predictions with CSV companion files, use: `predict.poll`
