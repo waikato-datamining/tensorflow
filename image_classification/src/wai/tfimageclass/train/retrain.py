@@ -132,7 +132,7 @@ import traceback
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
-from wai.tfimageclass.utils.train_utils import dir_to_label, save_image_list
+from wai.tfimageclass.utils.train_utils import dir_to_label, save_image_list, locate_sub_dirs
 
 FLAGS = None
 
@@ -165,13 +165,9 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
         tf.compat.v1.logging.error("Image directory '" + image_dir + "' not found.")
         return None
     result = collections.OrderedDict()
-    sub_dirs = sorted(x[0] for x in tf.io.gfile.walk(image_dir))
-    # The root directory comes first, so skip it.
-    is_root_dir = True
-    for sub_dir in sub_dirs:
-        if is_root_dir:
-            is_root_dir = False
-            continue
+    sub_dirs = locate_sub_dirs(image_dir)
+    for label_name in sub_dirs:
+        sub_dir = sub_dirs[label_name]
         extensions = sorted(set(os.path.normcase(ext)  # Smash case on Windows.
                                 for ext in ['JPEG', 'JPG', 'jpeg', 'jpg', 'png']))
         file_list = []
@@ -180,8 +176,6 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
             # Google Cloud Storage, which confuses os.path.basename().
             sub_dir[:-1] if sub_dir.endswith('/') else sub_dir)
 
-        if dir_name == image_dir:
-            continue
         tf.compat.v1.logging.info("Looking for images in '" + dir_name + "'")
         for extension in extensions:
             file_glob = os.path.join(image_dir, dir_name, '*.' + extension)
@@ -196,7 +190,6 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
             tf.logging.warning(
                 'WARNING: Folder {} has more than {} images. Some images will '
                 'never be selected.'.format(dir_name, MAX_NUM_IMAGES_PER_CLASS))
-        label_name = dir_to_label(dir_name)
         training_images = []
         testing_images = []
         validation_images = []
