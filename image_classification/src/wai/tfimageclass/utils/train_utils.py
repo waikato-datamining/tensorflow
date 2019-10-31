@@ -14,9 +14,11 @@
 # limitations under the License.
 # ==============================================================================
 
+import collections
 import json
 import re
 import os
+import tensorflow as tf
 
 
 def dir_to_label(dir_name):
@@ -49,3 +51,39 @@ def save_image_list(image_lists, image_lists_dir):
             for dirname in image_lists:
                 file_names[dirname] = image_lists[dirname][list_name][:]
             json.dump(file_names, lf, sort_keys=True, indent=4)
+
+
+def load_image_list(image_list):
+    """
+    Loads the specified image list (in JSON format).
+
+    :param image_list: the list with images
+    :type image_list: str
+    :return: the dictionary, each key represents a list of images with the key being the label
+    :rtype: dict
+    """
+
+    with open(image_list, "r") as lf:
+        result = json.load(lf)
+
+    return result
+
+
+def locate_sub_dirs(image_dir):
+    """
+    Locates the sub directories in the specified directory and generates a dictionary with the label
+    generated from the sub directory associated with the corresponding path.
+
+    :param image_dir: the directory to scan for sub dirs
+    :type image_dir: str
+    :return: the dictionary of label -> sub-dir relation
+    :rtype: dict
+    """
+
+    result = collections.OrderedDict()
+    sub_dirs = sorted(x[0] for x in tf.io.gfile.walk(image_dir))
+    for sub_dir in sub_dirs:
+        if sub_dir == image_dir:
+            continue
+        result[dir_to_label(os.path.basename(sub_dir))] = sub_dir
+    return result
