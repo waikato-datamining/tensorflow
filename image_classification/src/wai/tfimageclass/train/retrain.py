@@ -132,7 +132,8 @@ import traceback
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
-from wai.tfimageclass.utils.train_utils import dir_to_label, save_image_list, locate_sub_dirs
+from wai.tfimageclass.utils.train_utils import save_image_list, locate_sub_dirs
+from wai.tfimageclass.utils.logging_utils import logging_level_verbosity
 
 FLAGS = None
 
@@ -962,28 +963,6 @@ def export_model(module_spec, class_count, saved_model_dir):
             outputs={'prediction': graph.get_tensor_by_name('final_result:0')},
             legacy_init_op=tf.group(tf.compat.v1.tables_initializer(), name='legacy_init_op')
         )
-
-
-def logging_level_verbosity(logging_verbosity):
-    """Converts logging_level into TensorFlow logging verbosity value
-
-    Args:
-      logging_level: String value representing logging level: 'DEBUG', 'INFO',
-      'WARN', 'ERROR', 'FATAL'
-    """
-    name_to_level = {
-        'FATAL': tf.compat.v1.logging.FATAL,
-        'ERROR': tf.compat.v1.logging.ERROR,
-        'WARN': tf.compat.v1.logging.WARN,
-        'INFO': tf.compat.v1.logging.INFO,
-        'DEBUG': tf.compat.v1.logging.DEBUG
-    }
-
-    try:
-        return name_to_level[logging_verbosity]
-    except Exception as e:
-        raise RuntimeError('Not supported logs verbosity (%s). Use one of %s.' %
-                           (str(e), list(name_to_level)))
 
 
 def run(_):
