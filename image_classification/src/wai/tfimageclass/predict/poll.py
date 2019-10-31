@@ -28,6 +28,34 @@ from wai.tfimageclass.utils.prediction_utils import load_graph, load_labels, rea
 
 def poll(sess, graph, input_layer, output_layer, labels, in_dir, out_dir, height, width, mean, std, top_x, delete):
     """
+    Performs continuous predictions on files appearing in the "in_dir" and outputting the results in "out_dir".
+
+    :param sess: the tensorflow session to use
+    :type sess: tf.Session
+    :param graph: the tensorflow graph to use
+    :type graph: tf.Graph
+    :param input_layer: the name of input layer in the graph to use
+    :type input_layer: str
+    :param output_layer: the name of output layer in the graph to use
+    :type output_layer: str
+    :param labels: the list of labels to use
+    :type labels: list
+    :param in_dir: the input directory to poll
+    :type in_dir: str
+    :param out_dir: the output directory for the results
+    :type out_dir: str
+    :param height: the expected height of the images
+    :type height: int
+    :param width: the expected height of the images
+    :type width: int
+    :param mean: the mean to use for the images
+    :type mean: int
+    :param std: the std deviation to use for the images
+    :type std: int
+    :param top_x: the number of labels with the highest probabilities to return, <1 for all
+    :type top_x: int
+    :param delete: whether to delete the input images (True) or move them to the output directory (False)
+    :type delete: bool
     """
 
     print("Class labels: %s" % str(labels))
