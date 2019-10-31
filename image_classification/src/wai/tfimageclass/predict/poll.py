@@ -23,7 +23,7 @@ from time import sleep
 import os
 import tensorflow as tf
 import traceback
-from utils.prediction_utils import load_graph, load_labels, read_tensor_from_image_file, tensor_to_probs, top_k_probs
+from wai.tfimageclass.utils.prediction_utils import load_graph, load_labels, read_tensor_from_image_file, tensor_to_probs, top_k_probs
 
 
 def poll(sess, graph, input_layer, output_layer, labels, in_dir, out_dir, height, width, mean, std, top_x, delete):
@@ -99,7 +99,13 @@ def poll(sess, graph, input_layer, output_layer, labels, in_dir, out_dir, height
             sleep(1)
 
 
-if __name__ == "__main__":
+def main(args=None):
+    """
+    The main method for parsing command-line arguments and labeling.
+
+    :param args: the commandline arguments, uses sys.argv if not supplied
+    :type args: list
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--in_dir", help="the input directory to poll for images", required=True)
     parser.add_argument("--out_dir", help="the output directory for processed images and predictions", required=True)
@@ -113,7 +119,7 @@ if __name__ == "__main__":
     parser.add_argument("--input_layer", help="name of input layer", default="Placeholder")
     parser.add_argument("--output_layer", help="name of output layer", default="final_result")
     parser.add_argument("--top_x", type=int, help="output only the top K labels; use <1 for all", default=5)
-    args = parser.parse_args()
+    args = parser.parse_args(args=args)
 
     graph = load_graph(args.graph)
     labels = load_labels(args.labels)
@@ -121,3 +127,21 @@ if __name__ == "__main__":
     with tf.compat.v1.Session(graph=graph) as sess:
         poll(sess, graph, args.input_layer, args.output_layer, labels, args.in_dir, args.out_dir,
              args.input_height, args.input_width, args.input_mean, args.input_std, args.top_x, args.delete)
+
+
+def sys_main() -> int:
+    """
+    Runs the main function using the system cli arguments, and
+    returns a system error code.
+    :return:    0 for success, 1 for failure.
+    """
+    try:
+        main()
+        return 0
+    except Exception:
+        print(traceback.format_exc())
+        return 1
+
+
+if __name__ == '__main__':
+    main()

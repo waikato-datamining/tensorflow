@@ -19,11 +19,18 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
+import traceback
 
-from utils.prediction_utils import load_graph, load_labels, read_tensor_from_image_file, tensor_to_probs, top_k_probs
+from wai.tfimageclass.utils.prediction_utils import load_graph, load_labels, read_tensor_from_image_file, tensor_to_probs, top_k_probs
 
 
-if __name__ == "__main__":
+def main(args=None):
+    """
+    The main method for parsing command-line arguments and labeling.
+
+    :param args: the commandline arguments, uses sys.argv if not supplied
+    :type args: list
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--image", help="image to be processed", required=True)
     parser.add_argument("--graph", help="graph/model to be executed", required=True)
@@ -35,7 +42,7 @@ if __name__ == "__main__":
     parser.add_argument("--input_layer", help="name of input layer", default="Placeholder")
     parser.add_argument("--output_layer", help="name of output layer", default="final_result")
     parser.add_argument("--top_x", type=int, help="output only the top K labels; use <1 for all", default=5)
-    args = parser.parse_args()
+    args = parser.parse_args(args=args)
 
     graph = load_graph(args.graph)
     labels = load_labels(args.labels)
@@ -54,3 +61,21 @@ if __name__ == "__main__":
         print("All labels")
     for i in top_x:
         print("- " + labels[i] + ":", results[i])
+
+
+def sys_main() -> int:
+    """
+    Runs the main function using the system cli arguments, and
+    returns a system error code.
+    :return:    0 for success, 1 for failure.
+    """
+    try:
+        main()
+        return 0
+    except Exception:
+        print(traceback.format_exc())
+        return 1
+
+
+if __name__ == '__main__':
+    main()

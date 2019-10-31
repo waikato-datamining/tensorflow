@@ -127,12 +127,13 @@ import os.path
 import random
 import re
 import sys
+import traceback
 
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
 
-from utils.train_utils import dir_to_label, save_image_list
+from wai.tfimageclass.utils.train_utils import dir_to_label, save_image_list
 
 FLAGS = None
 
@@ -1168,7 +1169,14 @@ def main(_):
             export_model(module_spec, class_count, FLAGS.saved_model_dir)
 
 
-if __name__ == '__main__':
+def main(args=None):
+    """
+    The main method for parsing command-line arguments and starting the training.
+
+    :param args: the commandline arguments, uses sys.argv if not supplied
+    :type args: list
+    """
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--image_dir', type=str, default='', help='Path to folders of labeled images.')
     parser.add_argument('--image_lists_dir', type=str, default='/tmp/image_lists', help='Where to save the lists of images used for training, validation and testing (in JSON); ignored if directory does not exist.')
@@ -1209,5 +1217,23 @@ if __name__ == '__main__':
     parser.add_argument('--saved_model_dir', type=str, default='', help='Where to save the exported graph.')
     parser.add_argument('--logging_verbosity', type=str, default='INFO', choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'], help='How much logging output should be produced.')
     parser.add_argument('--checkpoint_path', type=str, default='/tmp/_retrain_checkpoint', help='Where to save checkpoint files.')
-    FLAGS, unparsed = parser.parse_known_args()
+    FLAGS, unparsed = parser.parse_known_args(args=args)
     tf.compat.v1.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+
+
+def sys_main() -> int:
+    """
+    Runs the main function using the system cli arguments, and
+    returns a system error code.
+    :return:    0 for success, 1 for failure.
+    """
+    try:
+        main()
+        return 0
+    except Exception:
+        print(traceback.format_exc())
+        return 1
+
+
+if __name__ == '__main__':
+    main()
