@@ -123,16 +123,15 @@ import argparse
 import collections
 from datetime import datetime
 import hashlib
+import json
 import os.path
 import random
 import re
 import sys
 import traceback
-
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
-
 from wai.tfimageclass.utils.train_utils import dir_to_label, save_image_list
 
 FLAGS = None
@@ -780,10 +779,13 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
     # calling these rewrites, only the newly added final layer will be
     # transformed.
     if quantize_layer:
-        if is_training:
-            tf.contrib.quantize.create_training_graph()
-        else:
-            tf.contrib.quantize.create_eval_graph()
+        try:
+            if is_training:
+                tf.contrib.quantize.create_training_graph()
+            else:
+                tf.contrib.quantize.create_eval_graph()
+        except:
+            print("quantizing of layers not supported!")
 
     tf.compat.v1.summary.histogram('activations', final_tensor)
 
@@ -991,9 +993,11 @@ def logging_level_verbosity(logging_verbosity):
                            (str(e), list(name_to_level)))
 
 
-def main(_):
+def run(_):
     # Needed to make sure the logging output is visible.
     # See https://github.com/tensorflow/tensorflow/issues/3047
+    global FLAGS
+
     logging_verbosity = logging_level_verbosity(FLAGS.logging_verbosity)
     tf.compat.v1.logging.set_verbosity(logging_verbosity)
 
@@ -1017,7 +1021,7 @@ def main(_):
                          ' - multiple classes are needed for classification.')
         return -1
 
-    if os.path.exists(FLAGS.image_lists_dir):
+    if FLAGS.image_lists_dir and os.path.exists(FLAGS.image_lists_dir):
         tf.compat.v1.logging.info("Outputting image lists to %s" % FLAGS.image_lists_dir)
         save_image_list(image_lists, FLAGS.image_lists_dir)
 
@@ -1158,10 +1162,26 @@ def main(_):
 
         # Write out the trained graph and labels with the weights stored as
         # constants.
-        tf.compat.v1.logging.info('Save final result to : ' + FLAGS.output_graph)
+        tf.compat.v1.logging.info('Saving final result to : ' + FLAGS.output_graph)
         if wants_quantization:
             tf.compat.v1.logging.info('The model is instrumented for quantization with TF-Lite')
         save_graph_to_file(FLAGS.output_graph, module_spec, class_count)
+
+        # save model information
+        if FLAGS.output_info:
+            tf.compat.v1.logging.info('Saving model info to : ' + FLAGS.output_info)
+            model_info = dict()
+            height, width = hub.get_expected_image_size(module_spec)
+            model_info['input_layer'] = 'Placeholder'  # always that? see create_module_graph method
+            model_info['output_layer'] = FLAGS.final_tensor_name
+            model_info['input_width'] = width
+            model_info['input_height'] = height
+            model_info['labels'] = list(image_lists.keys())
+            model_info['class_count'] = class_count
+            with open(FLAGS.output_info, "w") as mif:
+                json.dump(model_info, mif, sort_keys=True, indent=4)
+
+        # save labels
         with tf.io.gfile.GFile(FLAGS.output_labels, 'w') as f:
             f.write('\n'.join(image_lists.keys()) + '\n')
 
@@ -1177,10 +1197,13 @@ def main(args=None):
     :type args: list
     """
 
+    global FLAGS
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--image_dir', type=str, default='', help='Path to folders of labeled images.')
-    parser.add_argument('--image_lists_dir', type=str, default='/tmp/image_lists', help='Where to save the lists of images used for training, validation and testing (in JSON); ignored if directory does not exist.')
+    parser.add_argument('--image_lists_dir', type=str, required=False, help='Where to save the lists of images used for training, validation and testing (in JSON); ignored if directory does not exist.')
     parser.add_argument('--output_graph', type=str, default='/tmp/output_graph.pb', help='Where to save the trained graph.')
+    parser.add_argument('--output_info', type=str, required=False, help='Whether to save the (optional) information about the graph, like image dimensions and layers, (in JSON); ignored if not supplied.')
     parser.add_argument('--intermediate_output_graphs_dir', type=str, default='/tmp/intermediate_graph/', help='Where to save the intermediate graphs.')
     parser.add_argument('--intermediate_store_frequency', type=int, default=0, help='How many steps to store intermediate graph. If "0" then will not store.')
     parser.add_argument('--output_labels', type=str, default='/tmp/output_labels.txt', help='Where to save the trained graph\'s labels.')
@@ -1218,7 +1241,7 @@ def main(args=None):
     parser.add_argument('--logging_verbosity', type=str, default='INFO', choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'], help='How much logging output should be produced.')
     parser.add_argument('--checkpoint_path', type=str, default='/tmp/_retrain_checkpoint', help='Where to save checkpoint files.')
     FLAGS, unparsed = parser.parse_known_args(args=args)
-    tf.compat.v1.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+    tf.compat.v1.app.run(main=run, argv=[sys.argv[0]] + unparsed)
 
 
 def sys_main() -> int:
