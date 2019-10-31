@@ -51,11 +51,13 @@ All scripts support `--help` option to list all available options.
 
 ### Train
 
-* For training, use the following script: `train.retrain`
+* For training, use module `wai.tfimageclass.train.retrain` or console script `tfic-retrain`
 
 ### Predict
 
 Once you have built a model, you can use as follows:
 
-* For making predictions for a single image, use: `predict.label_image`
-* For polling images in a directory and making continous predictions with CSV companion files, use: `predict.poll`
+* For making predictions for a single image, use module `wai.tfimageclass.predict.label_image` or console 
+  script `tfic-labelimage`
+* For polling images in a directory and making continous predictions with CSV companion files, use 
+  module `wai.tfimageclass.predict.poll` or console script `tfic-poll`
