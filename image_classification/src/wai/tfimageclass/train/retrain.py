@@ -123,14 +123,17 @@ import argparse
 import collections
 from datetime import datetime
 import hashlib
+import json
 import os.path
 import random
 import re
 import sys
-
+import traceback
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
+from wai.tfimageclass.utils.train_utils import save_image_list, locate_sub_dirs, locate_images
+from wai.tfimageclass.utils.logging_utils import logging_level_verbosity
 
 FLAGS = None
 
@@ -163,27 +166,12 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
         tf.compat.v1.logging.error("Image directory '" + image_dir + "' not found.")
         return None
     result = collections.OrderedDict()
-    sub_dirs = sorted(x[0] for x in tf.io.gfile.walk(image_dir))
-    # The root directory comes first, so skip it.
-    is_root_dir = True
-    for sub_dir in sub_dirs:
-        if is_root_dir:
-            is_root_dir = False
-            continue
-        extensions = sorted(set(os.path.normcase(ext)  # Smash case on Windows.
-                                for ext in ['JPEG', 'JPG', 'jpeg', 'jpg', 'png']))
-        file_list = []
-        dir_name = os.path.basename(
-            # tf.io.gfile.walk() returns sub-directory with trailing '/' when it is in
-            # Google Cloud Storage, which confuses os.path.basename().
-            sub_dir[:-1] if sub_dir.endswith('/') else sub_dir)
-
-        if dir_name == image_dir:
-            continue
-        tf.compat.v1.logging.info("Looking for images in '" + dir_name + "'")
-        for extension in extensions:
-            file_glob = os.path.join(image_dir, dir_name, '*.' + extension)
-            file_list.extend(tf.io.gfile.glob(file_glob))
+    sub_dirs = locate_sub_dirs(image_dir)
+    for label_name in sub_dirs:
+        sub_dir = sub_dirs[label_name]
+        if sub_dir.endswith("/"):
+            sub_dir = sub_dir[:-1]
+        file_list = locate_images(sub_dir, strip_path=False)
         if not file_list:
             tf.logging.warning('No files found')
             continue
@@ -193,8 +181,7 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
         elif len(file_list) > MAX_NUM_IMAGES_PER_CLASS:
             tf.logging.warning(
                 'WARNING: Folder {} has more than {} images. Some images will '
-                'never be selected.'.format(dir_name, MAX_NUM_IMAGES_PER_CLASS))
-        label_name = re.sub(r'[^a-z0-9]+', ' ', dir_name.lower())
+                'never be selected.'.format(sub_dir, MAX_NUM_IMAGES_PER_CLASS))
         training_images = []
         testing_images = []
         validation_images = []
@@ -224,7 +211,7 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
             else:
                 training_images.append(base_name)
         result[label_name] = {
-            'dir': dir_name,
+            'dir': sub_dir,
             'training': training_images,
             'testing': testing_images,
             'validation': validation_images,
@@ -777,10 +764,13 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
     # calling these rewrites, only the newly added final layer will be
     # transformed.
     if quantize_layer:
-        if is_training:
-            tf.contrib.quantize.create_training_graph()
-        else:
-            tf.contrib.quantize.create_eval_graph()
+        try:
+            if is_training:
+                tf.contrib.quantize.create_training_graph()
+            else:
+                tf.contrib.quantize.create_eval_graph()
+        except:
+            print("quantizing of layers not supported!")
 
     tf.compat.v1.summary.histogram('activations', final_tensor)
 
@@ -966,31 +956,11 @@ def export_model(module_spec, class_count, saved_model_dir):
         )
 
 
-def logging_level_verbosity(logging_verbosity):
-    """Converts logging_level into TensorFlow logging verbosity value
-
-    Args:
-      logging_level: String value representing logging level: 'DEBUG', 'INFO',
-      'WARN', 'ERROR', 'FATAL'
-    """
-    name_to_level = {
-        'FATAL': tf.compat.v1.logging.FATAL,
-        'ERROR': tf.compat.v1.logging.ERROR,
-        'WARN': tf.compat.v1.logging.WARN,
-        'INFO': tf.compat.v1.logging.INFO,
-        'DEBUG': tf.compat.v1.logging.DEBUG
-    }
-
-    try:
-        return name_to_level[logging_verbosity]
-    except Exception as e:
-        raise RuntimeError('Not supported logs verbosity (%s). Use one of %s.' %
-                           (str(e), list(name_to_level)))
-
-
-def main(_):
+def run(_):
     # Needed to make sure the logging output is visible.
     # See https://github.com/tensorflow/tensorflow/issues/3047
+    global FLAGS
+
     logging_verbosity = logging_level_verbosity(FLAGS.logging_verbosity)
     tf.compat.v1.logging.set_verbosity(logging_verbosity)
 
@@ -1013,6 +983,10 @@ def main(_):
                          FLAGS.image_dir +
                          ' - multiple classes are needed for classification.')
         return -1
+
+    if FLAGS.image_lists_dir and os.path.exists(FLAGS.image_lists_dir):
+        tf.compat.v1.logging.info("Outputting image lists to %s" % FLAGS.image_lists_dir)
+        save_image_list(image_lists, FLAGS.image_lists_dir)
 
     # See if the command-line flags mean we're applying any distortions.
     do_distort_images = should_distort_images(
@@ -1151,10 +1125,26 @@ def main(_):
 
         # Write out the trained graph and labels with the weights stored as
         # constants.
-        tf.compat.v1.logging.info('Save final result to : ' + FLAGS.output_graph)
+        tf.compat.v1.logging.info('Saving final result to : ' + FLAGS.output_graph)
         if wants_quantization:
             tf.compat.v1.logging.info('The model is instrumented for quantization with TF-Lite')
         save_graph_to_file(FLAGS.output_graph, module_spec, class_count)
+
+        # save model information
+        if FLAGS.output_info:
+            tf.compat.v1.logging.info('Saving model info to : ' + FLAGS.output_info)
+            model_info = dict()
+            height, width = hub.get_expected_image_size(module_spec)
+            model_info['input_layer'] = 'Placeholder'  # always that? see create_module_graph method
+            model_info['output_layer'] = FLAGS.final_tensor_name
+            model_info['input_width'] = width
+            model_info['input_height'] = height
+            model_info['labels'] = list(image_lists.keys())
+            model_info['class_count'] = class_count
+            with open(FLAGS.output_info, "w") as mif:
+                json.dump(model_info, mif, sort_keys=True, indent=4)
+
+        # save labels
         with tf.io.gfile.GFile(FLAGS.output_labels, 'w') as f:
             f.write('\n'.join(image_lists.keys()) + '\n')
 
@@ -1162,189 +1152,74 @@ def main(_):
             export_model(module_spec, class_count, FLAGS.saved_model_dir)
 
 
-if __name__ == '__main__':
+def main(args=None):
+    """
+    The main method for parsing command-line arguments and starting the training.
+
+    :param args: the commandline arguments, uses sys.argv if not supplied
+    :type args: list
+    """
+
+    global FLAGS
+
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--image_dir',
-        type=str,
-        default='',
-        help='Path to folders of labeled images.'
-    )
-    parser.add_argument(
-        '--output_graph',
-        type=str,
-        default='/tmp/output_graph.pb',
-        help='Where to save the trained graph.'
-    )
-    parser.add_argument(
-        '--intermediate_output_graphs_dir',
-        type=str,
-        default='/tmp/intermediate_graph/',
-        help='Where to save the intermediate graphs.'
-    )
-    parser.add_argument(
-        '--intermediate_store_frequency',
-        type=int,
-        default=0,
-        help="""\
-         How many steps to store intermediate graph. If "0" then will not
-         store.\
-      """
-    )
-    parser.add_argument(
-        '--output_labels',
-        type=str,
-        default='/tmp/output_labels.txt',
-        help='Where to save the trained graph\'s labels.'
-    )
-    parser.add_argument(
-        '--summaries_dir',
-        type=str,
-        default='/tmp/retrain_logs',
-        help='Where to save summary logs for TensorBoard.'
-    )
-    parser.add_argument(
-        '--training_steps',
-        type=int,
-        default=4000,
-        help='How many training steps to run before ending.'
-    )
-    parser.add_argument(
-        '--learning_rate',
-        type=float,
-        default=0.01,
-        help='How large a learning rate to use when training.'
-    )
-    parser.add_argument(
-        '--testing_percentage',
-        type=int,
-        default=10,
-        help='What percentage of images to use as a test set.'
-    )
-    parser.add_argument(
-        '--validation_percentage',
-        type=int,
-        default=10,
-        help='What percentage of images to use as a validation set.'
-    )
-    parser.add_argument(
-        '--eval_step_interval',
-        type=int,
-        default=10,
-        help='How often to evaluate the training results.'
-    )
-    parser.add_argument(
-        '--train_batch_size',
-        type=int,
-        default=100,
-        help='How many images to train on at a time.'
-    )
-    parser.add_argument(
-        '--test_batch_size',
-        type=int,
-        default=-1,
-        help="""\
+    parser.add_argument('--image_dir', type=str, default='', help='Path to folders of labeled images.')
+    parser.add_argument('--image_lists_dir', type=str, required=False, help='Where to save the lists of images used for training, validation and testing (in JSON); ignored if directory does not exist.')
+    parser.add_argument('--output_graph', type=str, default='/tmp/output_graph.pb', help='Where to save the trained graph.')
+    parser.add_argument('--output_info', type=str, required=False, help='Whether to save the (optional) information about the graph, like image dimensions and layers, (in JSON); ignored if not supplied.')
+    parser.add_argument('--intermediate_output_graphs_dir', type=str, default='/tmp/intermediate_graph/', help='Where to save the intermediate graphs.')
+    parser.add_argument('--intermediate_store_frequency', type=int, default=0, help='How many steps to store intermediate graph. If "0" then will not store.')
+    parser.add_argument('--output_labels', type=str, default='/tmp/output_labels.txt', help='Where to save the trained graph\'s labels.')
+    parser.add_argument('--summaries_dir', type=str, default='/tmp/retrain_logs', help='Where to save summary logs for TensorBoard.')
+    parser.add_argument('--training_steps', type=int, default=4000, help='How many training steps to run before ending.')
+    parser.add_argument('--learning_rate', type=float, default=0.01, help='How large a learning rate to use when training.')
+    parser.add_argument('--testing_percentage', type=int, default=10, help='What percentage of images to use as a test set.')
+    parser.add_argument('--validation_percentage', type=int, default=10, help='What percentage of images to use as a validation set.')
+    parser.add_argument('--eval_step_interval', type=int, default=10, help='How often to evaluate the training results.')
+    parser.add_argument('--train_batch_size', type=int, default=100, help='How many images to train on at a time.')
+    parser.add_argument('--test_batch_size', type=int, default=-1, help="""
       How many images to test on. This test set is only used once, to evaluate
       the final accuracy of the model after training completes.
       A value of -1 causes the entire test set to be used, which leads to more
-      stable results across runs.\
-      """
-    )
-    parser.add_argument(
-        '--validation_batch_size',
-        type=int,
-        default=100,
-        help="""\
+      stable results across runs.""")
+    parser.add_argument('--validation_batch_size', type=int, default=100, help="""
       How many images to use in an evaluation batch. This validation set is
       used much more often than the test set, and is an early indicator of how
       accurate the model is during training.
       A value of -1 causes the entire validation set to be used, which leads to
       more stable results across training iterations, but may be slower on large
-      training sets.\
-      """
-    )
-    parser.add_argument(
-        '--print_misclassified_test_images',
-        default=False,
-        help="""\
-      Whether to print out a list of all misclassified test images.\
-      """,
-        action='store_true'
-    )
-    parser.add_argument(
-        '--bottleneck_dir',
-        type=str,
-        default='/tmp/bottleneck',
-        help='Path to cache bottleneck layer values as files.'
-    )
-    parser.add_argument(
-        '--final_tensor_name',
-        type=str,
-        default='final_result',
-        help="""\
-      The name of the output classification layer in the retrained graph.\
-      """
-    )
-    parser.add_argument(
-        '--flip_left_right',
-        default=False,
-        help="""\
-      Whether to randomly flip half of the training images horizontally.\
-      """,
-        action='store_true'
-    )
-    parser.add_argument(
-        '--random_crop',
-        type=int,
-        default=0,
-        help="""\
-      A percentage determining how much of a margin to randomly crop off the
-      training images.\
-      """
-    )
-    parser.add_argument(
-        '--random_scale',
-        type=int,
-        default=0,
-        help="""\
-      A percentage determining how much to randomly scale up the size of the
-      training images by.\
-      """
-    )
-    parser.add_argument(
-        '--random_brightness',
-        type=int,
-        default=0,
-        help="""\
-      A percentage determining how much to randomly multiply the training image
-      input pixels up or down by.\
-      """
-    )
-    parser.add_argument(
-        '--tfhub_module',
-        type=str,
-        default=(
-            'https://tfhub.dev/google/imagenet/inception_v3/feature_vector/3'),
-        help="""\
+      training sets.""")
+    parser.add_argument('--print_misclassified_test_images', default=False, help="Whether to print out a list of all misclassified test images.", action='store_true')
+    parser.add_argument('--bottleneck_dir', type=str, default='/tmp/bottleneck', help='Path to cache bottleneck layer values as files.')
+    parser.add_argument('--final_tensor_name', type=str, default='final_result', help="The name of the output classification layer in the retrained graph.")
+    parser.add_argument('--flip_left_right', default=False, help="Whether to randomly flip half of the training images horizontally.", action='store_true')
+    parser.add_argument('--random_crop', type=int, default=0, help="A percentage determining how much of a margin to randomly crop off the training images.")
+    parser.add_argument('--random_scale', type=int, default=0, help="A percentage determining how much to randomly scale up the size of the training images by.")
+    parser.add_argument('--random_brightness', type=int, default=0, help="A percentage determining how much to randomly multiply the training image input pixels up or down by.")
+    parser.add_argument('--tfhub_module', type=str, default='https://tfhub.dev/google/imagenet/inception_v3/feature_vector/3', help="""\
       Which TensorFlow Hub module to use. For more options,
       search https://tfhub.dev for image feature vector modules.\
       """)
-    parser.add_argument(
-        '--saved_model_dir',
-        type=str,
-        default='',
-        help='Where to save the exported graph.')
-    parser.add_argument(
-        '--logging_verbosity',
-        type=str,
-        default='INFO',
-        choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
-        help='How much logging output should be produced.')
-    parser.add_argument(
-        '--checkpoint_path',
-        type=str,
-        default='/tmp/_retrain_checkpoint',
-        help='Where to save checkpoint files.'
-    )
-    FLAGS, unparsed = parser.parse_known_args()
-    tf.compat.v1.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+    parser.add_argument('--saved_model_dir', type=str, default='', help='Where to save the exported graph.')
+    parser.add_argument('--logging_verbosity', type=str, default='INFO', choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'], help='How much logging output should be produced.')
+    parser.add_argument('--checkpoint_path', type=str, default='/tmp/_retrain_checkpoint', help='Where to save checkpoint files.')
+    FLAGS, unparsed = parser.parse_known_args(args=args)
+    tf.compat.v1.app.run(main=run, argv=[sys.argv[0]] + unparsed)
+
+
+def sys_main() -> int:
+    """
+    Runs the main function using the system cli arguments, and
+    returns a system error code.
+    :return:    0 for success, 1 for failure.
+    """
+    try:
+        main()
+        return 0
+    except Exception:
+        print(traceback.format_exc())
+        return 1
+
+
+if __name__ == '__main__':
+    main()

@@ -1,9 +1,0 @@
-cython
-numpy
-jupyter
-scikit-image
-keras
-imgaug
-opencv-python
-pyyaml
-easydict
