@@ -132,7 +132,7 @@ import traceback
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
-from wai.tfimageclass.utils.train_utils import save_image_list, locate_sub_dirs
+from wai.tfimageclass.utils.train_utils import save_image_list, locate_sub_dirs, locate_images
 from wai.tfimageclass.utils.logging_utils import logging_level_verbosity
 
 FLAGS = None
@@ -169,18 +169,9 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
     sub_dirs = locate_sub_dirs(image_dir)
     for label_name in sub_dirs:
         sub_dir = sub_dirs[label_name]
-        extensions = sorted(set(os.path.normcase(ext)  # Smash case on Windows.
-                                for ext in ['JPEG', 'JPG', 'jpeg', 'jpg', 'png']))
-        file_list = []
-        dir_name = os.path.basename(
-            # tf.io.gfile.walk() returns sub-directory with trailing '/' when it is in
-            # Google Cloud Storage, which confuses os.path.basename().
-            sub_dir[:-1] if sub_dir.endswith('/') else sub_dir)
-
-        tf.compat.v1.logging.info("Looking for images in '" + dir_name + "'")
-        for extension in extensions:
-            file_glob = os.path.join(image_dir, dir_name, '*.' + extension)
-            file_list.extend(tf.io.gfile.glob(file_glob))
+        if sub_dir.endswith("/"):
+            sub_dir = sub_dir[:-1]
+        file_list = locate_images(sub_dir, strip_path=False)
         if not file_list:
             tf.logging.warning('No files found')
             continue
@@ -190,7 +181,7 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
         elif len(file_list) > MAX_NUM_IMAGES_PER_CLASS:
             tf.logging.warning(
                 'WARNING: Folder {} has more than {} images. Some images will '
-                'never be selected.'.format(dir_name, MAX_NUM_IMAGES_PER_CLASS))
+                'never be selected.'.format(sub_dir, MAX_NUM_IMAGES_PER_CLASS))
         training_images = []
         testing_images = []
         validation_images = []
@@ -220,7 +211,7 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
             else:
                 training_images.append(base_name)
         result[label_name] = {
-            'dir': dir_name,
+            'dir': sub_dir,
             'training': training_images,
             'testing': testing_images,
             'validation': validation_images,
