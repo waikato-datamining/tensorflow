@@ -5,6 +5,46 @@ Based on example code located here:
 `https://www.tensorflow.org/hub/tutorials/image_retraining <https://www.tensorflow.org/hub/tutorials/image_retraining>`__
 
 
+Installation
+============
+
+- install virtual environment::
+
+    virtualenv -p /usr/bin/python3.7 venv
+
+- install dependencies::
+
+    ./venv/bin/pip install -r requirements.txt
+
+- install tensorflow (1.x or 2.x works)
+
+  - with GPU (1.x)::
+
+      ./venv/bin/pip install "tensorflow-gpu<2.0.0"
+
+  - with GPU (2.x)::
+
+      ./venv/bin/pip install "tensorflow-gpu>=2.0.0"
+
+  - CPU only (1.x)::
+
+      ./venv/bin/pip install "tensorflow<2.0.0"
+
+  - CPU only (2.x)::
+
+      ./venv/bin/pip install "tensorflow>=2.0.0"
+
+- install library
+
+  - via pip::
+
+      ./venv/bin/pip install wai.tfimageclass
+
+  - from source (from within the directory containing the `setup.py` script)::
+
+      ./venv/bin/pip install .
+
+
 Usage
 =====
 

@@ -45,6 +45,20 @@ https://www.tensorflow.org/hub/tutorials/image_retraining
     ./venv/bin/pip install "tensorflow>=2.0.0"
     ```
 
+* install library
+
+  * via pip
+
+    ```commandline
+    ./venv/bin/pip install wai.tfimageclass
+    ```
+
+  * from source (from within the directory containing the `setup.py` script)::
+
+    ```commandline
+    ./venv/bin/pip install .
+    ```
+
 ## Usage
 
 All scripts support `--help` option to list all available options.
