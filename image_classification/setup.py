@@ -34,6 +34,7 @@ setup(
     entry_points={
         "console_scripts": [
             "tfic-retrain=wai.tfimageclass.train.retrain:sys_main",
+            "tfic-stats=wai.tfimageclass.train.stats:sys_main",
             "tfic-labelimage=wai.tfimageclass.predict.label_image:sys_main",
             "tfic-poll=wai.tfimageclass.predict.poll:sys_main",
         ]
