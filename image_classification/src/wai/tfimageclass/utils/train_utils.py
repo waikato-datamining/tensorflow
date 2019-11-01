@@ -87,3 +87,33 @@ def locate_sub_dirs(image_dir):
             continue
         result[dir_to_label(os.path.basename(sub_dir))] = sub_dir
     return result
+
+
+def locate_images(dir, strip_path=False):
+    """
+    Locates all PNG and JPG images in the specified directory and returns the list of filenames.
+
+    :param dir: the directory to look for images
+    :type dir: str
+    :param strip_path: whether to strip the path
+    :type strip_path: bool
+    :return: the list of images
+    :rtype: list
+    """
+
+    result = []
+    extensions = sorted(set(os.path.normcase(ext)  # Smash case on Windows.
+                            for ext in ['JPEG', 'JPG', 'jpeg', 'jpg', 'png']))
+    if dir.endswith("/"):
+        dir = dir[:-1]
+
+    tf.compat.v1.logging.info("Looking for images in '" + os.path.basename(dir) + "'")
+    for extension in extensions:
+        file_glob = os.path.join(dir, '*.' + extension)
+        result.extend(tf.io.gfile.glob(file_glob))
+
+    if strip_path:
+        for i in range(len(result)):
+            result[i] = os.path.basename(result[i])
+
+    return result
