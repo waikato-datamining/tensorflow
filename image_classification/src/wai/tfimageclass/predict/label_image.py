@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import argparse
 import traceback
+import tensorflow as tf
 
 from wai.tfimageclass.utils.prediction_utils import load_graph, load_labels, read_tensor_from_image_file, tensor_to_probs, top_k_probs
 
@@ -46,21 +47,23 @@ def main(args=None):
 
     graph = load_graph(args.graph)
     labels = load_labels(args.labels)
-    tensor = read_tensor_from_image_file(
-        args.image,
-        input_height=args.input_height,
-        input_width=args.input_width,
-        input_mean=args.input_mean,
-        input_std=args.input_std)
+    with tf.compat.v1.Session(graph=graph) as sess:
+        tensor = read_tensor_from_image_file(
+            args.image,
+            input_height=args.input_height,
+            input_width=args.input_width,
+            input_mean=args.input_mean,
+            input_std=args.input_std,
+            sess=sess)
 
-    results = tensor_to_probs(graph, args.input_layer, args.output_layer, tensor)
-    top_x = top_k_probs(results, args.top_x)
-    if args.top_x > 0:
-        print("Top " + str(args.top_x) + " labels")
-    else:
-        print("All labels")
-    for i in top_x:
-        print("- " + labels[i] + ":", results[i])
+        results = tensor_to_probs(graph, args.input_layer, args.output_layer, tensor, sess)
+        top_x = top_k_probs(results, args.top_x)
+        if args.top_x > 0:
+            print("Top " + str(args.top_x) + " labels")
+        else:
+            print("All labels")
+        for i in top_x:
+            print("- " + labels[i] + ":", results[i])
 
 
 def sys_main() -> int:
