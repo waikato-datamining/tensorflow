@@ -52,6 +52,7 @@ All scripts support `--help` option to list all available options.
 ### Train
 
 * For training, use module `wai.tfimageclass.train.retrain` or console script `tfic-retrain`
+* For evaluating a built model, use module `wai.tfimageclass.train.stats` or console script `tfic-stats`
 
 ### Predict
 
