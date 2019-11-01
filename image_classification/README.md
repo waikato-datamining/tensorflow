@@ -1,6 +1,6 @@
 # Image classification with TensorFlow
 
-Based on example located here:
+Based on example code located here:
 
 https://www.tensorflow.org/hub/tutorials/image_retraining
 
@@ -53,6 +53,28 @@ All scripts support `--help` option to list all available options.
 
 * For training, use module `wai.tfimageclass.train.retrain` or console script `tfic-retrain`
 * For evaluating a built model, use module `wai.tfimageclass.train.stats` or console script `tfic-stats`
+
+### Training data
+
+All the data for building the model must be located in a single directory, with each sub-directory representing
+a *label*. For instance for building a model for distinguishing flowers (daisy, dandelion, roses, sunflowers, tulip),
+the data directory looks like this::
+
+```
+   |
+   +- flowers
+      |
+      +- daisy
+      |
+      +- dandelion
+      |
+      +- roses
+      |
+      +- sunflowers
+      |
+      +- tulip
+```
+
 
 ### Predict
 
