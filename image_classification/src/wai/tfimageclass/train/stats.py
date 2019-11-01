@@ -102,7 +102,7 @@ def generate_stats(sess, graph, input_layer, output_layer, labels, image_dir, im
         for label_name in sub_dirs:
             if label_name not in image_list:
                 continue
-            print(label_name)
+            tf.compat.v1.logging.info(label_name)
             sub_dir = sub_dirs[label_name]
             file_list = image_list[label_name]
             count = 0
@@ -123,7 +123,7 @@ def generate_stats(sess, graph, input_layer, output_layer, labels, image_dir, im
                 # progress
                 count += 1
                 if count % 10 == 0:
-                    print("%d / %d" % (count, len(file_list)))
+                    tf.compat.v1.logging.info("%d / %d" % (count, len(file_list)))
 
     with open(output_stats, "w") as sf:
         sf.write("statistic,value\n")
