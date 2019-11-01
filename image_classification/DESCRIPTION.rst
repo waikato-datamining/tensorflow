@@ -12,10 +12,6 @@ Installation
 
     virtualenv -p /usr/bin/python3.7 venv
 
-- install dependencies::
-
-    ./venv/bin/pip install -r requirements.txt
-
 - install tensorflow (1.x or 2.x works)
 
   - with GPU (1.x)::
