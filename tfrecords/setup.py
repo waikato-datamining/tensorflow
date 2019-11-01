@@ -38,6 +38,6 @@ setup(
         "wai.common"
     ],
     entry_points={
-        "console_scripts": ["tfrecords-a2od=wai.tfrecords.adams2objectdetection:sys_main"]
+        "console_scripts": ["tfrecords-convert=wai.tfrecords.adams:sys_main"]
     }
 )

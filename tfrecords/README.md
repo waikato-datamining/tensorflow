@@ -45,5 +45,5 @@
 
 ### Object Detection framework
 
-Execute the `adams/object_detection.py` script with `-h` to see the help screen.
+Execute `tfrecords-convert -h` to see the help screen.
 

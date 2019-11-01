@@ -3,8 +3,8 @@ import os
 import traceback
 from typing import Dict, Optional, List
 
-from wai.tfrecords.adams2objectdetection import logger, convert
-from wai.tfrecords.adams2objectdetection.constants import PREFIX_OBJECT, SUFFIX_TYPE, DEFAULT_LABEL
+from wai.tfrecords.adams import logger, convert
+from wai.tfrecords.adams.constants import PREFIX_OBJECT, SUFFIX_TYPE, DEFAULT_LABEL
 
 
 def main(args: Optional[List[str]] = None):
