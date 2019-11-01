@@ -2,16 +2,16 @@
 FROM tensorflow/tensorflow:1.14.0-gpu-py3
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git-core wget && \
+	apt-get install -y --no-install-recommends git-core wget && \
 	rm -rf /var/lib/apt/lists/* && \
 	pip install Cython contextlib2 Pillow lxml javaproperties matplotlib && \
-    rm -Rf /root/.cache/pip
+	rm -Rf /root/.cache/pip
 
 RUN cd /opt && \
-    git clone https://github.com/waikato-datamining/tensorflow.git && \
-    cd tensorflow/tfrecords && \
-    pip install . && \
-    cd .. && \
+	git clone https://github.com/waikato-datamining/tensorflow.git && \
+	cd tensorflow/tfrecords && \
+	pip install . && \
+	cd .. && \
 	git clone https://github.com/tensorflow/models && \
 	cd models/research && \
 	git reset --hard b9ef963d1e84da0bb9c0a6039457c39a699ea149 && \
