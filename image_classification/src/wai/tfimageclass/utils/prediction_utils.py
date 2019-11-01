@@ -59,6 +59,8 @@ def read_tensor_from_image_file(file_name,
     :param input_std: the standard deviation to use
     :type input_std: int
     :return: the tensor
+    :param sess: the tensorflow session to use
+    :type sess: tf.Session
     """
 
     input_name = "file_reader"
@@ -112,6 +114,8 @@ def tensor_to_probs(graph, input_layer, output_layer, tensor, sess=None):
     :param tensor: the image tensor
     :return: the probabilities
     :rtype: ndarray
+    :param sess: the tensorflow session to use
+    :type sess: tf.Session
     """
     input_operation = graph.get_operation_by_name("import/" + input_layer)
     output_operation = graph.get_operation_by_name("import/" + output_layer)
