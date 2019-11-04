@@ -80,7 +80,7 @@ COCO API github repo hash:
 * Generate tfrecords
 
   ```commandline
-  ./objdet_convert.sh "-i /path_to/images_and_reports_directory" \
+  objdet_convert.sh "-i /path_to/images_and_reports_directory" \
   "-o /path_to/name_of_output_file.tfrecords" "-s number_of_shards" \
   "-p /path_to/name_of_output_labels_file.pbtxt" "-m mapping_old_label=new_label" \
   "-r regexp_for_using_only_subset_of_labels"
@@ -91,7 +91,7 @@ COCO API github repo hash:
 * Update the config file and then start training
 
   ```commandline
-  ./objdet_train.sh "--pipeline_config_path=/path_to/your_data.config" \
+  objdet_train.sh "--pipeline_config_path=/path_to/your_data.config" \
   "--model_dir=/path_to/your_data/output" "--num_train_steps=50000" \
   "--sample_1_of_n_eval_examples=1" "--alsologtostderr"
   ```
@@ -99,7 +99,7 @@ COCO API github repo hash:
 * Export frozen_inference_graph.pb
 
   ```commandline
-  ./objdet_export.sh "--input_type image_tensor" "--pipeline_config_path /path_to/your_data.config \"
+  objdet_export.sh "--input_type image_tensor" "--pipeline_config_path /path_to/your_data.config \"
   "--trained_checkpoint_prefix /path_to/your_data/output/model.ckpt-50000" \
   "--output_directory /path_to/your_data/output/exported_graphs"
   ```
@@ -107,7 +107,7 @@ COCO API github repo hash:
 * Predict and produce csv files
 
   ```commandline
-  ./objdet_predict.sh "--graph /path_to/your_data/output/exported_graphs/frozen_inference_graph.pb" \
+  objdet_predict.sh "--graph /path_to/your_data/output/exported_graphs/frozen_inference_graph.pb" \
   "--labels /path_to/your_data_label_map.pbtxt" "--prediction_in /path_to/your_data/test_images/" \
   "--prediction_out /path_to/your_data/output/results" "--score 0.1" "--num_imgs 3" "--num_classes 1"
   ```
