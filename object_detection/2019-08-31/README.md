@@ -80,38 +80,38 @@ COCO API github repo hash:
 * Generate tfrecords
 
   ```commandline
-  objdet_convert.sh "-i /path_to/images_and_reports_directory" \
-  "-o /path_to/name_of_output_file.tfrecords" "-s number_of_shards" \
-  "-p /path_to/name_of_output_labels_file.pbtxt" "-m mapping_old_label=new_label" \
-  "-r regexp_for_using_only_subset_of_labels"
+  objdet_convert.sh -i /path_to/images_and_reports_directory \
+  -o /path_to/name_of_output_file.tfrecords -s number_of_shards \
+  -p /path_to/name_of_output_labels_file.pbtxt -m mapping_old_label=new_label \
+  -r regexp_for_using_only_subset_of_labels
   ```
-  Run with "-h" for all available options.
+  Run with -h for all available options.
   Above command need to run twice, once for training set and again for validation set.
 
 * Update the config file and then start training
 
   ```commandline
-  objdet_train.sh "--pipeline_config_path=/path_to/your_data.config" \
-  "--model_dir=/path_to/your_data/output" "--num_train_steps=50000" \
-  "--sample_1_of_n_eval_examples=1" "--alsologtostderr"
+  objdet_train.sh --pipeline_config_path=/path_to/your_data.config \
+  --model_dir=/path_to/your_data/output --num_train_steps=50000 \
+  --sample_1_of_n_eval_examples=1 --alsologtostderr
   ```
 
 * Export frozen_inference_graph.pb
 
   ```commandline
-  objdet_export.sh "--input_type image_tensor" "--pipeline_config_path /path_to/your_data.config \"
-  "--trained_checkpoint_prefix /path_to/your_data/output/model.ckpt-50000" \
-  "--output_directory /path_to/your_data/output/exported_graphs"
+  objdet_export.sh --input_type image_tensor --pipeline_config_path /path_to/your_data.config \
+  --trained_checkpoint_prefix /path_to/your_data/output/model.ckpt-50000 \
+  --output_directory /path_to/your_data/output/exported_graphs
   ```
 
 * Predict and produce csv files
 
   ```commandline
-  objdet_predict.sh "--graph /path_to/your_data/output/exported_graphs/frozen_inference_graph.pb" \
-  "--labels /path_to/your_data_label_map.pbtxt" "--prediction_in /path_to/your_data/test_images/" \
-  "--prediction_out /path_to/your_data/output/results" "--score 0.1" "--num_imgs 3" "--num_classes 1"
+  objdet_predict.sh --graph /path_to/your_data/output/exported_graphs/frozen_inference_graph.pb \
+  --labels /path_to/your_data_label_map.pbtxt --prediction_in /path_to/your_data/test_images/ \
+  --prediction_out /path_to/your_data/output/results --score 0.1 --num_imgs 3 --num_classes 1
   ```
-  Run with "-h" for all available options.
+  Run with -h for all available options.
 
 ## Docker Image in aml-repo
 
