@@ -15,7 +15,7 @@
 """
 A direct copy of the object_detection package in the tensorflow/models repository.
 
-The following commands were used to create this package:
+The following commands were used to create this package (on 6 Nov 2019):
 
 ```
 git clone https://github.com/tensorflow/models
