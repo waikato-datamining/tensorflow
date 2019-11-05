@@ -6,8 +6,8 @@ import contextlib2
 from wai.common.file.report import Report, loadf
 from wai.common.file.report.constants import EXTENSION as REPORT_EXT
 from wai.common.adams.imaging.locateobjects import LocatedObjects
-from object_detection.dataset_tools import tf_record_creation_util
 
+from ..object_detection.dataset_tools import tf_record_creation_util
 from ._logging import logger
 from ._determine_labels import determine_labels
 from ._get_files_from_directory import get_files_from_directory

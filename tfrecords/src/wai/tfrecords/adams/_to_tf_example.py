@@ -6,8 +6,8 @@ from PIL import Image as pil
 import tensorflow as tf
 import numpy as np
 from wai.common.adams.imaging.locateobjects import LocatedObjects
-from object_detection.utils import dataset_util
 
+from ..object_detection.utils import dataset_util
 from ._logging import logger
 from ._ImageFormat import ImageFormat
 from .constants import SUFFIX_TYPE
