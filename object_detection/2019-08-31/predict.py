@@ -224,9 +224,9 @@ def predict_on_images(input_dir, sess, output_dir, score_threshold, categories, 
             roi_path = "{}/{}-rois-combined.csv".format(output_dir, os.path.splitext(os.path.basename(im_name))[0])
             with open(roi_path, "w") as roi_file:
                 # File header
-                roi_file.write("file,x0,y0,x1,y1,label,label_str,score\n")
+                roi_file.write("file,x0,y0,x1,y1,x0n,y0n,x1n,y1n,label,label_str,score\n")
                 for index in range(output_dict['num_detections']):
-                    y0, x0, y1, x1 = boxes[index]
+                    y0n, x0n, y1n, x1n = boxes[index]
                     label = classes[index]
                     label_str = categories[label - 1]['name']
                     score = scores[index]
@@ -236,20 +236,18 @@ def predict_on_images(input_dir, sess, output_dir, score_threshold, categories, 
                         continue
 
                     # Translate roi coordinates into image coordinates
-                    x0 = x0 * image.width
-                    y0 = y0 * image.height
-                    x1 = x1 * image.width
-                    y1 = y1 * image.height
+                    x0 = x0n * image.width
+                    y0 = y0n * image.height
+                    x1 = x1n * image.width
+                    y1 = y1n * image.height
 
                     roi_file.write(
-                        "{},{},{},{},{},{},{},{}\n".format(os.path.basename(im_name), x0, y0, x1, y1,
-                                                           label, label_str, score))
+                        "{},{},{},{},{},{},{},{},{},{},{},{}\n".format(os.path.basename(im_name), x0, y0, x1, y1,
+                                                                       x0n, y0n, x1n, y1n, label, label_str, score))
 
         # Code for splitting rois to multiple csv's, one csv per image before combining
-        min_height = 0
         max_height = 0
         prev_min = 0
-        translation = 0
         for i in range(len(im_list)):
             img = Image.open(im_list[i])
             img_height = img.height
@@ -260,10 +258,10 @@ def predict_on_images(input_dir, sess, output_dir, score_threshold, categories, 
             roi_path_tmp = "{}/{}-rois.tmp".format(output_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
             with open(roi_path_tmp, "w") as roi_file:
                 # File header
-                roi_file.write("file,x0,y0,x1,y1,label,label_str,score\n")
+                roi_file.write("file,x0,y0,x1,y1,x0n,y0n,x1n,y1n,label,label_str,score\n")
                 # rois
                 for index in range(output_dict['num_detections']):
-                    y0, x0, y1, x1 = boxes[index]
+                    y0n, x0n, y1n, x1n = boxes[index]
                     label = classes[index]
                     label_str = categories[label - 1]['name']
                     score = scores[index]
@@ -273,10 +271,10 @@ def predict_on_images(input_dir, sess, output_dir, score_threshold, categories, 
                         continue
 
                     # Translate roi coordinates into combined image coordinates
-                    x0 = x0 * image.width
-                    y0 = y0 * image.height
-                    x1 = x1 * image.width
-                    y1 = y1 * image.height
+                    x0 = x0n * image.width
+                    y0 = y0n * image.height
+                    x1 = x1n * image.width
+                    y1 = y1n * image.height
 
                     if y0 > max_height or y1 > max_height:
                         continue
@@ -284,10 +282,10 @@ def predict_on_images(input_dir, sess, output_dir, score_threshold, categories, 
                         continue
 
                     # output
-                    roi_file.write("{},{},{},{},{},{},{},{}\n".format(os.path.basename(im_list[i]), x0, y0-translation,
-                                                                      x1, y1-translation, label, label_str, score))
+                    roi_file.write("{},{},{},{},{},{},{},{},{},{},{},{}\n".format(os.path.basename(im_name),
+                                                                                  x0, y0, x1, y1, x0n, y0n, x1n, y1n,
+                                                                                  label, label_str, score))
             os.rename(roi_path_tmp, roi_path)
-            translation += img_height
 
         # Move finished images to output_path or delete it
         for i in range(len(im_list)):
