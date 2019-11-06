@@ -13,14 +13,14 @@ def fix_labels(objects: LocatedObjects, mappings: Dict[str, str]):
     :param mappings:    The label mappings (old: new).
     """
     # Process each object
-    for object in objects:
+    for obj in objects:
         # If the object doesn't have a label, skip it
-        if SUFFIX_TYPE not in object.metadata:
+        if SUFFIX_TYPE not in obj.metadata:
             continue
 
         # Get the object's current label
-        label: str = object.metadata[SUFFIX_TYPE]
+        label: str = obj.metadata[SUFFIX_TYPE]
 
         # If there is a mapping for this label, change it
         if label in mappings:
-            object.metadata[SUFFIX_TYPE] = mappings[label]
+            obj.metadata[SUFFIX_TYPE] = mappings[label]
