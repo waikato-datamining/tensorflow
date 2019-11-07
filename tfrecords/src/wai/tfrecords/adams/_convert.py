@@ -123,7 +123,7 @@ def convert_unsharded(report_files: List[str],
     :param verbose:             Whether to log verbose messages.
     """
     # Create an unsharded writer
-    writer = tf.python_io.TFRecordWriter(output_file)
+    writer = tf.io.TFRecordWriter(output_file)
 
     # Create a function to perform writing for do_convert
     def write(example: tf.train.Example):
