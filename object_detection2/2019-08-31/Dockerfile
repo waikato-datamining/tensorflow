@@ -9,7 +9,7 @@ RUN apt-get update && \
 
 RUN cd /opt && \
 	git clone https://github.com/waikato-datamining/tensorflow.git && \
-	mv tensorflow/object_detection/2019-08-31/*.sh /usr/bin/. && \
+	mv tensorflow/object_detection2/2019-08-31/*.sh /usr/bin/. && \
 	cd tensorflow/tfrecords && \
 	pip install . && \
 	cd .. && \
