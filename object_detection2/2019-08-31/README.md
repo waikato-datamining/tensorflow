@@ -1,6 +1,6 @@
 # Object Detection framework
 
-Allows processing of images with Tensorflow's Object Detection framework, using Tensorflow 1.14.0.
+Allows processing of images with Tensorflow's Object Detection framework, using Tensorflow 2.0.0.
 
 # Version
 
@@ -64,7 +64,7 @@ COCO API github repo hash:
   ```
 ## Installation & Usage on Linux with Docker
 
-* Build the image from Docker file (from within /path_to/tensorflow/object_detection/2019-08-31)
+* Build the image from Docker file (from within /path_to/tensorflow/object_detection2/2019-08-31)
 
   ```commandline
   sudo docker build -t tf .
@@ -118,21 +118,21 @@ COCO API github repo hash:
 * Build
 
   ```commandline
-  docker build -t tensorflow/object_detection:2019-08-31 .
+  docker build -t tensorflow/object_detection2:2019-08-31 .
   ```
   
 * Tag
 
   ```commandline
   docker tag \
-  tensorflow/object_detection:2019-08-31 \
-  public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:2019-08-31
+  tensorflow/object_detection2:2019-08-31 \
+  public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection2:2019-08-31
   ```
   
 * Push
 
   ```commandline
-  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:2019-08-31
+  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection2:2019-08-31
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -145,7 +145,7 @@ COCO API github repo hash:
   If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
 
   ```commandline
-  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:2019-08-31
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection2:2019-08-31
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -156,13 +156,13 @@ COCO API github repo hash:
   
   ```commandline
   docker tag \
-  public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:2019-08-31 \
-  tensorflow/object_detection:2019-08-31
+  public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection2:2019-08-31 \
+  tensorflow/object_detection2:2019-08-31
   ```
   
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection:2019-08-31
+  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection2:2019-08-31
   ```
   "/local:/container" maps a local disk directory into a directory inside the container
