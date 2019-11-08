@@ -33,7 +33,7 @@ def to_tf_example(imgpath: str,
     :return:            The generated example.
     """
     # Load the image as a Numpy array
-    with tf.gfile.GFile(imgpath, 'rb') as fid:
+    with tf.io.gfile.GFile(imgpath, 'rb') as fid:
         encoded_img = fid.read()
     encoded_img_io = io.BytesIO(encoded_img)
     image = pil.open(encoded_img_io)
