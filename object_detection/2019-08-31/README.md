@@ -74,42 +74,42 @@ COCO API github repo hash:
 
   ```commandline
   sudo docker run --runtime=nvidia --name tf_container -ti -v \
-  /path_to/local_disk/contianing_data:/path_to/mount/inside/docker_container tf bash
+    /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container tf bash
   ```
 
-* Generate tfrecords
+* Generate tfrecords (see also [wai.tfrecords](https://github.com/waikato-datamining/tensorflow/tree/master/tfrecords))
 
   ```commandline
   objdet_convert -i /path_to/images_and_reports_directory \
-  -o /path_to/name_of_output_file.tfrecords -s number_of_shards \
-  -p /path_to/name_of_output_labels_file.pbtxt -m mapping_old_label=new_label \
-  -r regexp_for_using_only_subset_of_labels
+    -o /path_to/name_of_output_file.tfrecords -s number_of_shards \
+    -p /path_to/name_of_output_labels_file.pbtxt -m mapping_old_label=new_label \
+    -r regexp_for_using_only_subset_of_labels
   ```
-  Run with -h for all available options.
+  Run with `-h/--help` for all available options.
   Above command need to run twice, once for training set and again for validation set.
 
-* Update the config file and then start training
+* Update the config file (data augmentation: [1](https://stackoverflow.com/a/46901051/4698227), [2](https://github.com/tensorflow/models/blob/master/research/object_detection/core/preprocessor.py), [3](https://github.com/tensorflow/models/blob/master/research/object_detection/builders/preprocessor_builder_test.py)) and then start training:
 
   ```commandline
   objdet_train --pipeline_config_path=/path_to/your_data.config \
-  --model_dir=/path_to/your_data/output --num_train_steps=50000 \
-  --sample_1_of_n_eval_examples=1 --alsologtostderr
+    --model_dir=/path_to/your_data/output --num_train_steps=50000 \
+    --sample_1_of_n_eval_examples=1 --alsologtostderr
   ```
 
 * Export frozen_inference_graph.pb
 
   ```commandline
   objdet_export --input_type image_tensor --pipeline_config_path /path_to/your_data.config \
-  --trained_checkpoint_prefix /path_to/your_data/output/model.ckpt-50000 \
-  --output_directory /path_to/your_data/output/exported_graphs
+    --trained_checkpoint_prefix /path_to/your_data/output/model.ckpt-50000 \
+    --output_directory /path_to/your_data/output/exported_graphs
   ```
 
 * Predict and produce csv files
 
   ```commandline
   objdet_predict --graph /path_to/your_data/output/exported_graphs/frozen_inference_graph.pb \
-  --labels /path_to/your_data_label_map.pbtxt --prediction_in /path_to/your_data/test_images/ \
-  --prediction_out /path_to/your_data/output/results --score 0.1 --num_imgs 3 --num_classes 1
+    --labels /path_to/your_data_label_map.pbtxt --prediction_in /path_to/your_data/test_images/ \
+    --prediction_out /path_to/your_data/output/results --score 0.1 --num_imgs 3 --num_classes 1
   ```
   Run with -h for all available options.
 
@@ -125,8 +125,8 @@ COCO API github repo hash:
 
   ```commandline
   docker tag \
-  tensorflow/object_detection:2019-08-31 \
-  public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:2019-08-31
+    tensorflow/object_detection:2019-08-31 \
+    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:2019-08-31
   ```
   
 * Push
@@ -156,8 +156,8 @@ COCO API github repo hash:
   
   ```commandline
   docker tag \
-  public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:2019-08-31 \
-  tensorflow/object_detection:2019-08-31
+    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:2019-08-31 \
+    tensorflow/object_detection:2019-08-31
   ```
   
 * <a name="run">Run</a>
