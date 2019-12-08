@@ -13,9 +13,8 @@ RUN cd /opt && \
 	cd tensorflow/tfrecords && \
 	pip install . && \
 	cd .. && \
-	git clone https://github.com/tensorflow/models && \
+	git clone https://github.com/csterling/models.git && \
 	cd models/research && \
-	git reset --hard b9ef963d1e84da0bb9c0a6039457c39a699ea149 && \
 	wget -O protobuf.zip https://github.com/google/protobuf/releases/download/v3.0.0/protoc-3.0.0-linux-x86_64.zip && \
 	unzip protobuf.zip && \
 	rm protobuf.zip && \
