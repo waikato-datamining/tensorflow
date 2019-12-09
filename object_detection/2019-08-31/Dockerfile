@@ -9,9 +9,11 @@ RUN apt-get update && \
 
 RUN cd /opt && \
 	git clone https://github.com/waikato-datamining/tensorflow.git && \
+	git checkout -b negatives origin/negatives && \
 	mv tensorflow/object_detection/2019-08-31/objdet_* /usr/bin/. && \
 	cd tensorflow && \
 	git clone https://github.com/csterling/models.git && \
+	git checkout -b negatives origin/negatives && \
 	cd models/research && \
 	wget -O protobuf.zip https://github.com/google/protobuf/releases/download/v3.0.0/protoc-3.0.0-linux-x86_64.zip && \
 	unzip protobuf.zip && \
