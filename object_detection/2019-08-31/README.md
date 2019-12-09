@@ -80,8 +80,8 @@ COCO API github repo hash:
 * Generate tfrecords (see also [wai.tfrecords](https://github.com/waikato-datamining/tensorflow/tree/master/tfrecords))
 
   ```commandline
-  objdet_convert -i /path_to/images_and_reports_directory \
-    -o /path_to/name_of_output_file.tfrecords -s number_of_shards \
+  objdet_convert adams -i /path_to/images_and_reports_directory \
+    tfrecords -o /path_to/name_of_output_file.tfrecords -s number_of_shards \
     -p /path_to/name_of_output_labels_file.pbtxt -m mapping_old_label=new_label \
     -r regexp_for_using_only_subset_of_labels
   ```
