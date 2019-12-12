@@ -136,7 +136,7 @@ def remove_alpha_channel(image):
         return image
 
 
-def predict_on_images(input_dir, sess, output_dir, score_threshold, categories, num_imgs, inference_times, delete_input):
+def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, categories, num_imgs, inference_times, delete_input):
     """
     Method performing predictions on all images ony by one or combined as specified by the int value of num_imgs.
 
@@ -146,6 +146,8 @@ def predict_on_images(input_dir, sess, output_dir, score_threshold, categories, 
     :type sess: tf.Session
     :param output_dir: the output directory to move the images to and store the predictions
     :type output_dir: str
+    :param tmp_dir: the temporary directory to store the predictions until finished
+    :type tmp_dir: str
     :param score_threshold: the minimum score predictions have to have
     :type score_threshold: float
     :param categories: the label map
@@ -255,7 +257,10 @@ def predict_on_images(input_dir, sess, output_dir, score_threshold, categories, 
             max_height += img_height
             prev_min = max_height
             roi_path = "{}/{}-rois.csv".format(output_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
-            roi_path_tmp = "{}/{}-rois.tmp".format(output_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
+            if tmp_dir is not None:
+                roi_path_tmp = "{}/{}-rois.tmp".format(tmp_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
+            else:
+                roi_path_tmp = "{}/{}-rois.tmp".format(output_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
             with open(roi_path_tmp, "w") as roi_file:
                 # File header
                 roi_file.write("file,x0,y0,x1,y1,x0n,y0n,x1n,y1n,label,label_str,score\n")
@@ -321,6 +326,7 @@ if __name__ == '__main__':
     parser.add_argument('--labels', help='Path to the labels map', required=True, default=None)
     parser.add_argument('--prediction_in', help='Path to the test images', required=True, default=None)
     parser.add_argument('--prediction_out', help='Path to the output csv files folder', required=True, default=None)
+    parser.add_argument('--prediction_tmp', help='Path to the temporary csv files folder', required=False, default=None)
     parser.add_argument('--score', type=float, help='Score threshold to include in csv file', required=False, default=0.0)
     parser.add_argument('--num_classes', type=int, help='Number of classes', required=True, default=2)
     parser.add_argument('--num_imgs', type=int, help='Number of images to combine', required=False, default=1)
@@ -343,8 +349,8 @@ if __name__ == '__main__':
             with tf.compat.v1.Session() as sess:
                 while True:
                     # Performing the prediction and producing the csv files
-                    predict_on_images(parsed.prediction_in, sess, parsed.prediction_out, parsed.score,
-                                      categories, parsed.num_imgs, parsed.output_inference_time,
+                    predict_on_images(parsed.prediction_in, sess, parsed.prediction_out, parsed.prediction_tmp,
+                                      parsed.score, categories, parsed.num_imgs, parsed.output_inference_time,
                                       parsed.delete_input)
 
                     # Exit if not continuous
