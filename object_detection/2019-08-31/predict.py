@@ -1,7 +1,7 @@
 # Original Code from
 # https://github.com/tensorflow/models/blob/master/research/object_detection/object_detection_tutorial.ipynb
 # Licensed under Apache 2.0 (Most likely, since tensorflow is Apache 2.0)
-# Modifications Copyright (C) 2018 University of Waikato, Hamilton, NZ
+# Modifications Copyright (C) 2018-2020 University of Waikato, Hamilton, NZ
 #
 # Performs predictions on combined images from all images present in the folder passed as "prediction_in", then outputs the results as
 # csv files in the folder passed as "prediction_out"
@@ -19,6 +19,7 @@ from PIL import Image
 from tensorflow import Graph
 from datetime import datetime
 import time
+import traceback
 
 sys.path.append("..")
 from object_detection.utils import ops as utils_ops
@@ -161,8 +162,9 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
 
     # Iterate through all files present in "test_images_directory"
     total_time = 0
-    times = list()
-    times.append("Image(s)_file_name(s),Total_time(ms),Number_of_images,Time_per_image(ms)\n")
+    if inference_times:
+        times = list()
+        times.append("Image(s)_file_name(s),Total_time(ms),Number_of_images,Time_per_image(ms)\n")
     while True:
         start_time = datetime.now()
         im_list = []
@@ -170,6 +172,7 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
         for image_path in os.listdir(input_dir):
             # Load images only, currently supporting only jpg and png
             # TODO image complete?
+            # TODO add to blacklist if tried several times
             if image_path.lower().endswith(".jpg") or image_path.lower().endswith(".png"):
                 im_list.append(os.path.join(input_dir, image_path))
             if len(im_list) == num_imgs:
@@ -312,12 +315,12 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
         print("  Inference + I/O time: {} ms\n".format(inference_time))
         total_time += inference_time
 
-    if inference_times:
-        with open(os.path.join(output_dir, "inference_time.csv"), "w") as time_file:
-            for l in times:
-                time_file.write(l)
-        with open(os.path.join(output_dir, "total_time.txt"), "w") as total_time_file:
-            total_time_file.write("Total inference and I/O time: {} ms\n".format(total_time))
+        if inference_times:
+            with open(os.path.join(output_dir, "inference_time.csv"), "w") as time_file:
+                for l in times:
+                    time_file.write(l)
+            with open(os.path.join(output_dir, "total_time.txt"), "w") as total_time_file:
+                total_time_file.write("Total inference and I/O time: {} ms\n".format(total_time))
 
 
 if __name__ == '__main__':
@@ -334,6 +337,7 @@ if __name__ == '__main__':
     parser.add_argument('--continuous', action='store_true', help='Whether to continuously load test images and perform prediction', required=False, default=False)
     parser.add_argument('--output_inference_time', action='store_true', help='Whether to output a CSV file with inference times in the --prediction_output directory', required=False, default=False)
     parser.add_argument('--delete_input', action='store_true', help='Whether to delete the input images rather than move them to --prediction_out directory', required=False, default=False)
+    parser.add_argument('--memory_fraction', type=float, help='Memory fraction to use by tensorflow', required=False, default=0.5)
     parsed = parser.parse_args()
 
     try:
@@ -346,7 +350,8 @@ if __name__ == '__main__':
                                                                     use_display_name=True)
 
         with detection_graph.as_default():
-            with tf.compat.v1.Session() as sess:
+            opts = tf.GPUOptions(per_process_gpu_memory_fraction=parsed.memory_fraction)
+            with tf.compat.v1.Session(config=tf.ConfigProto(gpu_options=opts)) as sess:
                 while True:
                     # Performing the prediction and producing the csv files
                     predict_on_images(parsed.prediction_in, sess, parsed.prediction_out, parsed.prediction_tmp,
@@ -361,7 +366,7 @@ if __name__ == '__main__':
                         f.write("Success")
 
     except Exception as e:
-        print(e)
+        print(traceback.format_exc())
         if parsed.status is not None:
             with open(parsed.status, 'w') as f:
                 f.write(str(e))
