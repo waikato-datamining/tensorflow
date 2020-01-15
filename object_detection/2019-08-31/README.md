@@ -102,7 +102,8 @@ COCO API github repo hash:
   For training Mask RCNN, use this script (number of steps must be defined in the .config file, see [here](https://github.com/vijaydwivedi75/Custom-Mask-RCNN_TF/blob/master/mask_rcnn_inception_v2_coco.config) for an example):
 
   ```commandline
-  objdet_train_legacy --train_dir=/path/to/your/output --pipeline_config_path=/path/to/config/mask_rcnn_inception_v2_coco.config
+  objdet_train_legacy --train_dir=/path/to/your/output \
+    --pipeline_config_path=/path/to/config/mask_rcnn_inception_v2_coco.config
   ```
 
 * Export inference graph
