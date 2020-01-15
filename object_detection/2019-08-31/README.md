@@ -27,7 +27,7 @@ COCO API github repo hash:
 * install virtual environment
 
   ```commandline
-  virtualenv -p /usr/bin/python2.7 venv
+  virtualenv -p /usr/bin/python3.7 venv
   ```
 
 * install dependencies
