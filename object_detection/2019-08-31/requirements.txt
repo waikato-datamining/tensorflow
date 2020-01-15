@@ -1,8 +1,8 @@
 Cython
-argparse
 contextlib2
 pillow
 lxml
 jupyter
 matplotlib
-numpy
+scikit-image
+wai.annotations

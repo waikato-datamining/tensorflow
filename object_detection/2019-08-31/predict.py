@@ -20,6 +20,7 @@ from tensorflow import Graph
 from datetime import datetime
 import time
 import traceback
+from skimage import measure
 
 sys.path.append("..")
 from object_detection.utils import ops as utils_ops
@@ -137,7 +138,8 @@ def remove_alpha_channel(image):
         return image
 
 
-def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, categories, num_imgs, inference_times, delete_input):
+def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, categories, num_imgs, inference_times,
+                      delete_input, output_polygons, mask_threshold):
     """
     Method performing predictions on all images ony by one or combined as specified by the int value of num_imgs.
 
@@ -158,6 +160,10 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
     :type inference_times: bool
     :param delete_input: whether to delete the input images rather than moving them to the output directory
     :type delete_input: bool
+    :param output_polygons: whether the model predicts masks and polygons should be stored in the CSV files
+    :type output_polygons: bool
+    :param mask_threshold: the threshold to use for determining the contour of a mask
+    :type mask_threshold: float
     """
 
     # Iterate through all files present in "test_images_directory"
@@ -229,7 +235,10 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
             roi_path = "{}/{}-rois-combined.csv".format(output_dir, os.path.splitext(os.path.basename(im_name))[0])
             with open(roi_path, "w") as roi_file:
                 # File header
-                roi_file.write("file,x0,y0,x1,y1,x0n,y0n,x1n,y1n,label,label_str,score\n")
+                roi_file.write("file,x0,y0,x1,y1,x0n,y0n,x1n,y1n,label,label_str,score")
+                if output_polygons:
+                    roi_file.write(",poly_x,poly_y,poly_xn,poly_yn\n")
+                roi_file.write("\n")
                 for index in range(output_dict['num_detections']):
                     y0n, x0n, y1n, x1n = boxes[index]
                     label = classes[index]
@@ -246,9 +255,27 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
                     x1 = x1n * image.width
                     y1 = y1n * image.height
 
+                    if output_polygons:
+                        px = []
+                        py = []
+                        pxn = []
+                        pyn = []
+                        if 'detection_masks'in output_dict:
+                            poly = measure.find_contours(output_dict['detection_masks'][index], mask_threshold)
+                            print(poly)
+                            if len(poly) > 0:
+                                for p in poly[0]:
+                                    px.append(str(p[1]))
+                                    py.append(str(p[0]))
+                                    pxn.append(str(p[1]/image.width))
+                                    pyn.append(str(p[0]/image.height))
+
                     roi_file.write(
-                        "{},{},{},{},{},{},{},{},{},{},{},{}\n".format(os.path.basename(im_name), x0, y0, x1, y1,
+                        "{},{},{},{},{},{},{},{},{},{},{},{}".format(os.path.basename(im_name), x0, y0, x1, y1,
                                                                        x0n, y0n, x1n, y1n, label, label_str, score))
+                    if output_polygons:
+                        roi_file.write(',"{}","{}","{}","{}"'.format(",".join(px), ",".join(py), ",".join(pxn), ",".join(pyn)))
+                    roi_file.write("\n")
 
         # Code for splitting rois to multiple csv's, one csv per image before combining
         max_height = 0
@@ -266,7 +293,10 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
                 roi_path_tmp = "{}/{}-rois.tmp".format(output_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
             with open(roi_path_tmp, "w") as roi_file:
                 # File header
-                roi_file.write("file,x0,y0,x1,y1,x0n,y0n,x1n,y1n,label,label_str,score\n")
+                roi_file.write("file,x0,y0,x1,y1,x0n,y0n,x1n,y1n,label,label_str,score")
+                if output_polygons:
+                    roi_file.write(",poly_x,poly_y,poly_xn,poly_yn\n")
+                roi_file.write("\n")
                 # rois
                 for index in range(output_dict['num_detections']):
                     y0n, x0n, y1n, x1n = boxes[index]
@@ -289,10 +319,28 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
                     elif y0 < min_height or y1 < min_height:
                         continue
 
+                    if output_polygons:
+                        px = []
+                        py = []
+                        pxn = []
+                        pyn = []
+                        if 'detection_masks'in output_dict:
+                            poly = measure.find_contours(output_dict['detection_masks'][index], mask_threshold)
+                            if len(poly) > 0:
+                                for p in poly[0]:
+                                    px.append(str(p[1]))
+                                    py.append(str(p[0]))
+                                    pxn.append(str(p[1]/image.width))
+                                    pyn.append(str(p[0]/image.height))
+
                     # output
-                    roi_file.write("{},{},{},{},{},{},{},{},{},{},{},{}\n".format(os.path.basename(im_name),
-                                                                                  x0, y0, x1, y1, x0n, y0n, x1n, y1n,
-                                                                                  label, label_str, score))
+                    roi_file.write(
+                        "{},{},{},{},{},{},{},{},{},{},{},{}".format(os.path.basename(im_name), x0, y0, x1, y1,
+                                                                       x0n, y0n, x1n, y1n, label, label_str, score))
+                    if output_polygons:
+                        roi_file.write(',"{}","{}","{}","{}"'.format(",".join(px), ",".join(py), ",".join(pxn), ",".join(pyn)))
+                    roi_file.write("\n")
+
             os.rename(roi_path_tmp, roi_path)
 
         # Move finished images to output_path or delete it
@@ -331,6 +379,8 @@ if __name__ == '__main__':
     parser.add_argument('--prediction_out', help='Path to the output csv files folder', required=True, default=None)
     parser.add_argument('--prediction_tmp', help='Path to the temporary csv files folder', required=False, default=None)
     parser.add_argument('--score', type=float, help='Score threshold to include in csv file', required=False, default=0.0)
+    parser.add_argument('--output_polygons', action='store_true', help='Whether to masks are predicted and polygons should be output in the ROIS CSV files', required=False, default=False)
+    parser.add_argument('--mask_threshold', type=float, help='The threshold (0-1) to use for determining the contour of a mask', required=False, default=0.1)
     parser.add_argument('--num_classes', type=int, help='Number of classes', required=True, default=2)
     parser.add_argument('--num_imgs', type=int, help='Number of images to combine', required=False, default=1)
     parser.add_argument('--status', help='file path for predict exit status file', required=False, default=None)
@@ -356,7 +406,7 @@ if __name__ == '__main__':
                     # Performing the prediction and producing the csv files
                     predict_on_images(parsed.prediction_in, sess, parsed.prediction_out, parsed.prediction_tmp,
                                       parsed.score, categories, parsed.num_imgs, parsed.output_inference_time,
-                                      parsed.delete_input)
+                                      parsed.delete_input, parsed.output_polygons, parsed.mask_threshold)
 
                     # Exit if not continuous
                     if not parsed.continuous:

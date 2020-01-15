@@ -64,29 +64,32 @@ COCO API github repo hash:
   ```
 ## Installation & Usage on Linux with Docker
 
-* Build the image from Docker file (from within /path_to/tensorflow/object_detection/2019-08-31)
+* Build image `tf` from Docker file (from within /path_to/tensorflow/object_detection/2019-08-31)
 
   ```commandline
   sudo docker build -t tf .
   ```
   
-* Run the container
+* Run image `tf` in interactive mode (i.e., using `bash`) as container `tf_container`
 
   ```commandline
   sudo docker run --runtime=nvidia --name tf_container -ti -v \
-    /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container tf bash
+    /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container \
+    tf bash
   ```
 
-* Generate tfrecords (see also [wai.tfrecords](https://github.com/waikato-datamining/tensorflow/tree/master/tfrecords))
+* Generate tfrecords, e.g., from ADAMS annotations (using [wai.annotations](https://github.com/waikato-ufdl/wai-annotations))
 
   ```commandline
-  objdet_convert -i /path_to/images_and_reports_directory \
-    -o /path_to/name_of_output_file.tfrecords -s number_of_shards \
-    -p /path_to/name_of_output_labels_file.pbtxt -m mapping_old_label=new_label \
-    -r regexp_for_using_only_subset_of_labels
+  convert-annotations \
+    adams -i /path_to/images_and_reports_directory \
+    tfrecords -o /path_to/name_of_output_file.records \
+    -p /path_to/name_of_output_labels_file.pbtxt
   ```
   Run with `-h/--help` for all available options.
   Above command need to run twice, once for training set and again for validation set.
+
+  In case of generating output for Mask RCNN, you need to use global option `-f mask`.
 
 * Update the config file (data augmentation: [1](https://stackoverflow.com/a/46901051/4698227), [2](https://github.com/tensorflow/models/blob/master/research/object_detection/core/preprocessor.py), [3](https://github.com/tensorflow/models/blob/master/research/object_detection/builders/preprocessor_builder_test.py)) and then start training:
 
@@ -96,7 +99,13 @@ COCO API github repo hash:
     --sample_1_of_n_eval_examples=1 --alsologtostderr
   ```
 
-* Export frozen_inference_graph.pb
+  For training Mask RCNN, use this script (number of steps must be defined in the .config file, see [here](https://github.com/vijaydwivedi75/Custom-Mask-RCNN_TF/blob/master/mask_rcnn_inception_v2_coco.config) for an example):
+
+  ```commandline
+  objdet_train_legacy --train_dir=/path/to/your/output --pipeline_config_path=/path/to/config/mask_rcnn_inception_v2_coco.config
+  ```
+
+* Export inference graph
 
   ```commandline
   objdet_export --input_type image_tensor --pipeline_config_path /path_to/your_data.config \
@@ -104,14 +113,20 @@ COCO API github repo hash:
     --output_directory /path_to/your_data/output/exported_graphs
   ```
 
-* Predict and produce csv files
+* Predict and produce CSV files
 
   ```commandline
   objdet_predict --graph /path_to/your_data/output/exported_graphs/frozen_inference_graph.pb \
     --labels /path_to/your_data_label_map.pbtxt --prediction_in /path_to/your_data/test_images/ \
-    --prediction_out /path_to/your_data/output/results --score 0.1 --num_imgs 3 --num_classes 1
+    --prediction_out /path_to/your_data/output/results --score 0.1 --num_classes 1
   ```
   Run with -h for all available options.
+
+  In case of outputting predictions for Mask RCNN, you also need to specify the
+  following options:
+
+  * `--output_polygons`
+  * `--mask_threshold` - if using another threshold than the default of 0.1
 
 ## Docker Image in aml-repo
 
