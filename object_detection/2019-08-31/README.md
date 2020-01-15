@@ -53,17 +53,32 @@ COCO API github repo hash:
 * install object detection framework ([instructions](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md))
 
   ```commandline
+  mkdir /opt/tensorflow
+  cd /opt/tensorflow
   git clone https://github.com/tensorflow/models
   cd models
   git checkout SEE_HASH_ABOVE
   ```
 
-* you need to add the directory above the `object_detection` one to the `PYTHONPATH`
-  environment variable.
+* install COCO API
+
+  ```
+  cd /opt/tensorflow
+  git clone https://github.com/cocodataset/cocoapi.git
+  cd cocoapi
+  git checkout SEE_HASH_ABOVE
+  make
+  cp -r pycocotools /opt/tensorflow/models/research
+  ```
+
+* you need to append the `PYTHONPATH` environment variable:
   
   ```commandline
-  export PYTHONPATH=$PYTHONPATH:/some/where/models/research
+  export PYTHONPATH=$PYTHONPATH:/opt/tensorflow/models/research:/opt/tensorflow/models/research/slim:/opt/tensorflow/models/research/object_detection
   ```
+
+* copy the `objdet_*` scripts into `/usr/bin`
+
 
 ## Docker
 
