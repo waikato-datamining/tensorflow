@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# This training script is used for training Mask RCNN
+# See also: https://github.com/vijaydwivedi75/Custom-Mask-RCNN_TF
 
 cd /opt/tensorflow/models/research
 python object_detection/legacy/train.py "$@"
