@@ -139,7 +139,7 @@ def remove_alpha_channel(image):
 
 
 def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, categories, num_imgs, inference_times,
-                      delete_input, output_polygons, mask_threshold):
+                      delete_input, output_polygons, mask_threshold, mask_nth):
     """
     Method performing predictions on all images ony by one or combined as specified by the int value of num_imgs.
 
@@ -164,6 +164,8 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
     :type output_polygons: bool
     :param mask_threshold: the threshold to use for determining the contour of a mask
     :type mask_threshold: float
+    :param mask_nth: to speed up polygon computation, use only every nth row and column from mask
+    :type mask_nth: int
     """
 
     # Iterate through all files present in "test_images_directory"
@@ -261,14 +263,20 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
                         pxn = []
                         pyn = []
                         if 'detection_masks'in output_dict:
-                            poly = measure.find_contours(output_dict['detection_masks'][index], mask_threshold)
-                            print(poly)
+                            mask = output_dict['detection_masks'][index]
+                            if mask_nth > 1:
+                                rows = np.array(range(0, mask.shape[0], mask_nth))
+                                cols = np.array(range(0, mask.shape[1], mask_nth))
+                                mask_small = mask[np.ix_(rows, cols)]
+                            else:
+                                mask_small = mask
+                            poly = measure.find_contours(mask_small, mask_threshold)
                             if len(poly) > 0:
                                 for p in poly[0]:
-                                    px.append(str(p[1]))
-                                    py.append(str(p[0]))
-                                    pxn.append(str(p[1]/image.width))
-                                    pyn.append(str(p[0]/image.height))
+                                    px.append(str(p[1] * mask_nth))
+                                    py.append(str(p[0] * mask_nth))
+                                    pxn.append(str(p[1] * mask_nth / image.width))
+                                    pyn.append(str(p[0] * mask_nth / image.height))
 
                     roi_file.write(
                         "{},{},{},{},{},{},{},{},{},{},{},{}".format(os.path.basename(im_name), x0, y0, x1, y1,
@@ -325,13 +333,20 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
                         pxn = []
                         pyn = []
                         if 'detection_masks'in output_dict:
-                            poly = measure.find_contours(output_dict['detection_masks'][index], mask_threshold)
+                            mask = output_dict['detection_masks'][index]
+                            if mask_nth > 1:
+                                rows = np.array(range(0, mask.shape[0], mask_nth))
+                                cols = np.array(range(0, mask.shape[1], mask_nth))
+                                mask_small = mask[np.ix_(rows, cols)]
+                            else:
+                                mask_small = mask
+                            poly = measure.find_contours(mask_small, mask_threshold)
                             if len(poly) > 0:
                                 for p in poly[0]:
-                                    px.append(str(p[1]))
-                                    py.append(str(p[0]))
-                                    pxn.append(str(p[1]/image.width))
-                                    pyn.append(str(p[0]/image.height))
+                                    px.append(str(p[1] * mask_nth))
+                                    py.append(str(p[0] * mask_nth))
+                                    pxn.append(str(p[1] * mask_nth / image.width))
+                                    pyn.append(str(p[0] * mask_nth / image.height))
 
                     # output
                     roi_file.write(
@@ -381,6 +396,7 @@ if __name__ == '__main__':
     parser.add_argument('--score', type=float, help='Score threshold to include in csv file', required=False, default=0.0)
     parser.add_argument('--output_polygons', action='store_true', help='Whether to masks are predicted and polygons should be output in the ROIS CSV files', required=False, default=False)
     parser.add_argument('--mask_threshold', type=float, help='The threshold (0-1) to use for determining the contour of a mask', required=False, default=0.1)
+    parser.add_argument('--mask_nth', type=int, help='To speed polygon detection up, use every nth row and column only', required=False, default=1)
     parser.add_argument('--num_classes', type=int, help='Number of classes', required=True, default=2)
     parser.add_argument('--num_imgs', type=int, help='Number of images to combine', required=False, default=1)
     parser.add_argument('--status', help='file path for predict exit status file', required=False, default=None)
@@ -406,7 +422,8 @@ if __name__ == '__main__':
                     # Performing the prediction and producing the csv files
                     predict_on_images(parsed.prediction_in, sess, parsed.prediction_out, parsed.prediction_tmp,
                                       parsed.score, categories, parsed.num_imgs, parsed.output_inference_time,
-                                      parsed.delete_input, parsed.output_polygons, parsed.mask_threshold)
+                                      parsed.delete_input, parsed.output_polygons, parsed.mask_threshold,
+                                      parsed.mask_nth)
 
                     # Exit if not continuous
                     if not parsed.continuous:
