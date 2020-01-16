@@ -147,3 +147,26 @@ COCO API github repo hash:
   * `--output_polygons`
   * `--mask_threshold` - if using another threshold than the default of 0.1
 
+## Background images
+
+In order to use manually curated background images, you have to add the following 
+`hard_example_miner` section to your `pipeline.config`:
+
+```protobuf
+model {
+  faster_rcnn {
+    ...
+    hard_example_miner {
+      num_hard_examples: 0
+      use_negative_images_only: true
+    }
+  }
+  ...
+}
+```
+
+And, when generating the tfrecords from ADAMS annotations, the background images 
+need to get added to the training data with associating empty `.report` files 
+([wai.annotations](https://github.com/waikato-ufdl/wai-annotations) iterates 
+via the `.report` files).
+
