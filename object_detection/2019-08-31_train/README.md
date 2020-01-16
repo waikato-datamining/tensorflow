@@ -2,7 +2,7 @@
 
 Allows processing of images with Tensorflow's Object Detection framework, using Tensorflow 1.14.0.
 
-# Version
+## Version
 
 Object Detection framework github repo hash:
 
@@ -22,25 +22,27 @@ COCO API github repo hash:
 636becdc73d54283b3aac6d4ec363cffbb6f9b20
 ```
 
-## Installation & Usage on Linux with Docker
+## Docker
+
+### Build local image
 
 * Build the image from Docker file (from within /path_to/tensorflow/object_detection/2019-08-31_train)
 
   ```commandline
-  sudo docker build -t tf .
+  sudo docker build -t tf_train .
   ```
 
 * Run the container
 
   ```commandline
   sudo docker run --runtime=nvidia -ti -v \
-    /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container tf \
+    /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container tf_train \
     --pipeline_config_path=/path_to/your_data.config \
     --model_dir=/path_to/your_data/output --num_train_steps=50000 \
     --sample_1_of_n_eval_examples=1 --alsologtostderr
   ```
 
-## Docker Image in aml-repo
+## Pre-built images
 
 * Build
 
@@ -96,3 +98,4 @@ COCO API github repo hash:
     --sample_1_of_n_eval_examples=1 --alsologtostderr
   ```
   "/local:/container" maps a local disk directory into a directory inside the container
+
