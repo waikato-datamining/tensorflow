@@ -166,7 +166,7 @@ model {
 ```
 
 And, when generating the tfrecords from ADAMS annotations, the background images 
-need to get added to the training data with associating empty `.report` files 
+need to get added to the training data with corresponding (empty) `.report` files 
 ([wai.annotations](https://github.com/waikato-ufdl/wai-annotations) iterates 
 via the `.report` files).
 
