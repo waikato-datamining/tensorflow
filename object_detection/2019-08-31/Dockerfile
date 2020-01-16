@@ -4,7 +4,8 @@ FROM tensorflow/tensorflow:1.14.0-gpu-py3
 RUN apt-get update && \
 	apt-get install -y --no-install-recommends git-core wget && \
 	rm -rf /var/lib/apt/lists/* && \
-	pip install Cython contextlib2 Pillow lxml matplotlib scikit-image wai.annotations && \
+	pip install Cython && \
+	pip install contextlib2 Pillow lxml matplotlib scikit-image wai.annotations && \
 	rm -Rf /root/.cache/pip
 
 RUN cd /opt && \
