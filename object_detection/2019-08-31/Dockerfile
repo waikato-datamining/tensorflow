@@ -2,10 +2,10 @@
 FROM tensorflow/tensorflow:1.14.0-gpu-py3
 
 RUN apt-get update && \
-	apt-get install -y --no-install-recommends git-core wget && \
+	apt-get install -y --no-install-recommends git-core wget libglib2.0-0 libsm6 libxrender-dev libxext6 && \
 	rm -rf /var/lib/apt/lists/* && \
 	pip install Cython && \
-	pip install contextlib2 Pillow lxml matplotlib scikit-image wai.annotations && \
+	pip install contextlib2 Pillow lxml matplotlib scikit-image wai.annotations opencv-python && \
 	rm -Rf /root/.cache/pip
 
 RUN cd /opt && \

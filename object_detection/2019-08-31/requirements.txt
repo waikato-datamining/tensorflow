@@ -6,3 +6,4 @@ jupyter
 matplotlib
 scikit-image
 wai.annotations
+opencv-python

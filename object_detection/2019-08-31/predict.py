@@ -21,6 +21,7 @@ from datetime import datetime
 import time
 import traceback
 from skimage import measure
+import cv2
 
 sys.path.append("..")
 from object_detection.utils import ops as utils_ops
@@ -139,7 +140,7 @@ def remove_alpha_channel(image):
 
 
 def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, categories, num_imgs, inference_times,
-                      delete_input, output_polygons, mask_threshold, mask_nth):
+                      delete_input, output_polygons, mask_threshold, mask_nth, output_minrect):
     """
     Method performing predictions on all images ony by one or combined as specified by the int value of num_imgs.
 
@@ -166,6 +167,8 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
     :type mask_threshold: float
     :param mask_nth: to speed up polygon computation, use only every nth row and column from mask
     :type mask_nth: int
+    :param output_minrect: when predicting polygons, whether to output the minimal rectangles around the objects as well
+    :type output_minrect: bool
     """
 
     # Iterate through all files present in "test_images_directory"
@@ -239,17 +242,20 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
                 # File header
                 roi_file.write("file,x0,y0,x1,y1,x0n,y0n,x1n,y1n,label,label_str,score")
                 if output_polygons:
-                    roi_file.write(",poly_x,poly_y,poly_xn,poly_yn\n")
+                    roi_file.write(",poly_x,poly_y,poly_xn,poly_yn")
+                    if output_minrect:
+                        roi_file.write(",minrect_w,minrect_h")
                 roi_file.write("\n")
                 for index in range(output_dict['num_detections']):
-                    y0n, x0n, y1n, x1n = boxes[index]
-                    label = classes[index]
-                    label_str = categories[label - 1]['name']
                     score = scores[index]
 
                     # Ignore this roi if the score is less than the provided threshold
                     if score < score_threshold:
                         continue
+
+                    y0n, x0n, y1n, x1n = boxes[index]
+                    label = classes[index]
+                    label_str = categories[label - 1]['name']
 
                     # Translate roi coordinates into image coordinates
                     x0 = x0n * image.width
@@ -262,6 +268,8 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
                         py = []
                         pxn = []
                         pyn = []
+                        bw = ""
+                        bh = ""
                         if 'detection_masks'in output_dict:
                             mask = output_dict['detection_masks'][index]
                             if mask_nth > 1:
@@ -278,11 +286,18 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
                                     pxn.append(str(p[1] * mask_nth / image.width))
                                     pyn.append(str(p[0] * mask_nth / image.height))
 
+                                if output_minrect:
+                                    rect = cv2.minAreaRect(np.float32(poly[0]))
+                                    bw = rect[1][0] * mask_nth
+                                    bh = rect[1][1] * mask_nth
+
                     roi_file.write(
                         "{},{},{},{},{},{},{},{},{},{},{},{}".format(os.path.basename(im_name), x0, y0, x1, y1,
                                                                        x0n, y0n, x1n, y1n, label, label_str, score))
                     if output_polygons:
                         roi_file.write(',"{}","{}","{}","{}"'.format(",".join(px), ",".join(py), ",".join(pxn), ",".join(pyn)))
+                        if output_minrect:
+                            roi_file.write(',"{}","{}"'.format(bw, bh))
                     roi_file.write("\n")
 
         # Code for splitting rois to multiple csv's, one csv per image before combining
@@ -303,18 +318,19 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
                 # File header
                 roi_file.write("file,x0,y0,x1,y1,x0n,y0n,x1n,y1n,label,label_str,score")
                 if output_polygons:
-                    roi_file.write(",poly_x,poly_y,poly_xn,poly_yn\n")
+                    roi_file.write(",poly_x,poly_y,poly_xn,poly_yn")
+                    if output_minrect:
+                        roi_file.write(",minrect_w,minrect_h")
                 roi_file.write("\n")
                 # rois
                 for index in range(output_dict['num_detections']):
-                    y0n, x0n, y1n, x1n = boxes[index]
-                    label = classes[index]
-                    label_str = categories[label - 1]['name']
                     score = scores[index]
 
                     # Ignore this roi if the score is less than the provided threshold
                     if score < score_threshold:
                         continue
+
+                    y0n, x0n, y1n, x1n = boxes[index]
 
                     # Translate roi coordinates into combined image coordinates
                     x0 = x0n * image.width
@@ -327,11 +343,16 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
                     elif y0 < min_height or y1 < min_height:
                         continue
 
+                    label = classes[index]
+                    label_str = categories[label - 1]['name']
+
                     if output_polygons:
                         px = []
                         py = []
                         pxn = []
                         pyn = []
+                        bw = ""
+                        bh = ""
                         if 'detection_masks'in output_dict:
                             mask = output_dict['detection_masks'][index]
                             if mask_nth > 1:
@@ -348,12 +369,19 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
                                     pxn.append(str(p[1] * mask_nth / image.width))
                                     pyn.append(str(p[0] * mask_nth / image.height))
 
+                                if output_minrect:
+                                    rect = cv2.minAreaRect(np.float32(poly[0]))
+                                    bw = rect[1][0] * mask_nth
+                                    bh = rect[1][1] * mask_nth
+
                     # output
                     roi_file.write(
                         "{},{},{},{},{},{},{},{},{},{},{},{}".format(os.path.basename(im_name), x0, y0, x1, y1,
                                                                        x0n, y0n, x1n, y1n, label, label_str, score))
                     if output_polygons:
                         roi_file.write(',"{}","{}","{}","{}"'.format(",".join(px), ",".join(py), ",".join(pxn), ",".join(pyn)))
+                        if output_minrect:
+                            roi_file.write(',"{}","{}"'.format(bw, bh))
                     roi_file.write("\n")
 
             os.rename(roi_path_tmp, roi_path)
@@ -397,6 +425,7 @@ if __name__ == '__main__':
     parser.add_argument('--output_polygons', action='store_true', help='Whether to masks are predicted and polygons should be output in the ROIS CSV files', required=False, default=False)
     parser.add_argument('--mask_threshold', type=float, help='The threshold (0-1) to use for determining the contour of a mask', required=False, default=0.1)
     parser.add_argument('--mask_nth', type=int, help='To speed polygon detection up, use every nth row and column only', required=False, default=1)
+    parser.add_argument('--output_minrect', action='store_true', help='When outputting polygons whether to store the minimal rectangle around the objects in the CSV files as well', required=False, default=False)
     parser.add_argument('--num_classes', type=int, help='Number of classes', required=True, default=2)
     parser.add_argument('--num_imgs', type=int, help='Number of images to combine', required=False, default=1)
     parser.add_argument('--status', help='file path for predict exit status file', required=False, default=None)
@@ -423,7 +452,7 @@ if __name__ == '__main__':
                     predict_on_images(parsed.prediction_in, sess, parsed.prediction_out, parsed.prediction_tmp,
                                       parsed.score, categories, parsed.num_imgs, parsed.output_inference_time,
                                       parsed.delete_input, parsed.output_polygons, parsed.mask_threshold,
-                                      parsed.mask_nth)
+                                      parsed.mask_nth, parsed.output_minrect)
 
                     # Exit if not continuous
                     if not parsed.continuous:
