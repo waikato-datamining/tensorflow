@@ -22,6 +22,7 @@ import time
 import traceback
 from skimage import measure
 import cv2
+from image_complete import auto
 
 sys.path.append("..")
 from object_detection.utils import ops as utils_ops
@@ -29,6 +30,9 @@ from object_detection.utils import label_map_util
 
 OUTPUT_COMBINED = False
 """ Whether to output CSV file with ROIs for combined images as well (only for debugging). """
+
+SUPPORTED_EXTS = [".jpg", ".jpeg", ".png", ".bmp"]
+""" supported file extensions (lower case). """
 
 
 def load_image_into_numpy_array(image):
@@ -181,11 +185,13 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
         im_list = []
         # Loop to pick up images equal to num_imgs or the remaining images if less
         for image_path in os.listdir(input_dir):
-            # Load images only, currently supporting only jpg and png
-            # TODO image complete?
+            # Load images only
+            ext_lower = os.path.splitext(image_path)[1]
             # TODO add to blacklist if tried several times
-            if image_path.lower().endswith(".jpg") or image_path.lower().endswith(".png"):
-                im_list.append(os.path.join(input_dir, image_path))
+            if ext_lower in SUPPORTED_EXTS:
+                full_path = os.path.join(input_dir, image_path)
+                if auto.is_image_complete(full_path):
+                    im_list.append(full_path)
             if len(im_list) == num_imgs:
                 break
 

@@ -7,3 +7,4 @@ matplotlib
 scikit-image
 wai.annotations
 opencv-python
+python-image-complete
