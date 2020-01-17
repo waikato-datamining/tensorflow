@@ -52,12 +52,14 @@ def load_image_into_numpy_array(image):
     return im_arr
 
 
-def run_inference_for_single_image(image, sess):
+def run_inference_for_single_image(image, graph, sess):
     """
     Obtain predictions for image.
 
     :param image: the image to generate predictions for
     :type image: str
+    :param graph: the graph to use
+    :type graph: tf.Graph()
     :param sess: the tensorflow session
     :type sess: tf.Session
     :return: the predictions
@@ -65,7 +67,7 @@ def run_inference_for_single_image(image, sess):
     """
 
     # Get handles to input and output tensors
-    ops = tf.compat.v1.get_default_graph().get_operations()
+    ops = graph.get_operations()
     all_tensor_names = {output.name for op in ops for output in op.outputs}
     tensor_dict = {}
     for key in [
@@ -74,7 +76,7 @@ def run_inference_for_single_image(image, sess):
     ]:
         tensor_name = key + ':0'
         if tensor_name in all_tensor_names:
-            tensor_dict[key] = tf.compat.v1.get_default_graph().get_tensor_by_name(
+            tensor_dict[key] = graph.get_tensor_by_name(
                 tensor_name)
     if 'detection_masks' in tensor_dict:
         # The following processing is only for single image
@@ -91,7 +93,7 @@ def run_inference_for_single_image(image, sess):
         # Follow the convention by adding back the batch dimension
         tensor_dict['detection_masks'] = tf.expand_dims(
             detection_masks_reframed, 0)
-    image_tensor = tf.compat.v1.get_default_graph().get_tensor_by_name('image_tensor:0')
+    image_tensor = graph.get_tensor_by_name('image_tensor:0')
 
     # Run inference
     output_dict = sess.run(tensor_dict,
@@ -143,13 +145,15 @@ def remove_alpha_channel(image):
         return image
 
 
-def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, categories, num_imgs, inference_times,
+def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_threshold, categories, num_imgs, inference_times,
                       delete_input, output_polygons, mask_threshold, mask_nth, output_minrect):
     """
     Method performing predictions on all images ony by one or combined as specified by the int value of num_imgs.
 
     :param input_dir: the directory with the images
     :type input_dir: str
+    :param graph: the graph to use
+    :type graph: tf.Graph()
     :param sess: the tensorflow session
     :type sess: tf.Session
     :param output_dir: the output directory to move the images to and store the predictions
@@ -235,7 +239,7 @@ def predict_on_images(input_dir, sess, output_dir, tmp_dir, score_threshold, cat
             image = remove_alpha_channel(comb_img)
 
         image_np = load_image_into_numpy_array(image)
-        output_dict = run_inference_for_single_image(image_np, sess)
+        output_dict = run_inference_for_single_image(image_np, graph, sess)
 
         # Loading results
         boxes = output_dict['detection_boxes']
@@ -455,7 +459,7 @@ if __name__ == '__main__':
             with tf.compat.v1.Session(config=tf.ConfigProto(gpu_options=opts)) as sess:
                 while True:
                     # Performing the prediction and producing the csv files
-                    predict_on_images(parsed.prediction_in, sess, parsed.prediction_out, parsed.prediction_tmp,
+                    predict_on_images(parsed.prediction_in, detection_graph, sess, parsed.prediction_out, parsed.prediction_tmp,
                                       parsed.score, categories, parsed.num_imgs, parsed.output_inference_time,
                                       parsed.delete_input, parsed.output_polygons, parsed.mask_threshold,
                                       parsed.mask_nth, parsed.output_minrect)
