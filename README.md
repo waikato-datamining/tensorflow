@@ -6,5 +6,6 @@ Currently available:
   and making predictions with them
 * [object detection docker](object_detection) - for building docker images for tensorflow's 
   object detection framework
-* [tensorflow records generation](tfrecords) - for generating binary tensorflow files for 
-  object detection 
+
+For generating tfrecords, please see the [wai.annotations](https://github.com/waikato-ufdl/wai-annotations) 
+library, which can convert to and fro various file formats.
