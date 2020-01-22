@@ -55,4 +55,5 @@ of code to write for making predictions.
 ## Library
 
 * `wai.tfutils.load_frozen_graph` - for loading a frozen graph from disk
+* `wai.tfutils.load_labels` - for loading the label map and categories from a protobuf text
 * `wai.tfutils.inference_for_image` - for generating predictions for a single image
