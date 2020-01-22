@@ -20,9 +20,8 @@ from tensorflow import Graph
 from datetime import datetime
 import time
 import traceback
-from skimage import measure
-import cv2
 from image_complete import auto
+from wai.annotations.image_utils import image_to_numpyarray, remove_alpha_channel, mask_to_polygon, polygon_to_minrect, polygon_to_lists
 
 sys.path.append("..")
 from object_detection.utils import ops as utils_ops
@@ -36,23 +35,6 @@ SUPPORTED_EXTS = [".jpg", ".jpeg", ".png", ".bmp"]
 
 MAX_INCOMPLETE = 3
 """ the maximum number of times an image can return 'incomplete' status before getting moved/deleted. """
-
-
-def load_image_into_numpy_array(image):
-    """
-    Method to convert the image into a numpy array.
-    faster solution via np.fromstring found here:
-    https://stackoverflow.com/a/42036542/4698227
-
-    :param image: the image object to convert
-    :type image: Image
-    :return: the numpy array
-    :rtype: nd.array
-    """
-
-    im_arr = np.fromstring(image.tobytes(), dtype=np.uint8)
-    im_arr = im_arr.reshape((image.size[1], image.size[0], 3))
-    return im_arr
 
 
 def run_inference_for_single_image(image, graph, sess):
@@ -131,21 +113,6 @@ def load_frozen_graph(graph_path):
             od_graph_def.ParseFromString(serialized_graph)
             tf.import_graph_def(od_graph_def, name='')
     return graph
-
-
-def remove_alpha_channel(image):
-    """
-    Converts the Image object to RGB.
-
-    :param image: the image object to convert if necessary
-    :type image: Image
-    :return: the converted object
-    :rtype: Image
-    """
-    if image.mode is 'RGBA' or 'ARGB':
-        return image.convert('RGB')
-    else:
-        return image
 
 
 def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_threshold, categories, num_imgs, inference_times,
@@ -270,7 +237,7 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
                 im_name = combined[0]
                 image = remove_alpha_channel(comb_img)
 
-            image_np = load_image_into_numpy_array(image)
+            image_np = image_to_numpyarray(image)
             output_dict = run_inference_for_single_image(image_np, graph, sess)
 
             # Loading results
@@ -313,25 +280,12 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
                             bw = ""
                             bh = ""
                             if 'detection_masks'in output_dict:
-                                mask = output_dict['detection_masks'][index]
-                                if mask_nth > 1:
-                                    rows = np.array(range(0, mask.shape[0], mask_nth))
-                                    cols = np.array(range(0, mask.shape[1], mask_nth))
-                                    mask_small = mask[np.ix_(rows, cols)]
-                                else:
-                                    mask_small = mask
-                                poly = measure.find_contours(mask_small, mask_threshold)
+                                poly = mask_to_polygon(output_dict['detection_masks'][index], mask_threshold=mask_threshold, mask_nth=mask_nth)
                                 if len(poly) > 0:
-                                    for p in poly[0]:
-                                        px.append(str(p[1] * mask_nth))
-                                        py.append(str(p[0] * mask_nth))
-                                        pxn.append(str(p[1] * mask_nth / image.width))
-                                        pyn.append(str(p[0] * mask_nth / image.height))
-
+                                    px, py = polygon_to_lists(poly[0], swap_x_y=True, normalize=False, as_string=True)
+                                    pxn, pyn = polygon_to_lists(poly[0], swap_x_y=True, normalize=True, img_width=image.width, img_height=image.height, as_string=True)
                                     if output_minrect:
-                                        rect = cv2.minAreaRect(np.float32(poly[0]))
-                                        bw = rect[1][0] * mask_nth
-                                        bh = rect[1][1] * mask_nth
+                                        bw, bh = polygon_to_minrect(poly[0])
 
                         roi_file.write(
                             "{},{},{},{},{},{},{},{},{},{},{},{}".format(os.path.basename(im_name), x0, y0, x1, y1,
@@ -396,25 +350,12 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
                             bw = ""
                             bh = ""
                             if 'detection_masks'in output_dict:
-                                mask = output_dict['detection_masks'][index]
-                                if mask_nth > 1:
-                                    rows = np.array(range(0, mask.shape[0], mask_nth))
-                                    cols = np.array(range(0, mask.shape[1], mask_nth))
-                                    mask_small = mask[np.ix_(rows, cols)]
-                                else:
-                                    mask_small = mask
-                                poly = measure.find_contours(mask_small, mask_threshold)
+                                poly = mask_to_polygon(output_dict['detection_masks'][index], mask_threshold=mask_threshold, mask_nth=mask_nth)
                                 if len(poly) > 0:
-                                    for p in poly[0]:
-                                        px.append(str(p[1] * mask_nth))
-                                        py.append(str(p[0] * mask_nth))
-                                        pxn.append(str(p[1] * mask_nth / image.width))
-                                        pyn.append(str(p[0] * mask_nth / image.height))
-
+                                    px, py = polygon_to_lists(poly[0], swap_x_y=True, normalize=False, as_string=True)
+                                    pxn, pyn = polygon_to_lists(poly[0], swap_x_y=True, normalize=True, img_width=image.width, img_height=image.height, as_string=True)
                                     if output_minrect:
-                                        rect = cv2.minAreaRect(np.float32(poly[0]))
-                                        bw = rect[1][0] * mask_nth
-                                        bh = rect[1][1] * mask_nth
+                                        bw, bh = polygon_to_minrect(poly[0])
 
                         # output
                         roi_file.write(
