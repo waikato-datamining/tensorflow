@@ -12,20 +12,15 @@
 
 import numpy as np
 import os
-import sys
 import tensorflow as tf
 import argparse
 from PIL import Image
-from tensorflow import Graph
 from datetime import datetime
 import time
 import traceback
 from image_complete import auto
 from wai.annotations.image_utils import image_to_numpyarray, remove_alpha_channel, mask_to_polygon, polygon_to_minrect, polygon_to_lists
-
-sys.path.append("..")
-from object_detection.utils import ops as utils_ops
-from object_detection.utils import label_map_util
+from wai.tfutils import load_frozen_graph, inference_for_image, load_labels
 
 OUTPUT_COMBINED = False
 """ Whether to output CSV file with ROIs for combined images as well (only for debugging). """
@@ -35,84 +30,6 @@ SUPPORTED_EXTS = [".jpg", ".jpeg", ".png", ".bmp"]
 
 MAX_INCOMPLETE = 3
 """ the maximum number of times an image can return 'incomplete' status before getting moved/deleted. """
-
-
-def run_inference_for_single_image(image, graph, sess):
-    """
-    Obtain predictions for image.
-
-    :param image: the image to generate predictions for
-    :type image: str
-    :param graph: the graph to use
-    :type graph: tf.Graph()
-    :param sess: the tensorflow session
-    :type sess: tf.Session
-    :return: the predictions
-    :rtype: dict
-    """
-
-    # Get handles to input and output tensors
-    ops = graph.get_operations()
-    all_tensor_names = {output.name for op in ops for output in op.outputs}
-    tensor_dict = {}
-    for key in [
-        'num_detections', 'detection_boxes', 'detection_scores',
-        'detection_classes', 'detection_masks'
-    ]:
-        tensor_name = key + ':0'
-        if tensor_name in all_tensor_names:
-            tensor_dict[key] = graph.get_tensor_by_name(
-                tensor_name)
-    if 'detection_masks' in tensor_dict:
-        # The following processing is only for single image
-        detection_boxes = tf.squeeze(tensor_dict['detection_boxes'], [0])
-        detection_masks = tf.squeeze(tensor_dict['detection_masks'], [0])
-        # Reframe is required to translate mask from box coordinates to image coordinates and fit the image size.
-        real_num_detection = tf.cast(tensor_dict['num_detections'][0], tf.int32)
-        detection_boxes = tf.slice(detection_boxes, [0, 0], [real_num_detection, -1])
-        detection_masks = tf.slice(detection_masks, [0, 0, 0], [real_num_detection, -1, -1])
-        detection_masks_reframed = utils_ops.reframe_box_masks_to_image_masks(
-            detection_masks, detection_boxes, image.shape[0], image.shape[1])
-        detection_masks_reframed = tf.cast(
-            tf.greater(detection_masks_reframed, 0.5), tf.uint8)
-        # Follow the convention by adding back the batch dimension
-        tensor_dict['detection_masks'] = tf.expand_dims(
-            detection_masks_reframed, 0)
-    image_tensor = graph.get_tensor_by_name('image_tensor:0')
-
-    # Run inference
-    output_dict = sess.run(tensor_dict,
-                           feed_dict={image_tensor: np.expand_dims(image, 0)})
-
-    # all outputs are float32 numpy arrays, so convert types as appropriate
-    output_dict['num_detections'] = int(output_dict['num_detections'][0])
-    output_dict['detection_classes'] = output_dict[
-        'detection_classes'][0].astype(np.uint8)
-    output_dict['detection_boxes'] = output_dict['detection_boxes'][0]
-    output_dict['detection_scores'] = output_dict['detection_scores'][0]
-    if 'detection_masks' in output_dict:
-        output_dict['detection_masks'] = output_dict['detection_masks'][0]
-    return output_dict
-
-
-def load_frozen_graph(graph_path):
-    """
-    Loads the provided frozen graph into detection_graph to use with prediction.
-
-    :param graph_path: the path to the frozen graph
-    :type graph_path: str
-    :return: the graph
-    :rtype: tf.Graph
-    """
-
-    graph = tf.Graph()  # type: Graph
-    with graph.as_default():
-        od_graph_def = tf.compat.v1.GraphDef()
-        with tf.io.gfile.GFile(graph_path, 'rb') as fid:
-            serialized_graph = fid.read()
-            od_graph_def.ParseFromString(serialized_graph)
-            tf.import_graph_def(od_graph_def, name='')
-    return graph
 
 
 def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_threshold, categories, num_imgs, inference_times,
@@ -238,7 +155,7 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
                 image = remove_alpha_channel(comb_img)
 
             image_np = image_to_numpyarray(image)
-            output_dict = run_inference_for_single_image(image_np, graph, sess)
+            output_dict = inference_for_image(image_np, graph, sess)
 
             # Loading results
             boxes = output_dict['detection_boxes']
@@ -426,9 +343,7 @@ if __name__ == '__main__':
         detection_graph = load_frozen_graph(parsed.graph)
 
         # Getting classes strings from the label map
-        label_map = label_map_util.load_labelmap(parsed.labels)
-        categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=parsed.num_classes,
-                                                                    use_display_name=True)
+        _, categories = load_labels(parsed.labels, parsed.num_classes, use_display_name=True)
 
         with detection_graph.as_default():
             opts = tf.GPUOptions(per_process_gpu_memory_fraction=parsed.memory_fraction)
