@@ -43,7 +43,7 @@ of code to write for making predictions.
   * via pip
 
     ```commandline
-    ./venv/bin/pip install wai.tfimageclass
+    ./venv/bin/pip install wai.tfutils
     ```
 
   * from source (from within the directory containing the `setup.py` script)::
