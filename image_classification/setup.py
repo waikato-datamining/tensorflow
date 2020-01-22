@@ -23,11 +23,11 @@ setup(
     url="https://github.com/waikato-datamining/tensorflow/tree/master/image_classification",
     classifiers=[
         'Development Status :: 4 - Beta',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: Apache Software License',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Programming Language :: Python :: 3',
     ],
-    license='MIT License',
+    license='Apache 2.0 License',
     package_dir={
         '': 'src'
     },
