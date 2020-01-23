@@ -20,10 +20,10 @@ import time
 import traceback
 from image_complete import auto
 from wai.annotations.image_utils import image_to_numpyarray, remove_alpha_channel, mask_to_polygon, polygon_to_minrect, polygon_to_lists
+from wai.annotations.core import ImageInfo
+from wai.annotations.roi import ROIObject
+from wai.annotations.roi.io import ROIWriter
 from wai.tfutils import load_frozen_graph, inference_for_image, load_labels
-
-OUTPUT_COMBINED = False
-""" Whether to output CSV file with ROIs for combined images as well (only for debugging). """
 
 SUPPORTED_EXTS = [".jpg", ".jpeg", ".png", ".bmp"]
 """ supported file extensions (lower case). """
@@ -162,57 +162,6 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
             scores = output_dict['detection_scores']
             classes = output_dict['detection_classes']
 
-            if OUTPUT_COMBINED:
-                roi_path = "{}/{}-rois-combined.csv".format(output_dir, os.path.splitext(os.path.basename(im_name))[0])
-                with open(roi_path, "w") as roi_file:
-                    # File header
-                    roi_file.write("file,x0,y0,x1,y1,x0n,y0n,x1n,y1n,label,label_str,score")
-                    if output_polygons:
-                        roi_file.write(",poly_x,poly_y,poly_xn,poly_yn")
-                        if output_minrect:
-                            roi_file.write(",minrect_w,minrect_h")
-                    roi_file.write("\n")
-                    for index in range(output_dict['num_detections']):
-                        score = scores[index]
-
-                        # Ignore this roi if the score is less than the provided threshold
-                        if score < score_threshold:
-                            continue
-
-                        y0n, x0n, y1n, x1n = boxes[index]
-                        label = classes[index]
-                        label_str = categories[label - 1]['name']
-
-                        # Translate roi coordinates into image coordinates
-                        x0 = x0n * image.width
-                        y0 = y0n * image.height
-                        x1 = x1n * image.width
-                        y1 = y1n * image.height
-
-                        if output_polygons:
-                            px = []
-                            py = []
-                            pxn = []
-                            pyn = []
-                            bw = ""
-                            bh = ""
-                            if 'detection_masks'in output_dict:
-                                poly = mask_to_polygon(output_dict['detection_masks'][index], mask_threshold=mask_threshold, mask_nth=mask_nth)
-                                if len(poly) > 0:
-                                    px, py = polygon_to_lists(poly[0], swap_x_y=True, normalize=False, as_string=True)
-                                    pxn, pyn = polygon_to_lists(poly[0], swap_x_y=True, normalize=True, img_width=image.width, img_height=image.height, as_string=True)
-                                    if output_minrect:
-                                        bw, bh = polygon_to_minrect(poly[0])
-
-                        roi_file.write(
-                            "{},{},{},{},{},{},{},{},{},{},{},{}".format(os.path.basename(im_name), x0, y0, x1, y1,
-                                                                           x0n, y0n, x1n, y1n, label, label_str, score))
-                        if output_polygons:
-                            roi_file.write(',"{}","{}","{}","{}"'.format(",".join(px), ",".join(py), ",".join(pxn), ",".join(pyn)))
-                            if output_minrect:
-                                roi_file.write(',"{}","{}"'.format(bw, bh))
-                        roi_file.write("\n")
-
             # Code for splitting rois to multiple csv's, one csv per image before combining
             max_height = 0
             prev_min = 0
@@ -227,64 +176,63 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
                     roi_path_tmp = "{}/{}-rois.tmp".format(tmp_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
                 else:
                     roi_path_tmp = "{}/{}-rois.tmp".format(output_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
-                with open(roi_path_tmp, "w") as roi_file:
-                    # File header
-                    roi_file.write("file,x0,y0,x1,y1,x0n,y0n,x1n,y1n,label,label_str,score")
+
+                roiobjs = []
+                for index in range(output_dict['num_detections']):
+                    score = scores[index]
+
+                    # Ignore this roi if the score is less than the provided threshold
+                    if score < score_threshold:
+                        continue
+
+                    y0n, x0n, y1n, x1n = boxes[index]
+
+                    # Translate roi coordinates into combined image coordinates
+                    x0 = x0n * image.width
+                    y0 = y0n * image.height
+                    x1 = x1n * image.width
+                    y1 = y1n * image.height
+
+                    if y0 > max_height or y1 > max_height:
+                        continue
+                    elif y0 < min_height or y1 < min_height:
+                        continue
+
+                    label = classes[index]
+                    label_str = categories[label - 1]['name']
+
+                    px = None
+                    py = None
+                    pxn = None
+                    pyn = None
+                    bw = None
+                    bh = None
                     if output_polygons:
-                        roi_file.write(",poly_x,poly_y,poly_xn,poly_yn")
-                        if output_minrect:
-                            roi_file.write(",minrect_w,minrect_h")
-                    roi_file.write("\n")
-                    # rois
-                    for index in range(output_dict['num_detections']):
-                        score = scores[index]
+                        px = []
+                        py = []
+                        pxn = []
+                        pyn = []
+                        bw = ""
+                        bh = ""
+                        if 'detection_masks'in output_dict:
+                            poly = mask_to_polygon(output_dict['detection_masks'][index], mask_threshold=mask_threshold, mask_nth=mask_nth)
+                            if len(poly) > 0:
+                                px, py = polygon_to_lists(poly[0], swap_x_y=True, normalize=False, as_string=True)
+                                pxn, pyn = polygon_to_lists(poly[0], swap_x_y=True, normalize=True, img_width=image.width, img_height=image.height, as_string=True)
+                                if output_minrect:
+                                    bw, bh = polygon_to_minrect(poly[0])
 
-                        # Ignore this roi if the score is less than the provided threshold
-                        if score < score_threshold:
-                            continue
+                    roiobj = ROIObject(x0, y0, x1, y1, x0n, y0n, x1n, y1n, label, label_str, score=score,
+                                       poly_x=px, poly_y=py, poly_xn=pxn, poly_yn=pyn,
+                                       minrect_w=bw, minrect_h=bh)
+                    roiobjs.append(roiobj)
 
-                        y0n, x0n, y1n, x1n = boxes[index]
-
-                        # Translate roi coordinates into combined image coordinates
-                        x0 = x0n * image.width
-                        y0 = y0n * image.height
-                        x1 = x1n * image.width
-                        y1 = y1n * image.height
-
-                        if y0 > max_height or y1 > max_height:
-                            continue
-                        elif y0 < min_height or y1 < min_height:
-                            continue
-
-                        label = classes[index]
-                        label_str = categories[label - 1]['name']
-
-                        if output_polygons:
-                            px = []
-                            py = []
-                            pxn = []
-                            pyn = []
-                            bw = ""
-                            bh = ""
-                            if 'detection_masks'in output_dict:
-                                poly = mask_to_polygon(output_dict['detection_masks'][index], mask_threshold=mask_threshold, mask_nth=mask_nth)
-                                if len(poly) > 0:
-                                    px, py = polygon_to_lists(poly[0], swap_x_y=True, normalize=False, as_string=True)
-                                    pxn, pyn = polygon_to_lists(poly[0], swap_x_y=True, normalize=True, img_width=image.width, img_height=image.height, as_string=True)
-                                    if output_minrect:
-                                        bw, bh = polygon_to_minrect(poly[0])
-
-                        # output
-                        roi_file.write(
-                            "{},{},{},{},{},{},{},{},{},{},{},{}".format(os.path.basename(im_name), x0, y0, x1, y1,
-                                                                           x0n, y0n, x1n, y1n, label, label_str, score))
-                        if output_polygons:
-                            roi_file.write(',"{}","{}","{}","{}"'.format(",".join(px), ",".join(py), ",".join(pxn), ",".join(pyn)))
-                            if output_minrect:
-                                roi_file.write(',"{}","{}"'.format(bw, bh))
-                        roi_file.write("\n")
-
-                os.rename(roi_path_tmp, roi_path)
+                info = ImageInfo(os.path.basename(im_list[i]))
+                roiext = (info, roiobjs)
+                roiwriter = ROIWriter(output=tmp_dir if tmp_dir is not None else output_dir, no_images=True)
+                roiwriter.save([roiext])
+                if tmp_dir is not None:
+                    os.rename(roi_path_tmp, roi_path)
         except:
             print("Failed processing images: {}".format(",".join(im_list)))
             print(traceback.format_exc())
