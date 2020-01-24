@@ -16,12 +16,6 @@ and timestamp:
 Fri Aug 30 14:39:49 2019 -0700
 ```
 
-COCO API github repo hash:
-
-```
-636becdc73d54283b3aac6d4ec363cffbb6f9b20
-```
-
 ## Docker
 
 ### Build local image

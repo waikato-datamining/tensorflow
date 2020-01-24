@@ -18,13 +18,8 @@ RUN cd /opt && \
 	wget -O protobuf.zip https://github.com/google/protobuf/releases/download/v3.0.0/protoc-3.0.0-linux-x86_64.zip && \
 	unzip protobuf.zip && \
 	rm protobuf.zip && \
-	./bin/protoc object_detection/protos/*.proto --python_out=. && \
-	git clone https://github.com/cocodataset/cocoapi.git && \
-	cd cocoapi/PythonAPI && \
-	git reset --hard 636becdc73d54283b3aac6d4ec363cffbb6f9b20 && \
-	make && \
-	cp -r pycocotools /opt/tensorflow/models/research/
-	
+	./bin/protoc object_detection/protos/*.proto --python_out=.
+
 ENV PYTHONPATH=/opt/tensorflow/models/research:/opt/tensorflow/models/research/slim:/opt/tensorflow/models/research/object_detection
 	
 WORKDIR /opt/tensorflow/
