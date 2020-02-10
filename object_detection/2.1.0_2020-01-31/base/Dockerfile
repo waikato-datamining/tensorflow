@@ -11,7 +11,7 @@ RUN apt-get update && \
 
 RUN cd /opt && \
 	git clone https://github.com/waikato-datamining/tensorflow.git && \
-	mv tensorflow/object_detection/2.1.0_2020-01-08/base/objdet_* /usr/bin/. && \
+	mv tensorflow/object_detection/2.1.0_2020-01-31/base/objdet_* /usr/bin/. && \
 	cd tensorflow && \
 	git clone https://github.com/tensorflow/models && \
 	cd models/research && \
