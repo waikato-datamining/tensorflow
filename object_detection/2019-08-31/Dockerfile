@@ -1,5 +1,6 @@
 # Ubuntu 18.04, CUDA 10.0, Python 3.6
-FROM public.aml-repo.cms.waikato.ac.nz:443/tensorflow/tensorflow:1.14.0-gpu-py3
+ARG DOCKER_REGISTRY=public.aml-repo.cms.waikato.ac.nz:443/
+FROM ${DOCKER_REGISTRY}tensorflow/tensorflow:1.14.0-gpu-py3
 
 RUN apt-get update && \
 	apt-get install -y --no-install-recommends git-core wget libglib2.0-0 libsm6 libxrender-dev libxext6 && \
