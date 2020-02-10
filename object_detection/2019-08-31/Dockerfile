@@ -1,5 +1,5 @@
 # Ubuntu 18.04, CUDA 10.0, Python 3.6
-FROM tensorflow/tensorflow:1.14.0-gpu-py3
+FROM public.aml-repo.cms.waikato.ac.nz:443/tensorflow/tensorflow:1.14.0-gpu-py3
 
 RUN apt-get update && \
 	apt-get install -y --no-install-recommends git-core wget libglib2.0-0 libsm6 libxrender-dev libxext6 && \
