@@ -23,13 +23,13 @@ Fri Aug 30 14:39:49 2019 -0700
 * Build image `tf` from Docker file (from within /path_to/tensorflow/object_detection/2019-08-31)
 
   ```commandline
-  sudo docker build -t tf .
+  docker build -t tf .
   ```
   
 * Run image `tf` in interactive mode (i.e., using `bash`) as container `tf_container`
 
   ```commandline
-  sudo docker run --runtime=nvidia --name tf_container -ti -v \
+  docker run --runtime=nvidia --name tf_container -ti -v \
     /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container \
     tf bash
   ```

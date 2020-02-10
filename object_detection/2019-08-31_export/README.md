@@ -23,13 +23,13 @@ Fri Aug 30 14:39:49 2019 -0700
 * Build the image from Docker file (from within /path_to/tensorflow/object_detection/2019-08-31_export)
 
   ```commandline
-  sudo docker build -t tf_export .
+  docker build -t tf_export .
   ```
 
 * Run the container
 
   ```commandline
-  sudo docker run --runtime=nvidia -ti -v \
+  docker run --runtime=nvidia -ti -v \
     /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container tf_export \
     --input_type image_tensor --pipeline_config_path /path_to/your_data.config \
     --trained_checkpoint_prefix /path_to/your_data/output/model.ckpt-50000 \

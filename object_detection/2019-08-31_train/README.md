@@ -23,13 +23,13 @@ Fri Aug 30 14:39:49 2019 -0700
 * Build the image from Docker file (from within /path_to/tensorflow/object_detection/2019-08-31_train)
 
   ```commandline
-  sudo docker build -t tf_train .
+  docker build -t tf_train .
   ```
 
 * Run the container
 
   ```commandline
-  sudo docker run --runtime=nvidia -ti -v \
+  docker run --runtime=nvidia -ti -v \
     /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container tf_train \
     --pipeline_config_path=/path_to/your_data.config \
     --model_dir=/path_to/your_data/output --num_train_steps=50000 \
