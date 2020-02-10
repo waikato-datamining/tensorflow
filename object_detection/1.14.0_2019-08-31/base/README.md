@@ -20,7 +20,7 @@ Fri Aug 30 14:39:49 2019 -0700
 
 ### Build local image
 
-* Build image `tf` from Docker file (from within /path_to/tensorflow/object_detection/2019-08-31)
+* Build image `tf` from Docker file (from within /path_to/tensorflow/object_detection/1.14.0-2019-08-31/base)
 
   ```commandline
   docker build -t tf .
@@ -39,21 +39,21 @@ Fri Aug 30 14:39:49 2019 -0700
 * Build
 
   ```commandline
-  docker build -t tensorflow/object_detection:2019-08-31 .
+  docker build -t tensorflow/object_detection:1.14.0_2019-08-31 .
   ```
   
 * Tag
 
   ```commandline
   docker tag \
-    tensorflow/object_detection:2019-08-31 \
-    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:2019-08-31
+    tensorflow/object_detection:1.14.0_2019-08-31 \
+    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.14.0_2019-08-31
   ```
   
 * Push
 
   ```commandline
-  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:2019-08-31
+  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.14.0_2019-08-31
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -66,7 +66,7 @@ Fri Aug 30 14:39:49 2019 -0700
   If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
 
   ```commandline
-  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:2019-08-31
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.14.0_2019-08-31
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -77,14 +77,14 @@ Fri Aug 30 14:39:49 2019 -0700
   
   ```commandline
   docker tag \
-    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:2019-08-31 \
-    tensorflow/object_detection:2019-08-31
+    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.14.0_2019-08-31 \
+    tensorflow/object_detection:1.14.0_2019-08-31
   ```
   
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection:2019-08-31
+  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection:1.14.0_2019-08-31
   ```
   "/local:/container" maps a local disk directory into a directory inside the container
 
