@@ -1,4 +1,4 @@
-# Ubuntu 18.04, CUDA 10.0, Python 3.6
+# Ubuntu 18.04, CUDA 10.1, Python 3.6
 ARG DOCKER_REGISTRY=public.aml-repo.cms.waikato.ac.nz:443/
 FROM ${DOCKER_REGISTRY}tensorflow/tensorflow:2.1.0-gpu-py3
 
@@ -15,7 +15,7 @@ RUN cd /opt && \
 	cd tensorflow && \
 	git clone https://github.com/tensorflow/models && \
 	cd models/research && \
-	git reset --hard d7a267397bf33a8b127004175ed77688fd37d0fb && \
+	git reset --hard d7e4cc8a3ef9b7c20d7212649dade80989a8c324 && \
 	wget -O protobuf.zip https://github.com/google/protobuf/releases/download/v3.0.0/protoc-3.0.0-linux-x86_64.zip && \
 	unzip protobuf.zip && \
 	rm protobuf.zip && \
