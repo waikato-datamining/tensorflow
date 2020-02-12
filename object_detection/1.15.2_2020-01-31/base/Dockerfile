@@ -17,7 +17,7 @@ RUN cd /opt && \
 	cd models/research && \
 	git reset --hard d7e4cc8a3ef9b7c20d7212649dade80989a8c324 && \
 	wget -O protobuf.zip https://github.com/google/protobuf/releases/download/v3.0.0/protoc-3.0.0-linux-x86_64.zip && \
-	unzip protobuf.zip && \
+	unzip -q protobuf.zip && \
 	rm protobuf.zip && \
 	./bin/protoc object_detection/protos/*.proto --python_out=.
 
