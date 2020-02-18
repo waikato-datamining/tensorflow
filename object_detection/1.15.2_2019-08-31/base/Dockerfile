@@ -11,11 +11,11 @@ RUN apt-get update && \
 
 RUN cd /opt && \
 	git clone https://github.com/waikato-datamining/tensorflow.git && \
-	mv tensorflow/object_detection/1.15.2_2020-01-31/base/objdet_* /usr/bin/. && \
+	mv tensorflow/object_detection/1.15.2_2019-08-31/base/objdet_* /usr/bin/. && \
 	cd tensorflow && \
 	git clone https://github.com/tensorflow/models && \
 	cd models/research && \
-	git reset --hard d7e4cc8a3ef9b7c20d7212649dade80989a8c324 && \
+	git reset --hard b9ef963d1e84da0bb9c0a6039457c39a699ea149 && \
 	wget -O protobuf.zip https://github.com/google/protobuf/releases/download/v3.0.0/protoc-3.0.0-linux-x86_64.zip && \
 	unzip -q protobuf.zip && \
 	rm protobuf.zip && \

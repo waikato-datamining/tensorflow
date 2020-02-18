@@ -7,20 +7,20 @@ Allows processing of images with Tensorflow's Object Detection framework, using 
 Object Detection framework github repo hash:
 
 ```
-d7e4cc8a3ef9b7c20d7212649dade80989a8c324
+b9ef963d1e84da0bb9c0a6039457c39a699ea149
 ```
 
 and timestamp:
 
 ```
-31 Jan 2020
+Fri Aug 30 14:39:49 2019 -0700
 ```
 
 ## Docker
 
 ### Build local image
 
-* Build the image from Docker file (from within /path_to/tensorflow/object_detection/1.15.2_2020-01-31/train)
+* Build the image from Docker file (from within /path_to/tensorflow/object_detection/1.15.2_2019-08-31/train)
 
   ```commandline
   docker build -t tf_train .
@@ -41,21 +41,21 @@ and timestamp:
 * Build
 
   ```commandline
-  docker build -t tensorflow/object_detection:1.15.2_2020-01-31_train .
+  docker build -t tensorflow/object_detection:1.15.2_2019-08-31_train .
   ```
   
 * Tag
 
   ```commandline
   docker tag \
-    tensorflow/object_detection:1.15.2_2020-01-31_train \
-    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2020-01-31_train
+    tensorflow/object_detection:1.15.2_2019-08-31_train \
+    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2019-08-31_train
   ```
   
 * Push
 
   ```commandline
-  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2020-01-31_train
+  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2019-08-31_train
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -68,7 +68,7 @@ and timestamp:
   If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
 
   ```commandline
-  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2020-01-31_train
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2019-08-31_train
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -79,14 +79,14 @@ and timestamp:
   
   ```commandline
   docker tag \
-    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2020-01-31_train \
-    tensorflow/object_detection:1.15.2_2020-01-31_train
+    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2019-08-31_train \
+    tensorflow/object_detection:1.15.2_2019-08-31_train
   ```
 
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection:1.15.2_2020-01-31_train \
+  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection:1.15.2_2019-08-31_train \
     --pipeline_config_path=/path_to/your_data.config \
     --model_dir=/path_to/your_data/output --num_train_steps=50000 \
     --sample_1_of_n_eval_examples=1 --alsologtostderr

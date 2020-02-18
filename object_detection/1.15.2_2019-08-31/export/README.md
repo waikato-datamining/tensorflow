@@ -7,20 +7,20 @@ Allows processing of images with Tensorflow's Object Detection framework, using 
 Object Detection framework github repo hash:
 
 ```
-d7e4cc8a3ef9b7c20d7212649dade80989a8c324
+b9ef963d1e84da0bb9c0a6039457c39a699ea149
 ```
 
 and timestamp:
 
 ```
-31 Jan 2020
+Fri Aug 30 14:39:49 2019 -0700
 ```
 
 ## Docker
 
 ### Build local image
 
-* Build the image from Docker file (from within /path_to/tensorflow/object_detection/1.15.2_2020-01-31/export)
+* Build the image from Docker file (from within /path_to/tensorflow/object_detection/1.15.2_2019-08-31/export)
 
   ```commandline
   docker build -t tf_export .
@@ -41,21 +41,21 @@ and timestamp:
 * Build
 
   ```commandline
-  docker build -t tensorflow/object_detection:1.15.2_2020-01-31_export .
+  docker build -t tensorflow/object_detection:1.15.2_2019-08-31_export .
   ```
   
 * Tag
 
   ```commandline
   docker tag \
-    tensorflow/object_detection:1.15.2_2020-01-31_export \
-    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2020-01-31_export
+    tensorflow/object_detection:1.15.2_2019-08-31_export \
+    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2019-08-31_export
   ```
   
 * Push
 
   ```commandline
-  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2020-01-31_export
+  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2019-08-31_export
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -68,7 +68,7 @@ and timestamp:
   If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
 
   ```commandline
-  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2020-01-31_export
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2019-08-31_export
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -79,14 +79,14 @@ and timestamp:
   
   ```commandline
   docker tag \
-    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2020-01-31_export \
-    tensorflow/object_detection:1.15.2_2020-01-31_export
+    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2019-08-31_export \
+    tensorflow/object_detection:1.15.2_2019-08-31_export
   ```
 
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection:1.15.2_2020-01-31_export \
+  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection:1.15.2_2019-08-31_export \
     --input_type image_tensor --pipeline_config_path /path_to/your_data.config \
     --trained_checkpoint_prefix /path_to/your_data/output/model.ckpt-50000 \
     --output_directory /path_to/your_data/output/exported_graphs
