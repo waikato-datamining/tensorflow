@@ -6,7 +6,11 @@ import cv2, numpy as np
 from keras.models import model_from_json # or from tf.keras.models import model_from_json
 import tensorflow as tf
 import argparse
+import traceback
 
+# https://github.com/keras-team/keras/issues/3945#issuecomment-281312732
+from keras import backend as K
+K.set_image_dim_ordering('th')
 
 def VGG_16():
     """
