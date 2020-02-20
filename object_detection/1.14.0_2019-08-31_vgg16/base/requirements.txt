@@ -1,0 +1,10 @@
+Cython
+contextlib2
+pillow
+lxml
+jupyter
+matplotlib
+scikit-image
+wai.annotations
+opencv-python
+python-image-complete
