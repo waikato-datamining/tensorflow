@@ -6,7 +6,7 @@ RUN apt-get update && \
 	apt-get install -y --no-install-recommends git-core wget libglib2.0-0 libsm6 libxrender-dev libxext6 && \
 	rm -rf /var/lib/apt/lists/* && \
 	pip install Cython && \
-	pip install contextlib2 Pillow lxml matplotlib scikit-image wai.annotations wai.tfutils opencv-python python-image-complete && \
+	pip install contextlib2 Pillow lxml matplotlib scikit-image wai.annotations wai.tfutils opencv-python python-image-complete "keras<2.0.0" && \
 	rm -Rf /root/.cache/pip
 
 RUN cd /opt && \
