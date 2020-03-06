@@ -70,5 +70,5 @@ Allows labeling of images with Tensorflow's image classification capabilities, u
   ```commandline
   docker run --runtime=nvidia -v /local:/container -it tensorflow/image_classification:1.14
   ```
-  "/local:/container" maps a local disk directory into a directory inside the container
+  `/local:/container` maps a local disk directory into a directory inside the container
 

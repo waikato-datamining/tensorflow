@@ -76,5 +76,5 @@ library.
     --labels /path/to/output_labels.txt \
     --input_width 224 --input_height 224
   ```
-  "/local:/container" maps a local disk directory into a directory inside the container
+  `/local:/container` maps a local disk directory into a directory inside the container
 

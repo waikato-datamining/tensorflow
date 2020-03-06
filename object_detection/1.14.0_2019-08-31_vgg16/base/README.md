@@ -86,7 +86,7 @@ Fri Aug 30 14:39:49 2019 -0700
   ```commandline
   docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection:1.14.0_2019-08-31_vgg16
   ```
-  "/local:/container" maps a local disk directory into a directory inside the container
+  `/local:/container` maps a local disk directory into a directory inside the container
 
 ### Usage
 

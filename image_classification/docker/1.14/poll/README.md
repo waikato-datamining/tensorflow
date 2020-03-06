@@ -82,5 +82,5 @@ library.
     --in_dir /path/to/predictions/in \ 
     --out_dir /path/to/predictions/out 
   ```
-  "/local:/container" maps a local disk directory into a directory inside the container
+  `/local:/container` maps a local disk directory into a directory inside the container
 

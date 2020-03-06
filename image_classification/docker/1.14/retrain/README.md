@@ -86,5 +86,5 @@ library.
     --validation_percentage 20 \
     --training_steps 2000
   ```
-  "/local:/container" maps a local disk directory into a directory inside the container
+  `/local:/container` maps a local disk directory into a directory inside the container
 
