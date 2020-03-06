@@ -215,7 +215,7 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
                         bw = ""
                         bh = ""
                         if 'detection_masks'in output_dict:
-                            poly = mask_to_polygon(output_dict['detection_masks'][index], mask_threshold=mask_threshold, mask_nth=mask_nth)
+                            poly = mask_to_polygon(output_dict['detection_masks'][index], mask_threshold=mask_threshold, mask_nth=mask_nth, view=(x0, y0, x1, y1))
                             if len(poly) > 0:
                                 px, py = polygon_to_lists(poly[0], swap_x_y=True, normalize=False, as_string=True)
                                 pxn, pyn = polygon_to_lists(poly[0], swap_x_y=True, normalize=True, img_width=image.width, img_height=image.height, as_string=True)
