@@ -34,13 +34,13 @@ library.
   ```commandline
   docker tag \
     tensorflow/image_classification:1.14 \
-    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification:1.14_retrain
+    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification_retrain:1.14
   ```
   
 * Push
 
   ```commandline
-  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification:1.14_retrain
+  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification_retrain:1.14
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -53,7 +53,7 @@ library.
   If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
 
   ```commandline
-  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification:1.14_retrain
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification_retrain:1.14
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -64,14 +64,14 @@ library.
   
   ```commandline
   docker tag \
-    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification:1.14_retrain \
-    tensorflow/image_classification:1.14_retrain
+    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification_retrain:1.14 \
+    tensorflow/image_classification_retrain:1.14
   ```
 
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/image_classification:1.14_retrain \
+  docker run --runtime=nvidia -v /local:/container -it tensorflow/image_classification_retrain:1.14 \
     --image_dir /path/to/data/ \
     --image_lists_dir /path/to/output/ \
     --output_graph /path/to/output/output_graph.pb \

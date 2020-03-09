@@ -41,21 +41,21 @@ Fri Aug 30 14:39:49 2019 -0700
 * Build
 
   ```commandline
-  docker build -t tensorflow/object_detection:1.14.0_2019-08-31_train .
+  docker build -t tensorflow/object_detection_train:1.14.0_2019-08-31 .
   ```
   
 * Tag
 
   ```commandline
   docker tag \
-    tensorflow/object_detection:1.14.0_2019-08-31_train \
-    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.14.0_2019-08-31_train
+    tensorflow/object_detection_train:1.14.0_2019-08-31 \
+    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_train:1.14.0_2019-08-31
   ```
   
 * Push
 
   ```commandline
-  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.14.0_2019-08-31_train
+  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_train:1.14.0_2019-08-31
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -68,7 +68,7 @@ Fri Aug 30 14:39:49 2019 -0700
   If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
 
   ```commandline
-  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.14.0_2019-08-31_train
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_train:1.14.0_2019-08-31
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -79,14 +79,14 @@ Fri Aug 30 14:39:49 2019 -0700
   
   ```commandline
   docker tag \
-    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.14.0_2019-08-31_train \
-    tensorflow/object_detection:1.14.0_2019-08-31_train
+    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_train:1.14.0_2019-08-31 \
+    tensorflow/object_detection_train:1.14.0_2019-08-31
   ```
 
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection:1.14.0_2019-08-31_train \
+  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection_train:1.14.0_2019-08-31 \
     --pipeline_config_path=/path_to/your_data.config \
     --model_dir=/path_to/your_data/output --num_train_steps=50000 \
     --sample_1_of_n_eval_examples=1 --alsologtostderr

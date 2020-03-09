@@ -41,21 +41,21 @@ Fri Aug 30 14:39:49 2019 -0700
 * Build
 
   ```commandline
-  docker build -t tensorflow/object_detection:1.15.2_2019-08-31_predict .
+  docker build -t tensorflow/object_detection_predict:1.15.2_2019-08-31 .
   ```
   
 * Tag
 
   ```commandline
   docker tag \
-    tensorflow/object_detection:1.15.2_2019-08-31_predict \
-    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2019-08-31_predict
+    tensorflow/object_detection_predict:1.15.2_2019-08-31 \
+    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_predict:1.15.2_2019-08-31
   ```
   
 * Push
 
   ```commandline
-  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2019-08-31_predict
+  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_predict:1.15.2_2019-08-31
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -68,7 +68,7 @@ Fri Aug 30 14:39:49 2019 -0700
   If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
 
   ```commandline
-  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2019-08-31_predict
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_predict:1.15.2_2019-08-31
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -79,14 +79,14 @@ Fri Aug 30 14:39:49 2019 -0700
   
   ```commandline
   docker tag \
-    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2019-08-31_predict \
-    tensorflow/object_detection:1.15.2_2019-08-31_predict
+    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_predict:1.15.2_2019-08-31 \
+    tensorflow/object_detection_predict:1.15.2_2019-08-31
   ```
 
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection:1.15.2_2019-08-31_predict \
+  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection_predict:1.15.2_2019-08-31 \
     --graph /path_to/your_data/output/exported_graphs/frozen_inference_graph.pb \
     --labels /path_to/your_data_label_map.pbtxt --prediction_in /path_to/your_data/test_images/ \
     --prediction_out /path_to/your_data/output/results --score 0.1 --num_imgs 3 --num_classes 1
