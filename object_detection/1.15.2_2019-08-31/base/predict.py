@@ -33,7 +33,7 @@ MAX_INCOMPLETE = 3
 
 
 def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_threshold, categories, num_imgs, inference_times,
-                      delete_input, output_polygons, mask_threshold, mask_nth, output_minrect):
+                      delete_input, output_polygons, mask_threshold, mask_nth, output_minrect, view_margin, fully_connected):
     """
     Method performing predictions on all images ony by one or combined as specified by the int value of num_imgs.
 
@@ -64,6 +64,10 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
     :type mask_nth: int
     :param output_minrect: when predicting polygons, whether to output the minimal rectangles around the objects as well
     :type output_minrect: bool
+    :param view_margin: the margin in pixels to use around the masks
+    :type view_margin: int
+    :param fully_connected: whether regions of 'high' or 'low' values should be fully-connected at isthmuses
+    :type fully_connected: str
     """
 
     # Iterate through all files present in "test_images_directory"
@@ -215,7 +219,9 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
                         bw = ""
                         bh = ""
                         if 'detection_masks'in output_dict:
-                            poly = mask_to_polygon(output_dict['detection_masks'][index], mask_threshold=mask_threshold, mask_nth=mask_nth, view=(x0, y0, x1, y1))
+                            poly = mask_to_polygon(output_dict['detection_masks'][index], mask_threshold=mask_threshold,
+                                                   mask_nth=mask_nth, view=(x0, y0, x1, y1), view_margin=view_margin,
+                                                   fully_connected=fully_connected)
                             if len(poly) > 0:
                                 px, py = polygon_to_lists(poly[0], swap_x_y=True, normalize=False, as_string=True)
                                 pxn, pyn = polygon_to_lists(poly[0], swap_x_y=True, normalize=True, img_width=image.width, img_height=image.height, as_string=True)
@@ -284,6 +290,8 @@ if __name__ == '__main__':
     parser.add_argument('--output_inference_time', action='store_true', help='Whether to output a CSV file with inference times in the --prediction_output directory', required=False, default=False)
     parser.add_argument('--delete_input', action='store_true', help='Whether to delete the input images rather than move them to --prediction_out directory', required=False, default=False)
     parser.add_argument('--memory_fraction', type=float, help='Memory fraction to use by tensorflow', required=False, default=0.5)
+    parser.add_argument('--view_margin', default=2, type=int, required=False, help='The number of pixels to use as margin around the masks when determining the polygon')
+    parser.add_argument('--fully_connected', default='high', choices=['high', 'low'], required=False, help='When determining polygons, whether regions of high or low values should be fully-connected at isthmuses')
     parsed = parser.parse_args()
 
     try:
@@ -301,7 +309,7 @@ if __name__ == '__main__':
                     predict_on_images(parsed.prediction_in, detection_graph, sess, parsed.prediction_out, parsed.prediction_tmp,
                                       parsed.score, categories, parsed.num_imgs, parsed.output_inference_time,
                                       parsed.delete_input, parsed.output_polygons, parsed.mask_threshold,
-                                      parsed.mask_nth, parsed.output_minrect)
+                                      parsed.mask_nth, parsed.output_minrect, parsed.view_margin, parsed.fully_connected)
 
                     # Exit if not continuous
                     if not parsed.continuous:
