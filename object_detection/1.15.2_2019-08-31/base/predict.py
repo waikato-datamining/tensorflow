@@ -19,7 +19,7 @@ from datetime import datetime
 import time
 import traceback
 from image_complete import auto
-from wai.annotations.image_utils import image_to_numpyarray, remove_alpha_channel, mask_to_polygon, polygon_to_minrect, polygon_to_lists
+from wai.annotations.image_utils import image_to_numpyarray, remove_alpha_channel, mask_to_polygon, polygon_to_minrect, polygon_to_lists, lists_to_polygon, polygon_to_bbox
 from wai.annotations.core import ImageInfo
 from wai.annotations.roi import ROIObject
 from wai.annotations.roi.io import ROIWriter
@@ -33,7 +33,8 @@ MAX_INCOMPLETE = 3
 
 
 def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_threshold, categories, num_imgs, inference_times,
-                      delete_input, output_polygons, mask_threshold, mask_nth, output_minrect, view_margin, fully_connected):
+                      delete_input, output_polygons, mask_threshold, mask_nth, output_minrect, view_margin, fully_connected,
+                      fit_bbox_to_polygon):
     """
     Method performing predictions on all images ony by one or combined as specified by the int value of num_imgs.
 
@@ -68,6 +69,8 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
     :type view_margin: int
     :param fully_connected: whether regions of 'high' or 'low' values should be fully-connected at isthmuses
     :type fully_connected: str
+    :param fit_bbox_to_polygon: whether to fit the bounding box to the polygon
+    :type fit_bbox_to_polygon: bool
     """
 
     # Iterate through all files present in "test_images_directory"
@@ -227,6 +230,9 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
                                 pxn, pyn = polygon_to_lists(poly[0], swap_x_y=True, normalize=True, img_width=image.width, img_height=image.height, as_string=True)
                                 if output_minrect:
                                     bw, bh = polygon_to_minrect(poly[0])
+                                if fit_bbox_to_polygon and (len(px) >= 3):
+                                    x0, y0, x1, y1 = polygon_to_bbox(lists_to_polygon(px, py))
+                                    x0n, y0n, x1n, y1n = polygon_to_bbox(lists_to_polygon(pxn, pyn))
 
                     roiobj = ROIObject(x0, y0, x1, y1, x0n, y0n, x1n, y1n, label, label_str, score=score,
                                        poly_x=px, poly_y=py, poly_xn=pxn, poly_yn=pyn,
@@ -280,6 +286,7 @@ if __name__ == '__main__':
     parser.add_argument('--prediction_tmp', help='Path to the temporary csv files folder', required=False, default=None)
     parser.add_argument('--score', type=float, help='Score threshold to include in csv file', required=False, default=0.0)
     parser.add_argument('--output_polygons', action='store_true', help='Whether to masks are predicted and polygons should be output in the ROIS CSV files', required=False, default=False)
+    parser.add_argument('--fit_bbox_to_polygon', action='store_true', help='Whether to fit the bounding box to the polygon', required=False, default=False)
     parser.add_argument('--mask_threshold', type=float, help='The threshold (0-1) to use for determining the contour of a mask', required=False, default=0.1)
     parser.add_argument('--mask_nth', type=int, help='To speed polygon detection up, use every nth row and column only', required=False, default=1)
     parser.add_argument('--output_minrect', action='store_true', help='When outputting polygons whether to store the minimal rectangle around the objects in the CSV files as well', required=False, default=False)
@@ -309,7 +316,8 @@ if __name__ == '__main__':
                     predict_on_images(parsed.prediction_in, detection_graph, sess, parsed.prediction_out, parsed.prediction_tmp,
                                       parsed.score, categories, parsed.num_imgs, parsed.output_inference_time,
                                       parsed.delete_input, parsed.output_polygons, parsed.mask_threshold,
-                                      parsed.mask_nth, parsed.output_minrect, parsed.view_margin, parsed.fully_connected)
+                                      parsed.mask_nth, parsed.output_minrect, parsed.view_margin, parsed.fully_connected,
+                                      parsed.fit_bbox_to_polygon)
 
                     # Exit if not continuous
                     if not parsed.continuous:
