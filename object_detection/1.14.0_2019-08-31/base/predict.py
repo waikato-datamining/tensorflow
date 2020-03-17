@@ -34,7 +34,7 @@ MAX_INCOMPLETE = 3
 
 def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_threshold, categories, num_imgs, inference_times,
                       delete_input, output_polygons, mask_threshold, mask_nth, output_minrect, view_margin, fully_connected,
-                      fit_bbox_to_polygon):
+                      fit_bbox_to_polygon, output_width_height):
     """
     Method performing predictions on all images ony by one or combined as specified by the int value of num_imgs.
 
@@ -71,6 +71,8 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
     :type fully_connected: str
     :param fit_bbox_to_polygon: whether to fit the bounding box to the polygon
     :type fit_bbox_to_polygon: bool
+    :param output_width_height: whether to output x/y/w/h instead of x0/y0/x1/y1
+    :type output_width_height: bool
     """
 
     # Iterate through all files present in "test_images_directory"
@@ -241,7 +243,10 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
 
                 info = ImageInfo(os.path.basename(im_list[i]))
                 roiext = (info, roiobjs)
-                roiwriter = ROIWriter(["--output", str(tmp_dir if tmp_dir is not None else output_dir), "--no-images"])
+                options = ["--output", str(tmp_dir if tmp_dir is not None else output_dir), "--no-images"]
+                if output_width_height:
+                    options.append("--size-mode")
+                roiwriter = ROIWriter(options)
                 roiwriter.save([roiext])
                 if tmp_dir is not None:
                     os.rename(roi_path_tmp, roi_path)
@@ -299,6 +304,7 @@ if __name__ == '__main__':
     parser.add_argument('--memory_fraction', type=float, help='Memory fraction to use by tensorflow', required=False, default=0.5)
     parser.add_argument('--view_margin', default=2, type=int, required=False, help='The number of pixels to use as margin around the masks when determining the polygon')
     parser.add_argument('--fully_connected', default='high', choices=['high', 'low'], required=False, help='When determining polygons, whether regions of high or low values should be fully-connected at isthmuses')
+    parser.add_argument('--output_width_height', action='store_true', help="Whether to output x/y/w/h instead of x0/y0/x1/y1 in the ROI CSV files", required=False, default=False)
     parsed = parser.parse_args()
 
     try:
@@ -317,7 +323,7 @@ if __name__ == '__main__':
                                       parsed.score, categories, parsed.num_imgs, parsed.output_inference_time,
                                       parsed.delete_input, parsed.output_polygons, parsed.mask_threshold,
                                       parsed.mask_nth, parsed.output_minrect, parsed.view_margin, parsed.fully_connected,
-                                      parsed.fit_bbox_to_polygon)
+                                      parsed.fit_bbox_to_polygon, parsed.output_width_height)
 
                     # Exit if not continuous
                     if not parsed.continuous:
