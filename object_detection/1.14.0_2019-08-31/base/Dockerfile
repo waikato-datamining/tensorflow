@@ -7,6 +7,7 @@ RUN apt-get update && \
 	rm -rf /var/lib/apt/lists/* && \
 	pip install Cython && \
 	pip install contextlib2 Pillow lxml matplotlib scikit-image wai.annotations wai.tfutils opencv-python python-image-complete && \
+	pip install --upgrade wai.annotations && \
 	rm -Rf /root/.cache/pip
 
 RUN cd /opt && \
