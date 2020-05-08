@@ -6,7 +6,7 @@ RUN apt-get update && \
 	apt-get install -y --no-install-recommends git-core wget libglib2.0-0 libsm6 libxrender-dev libxext6 && \
 	rm -rf /var/lib/apt/lists/* && \
 	pip install Cython && \
-	pip install opencv-python<4.2 && \
+	pip install "opencv-python<4.2" && \
 	pip install keras-segmentation && \
 	rm -Rf /root/.cache/pip
 	
