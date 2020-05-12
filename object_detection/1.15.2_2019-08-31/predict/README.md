@@ -89,7 +89,7 @@ Fri Aug 30 14:39:49 2019 -0700
   docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection_predict:1.15.2_2019-08-31 \
     --graph /path_to/your_data/output/exported_graphs/frozen_inference_graph.pb \
     --labels /path_to/your_data_label_map.pbtxt --prediction_in /path_to/your_data/test_images/ \
-    --prediction_out /path_to/your_data/output/results --score 0.1 --num_imgs 3 --num_classes 1
+    --prediction_out /path_to/your_data/output/results --score 0.1
   ```
   `/local:/container` maps a local disk directory into a directory inside the container
 

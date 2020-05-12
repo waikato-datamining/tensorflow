@@ -131,7 +131,7 @@ Fri Aug 30 14:39:49 2019 -0700
   ```commandline
   objdet_predict --graph /path_to/your_data/output/exported_graphs/frozen_inference_graph.pb \
     --labels /path_to/your_data_label_map.pbtxt --prediction_in /path_to/your_data/test_images/ \
-    --prediction_out /path_to/your_data/output/results --score 0.1 --num_classes 1
+    --prediction_out /path_to/your_data/output/results --score 0.1
   ```
   Run with -h for all available options.
 
