@@ -1,4 +1,0 @@
-#!/bin/bash
-
-cd /opt/tensorflow/models/research
-python object_detection/keras_vgg16_to_tf.py "$@"
