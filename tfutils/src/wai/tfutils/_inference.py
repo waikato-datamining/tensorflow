@@ -19,7 +19,7 @@ from object_detection.utils import ops as utils_ops
 from object_detection.utils import label_map_util
 
 
-def load_labels(label_map_path, num_classes, use_display_name=True):
+def load_labels(label_map_path, num_classes=None, use_display_name=True):
     """
     Loads the labels (map and categories) from the protobuf text file.
 
