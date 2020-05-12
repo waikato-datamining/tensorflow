@@ -25,7 +25,7 @@ def load_labels(label_map_path, num_classes, use_display_name=True):
 
     :param label_map_path: the protobuf text file with the labels
     :type label_map_path: str
-    :param num_classes: the maximum number of classes to use
+    :param num_classes: the maximum number of classes to use, use None to determine maximum from label_map_path
     :type num_classes: int
     :param use_display_name: choose whether to load 'display_name' field as category name.
            If False or if the display_name field does not exist, uses 'name' field as category names instead.
@@ -35,6 +35,8 @@ def load_labels(label_map_path, num_classes, use_display_name=True):
     """
 
     label_map = label_map_util.load_labelmap(label_map_path)
+    if num_classes is None:
+        num_classes = len(label_map[1])
     categories = label_map_util.convert_label_map_to_categories(
         label_map, max_num_classes=num_classes, use_display_name=use_display_name)
     return label_map, categories
