@@ -36,7 +36,7 @@ def load_labels(label_map_path, num_classes=None, use_display_name=True):
 
     label_map = label_map_util.load_labelmap(label_map_path)
     if num_classes is None:
-        num_classes = len(label_map[1])
+        num_classes = len(label_map.item)
     categories = label_map_util.convert_label_map_to_categories(
         label_map, max_num_classes=num_classes, use_display_name=use_display_name)
     return label_map, categories

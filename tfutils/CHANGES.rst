@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.0.3 (2020-05-13)
+------------------
+
+- fixed how `wai.tfutils.load_labels` determines maximum number of classes
+
+
 0.0.2 (2020-05-12)
 ------------------
 
