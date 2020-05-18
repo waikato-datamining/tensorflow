@@ -15,7 +15,7 @@ RUN cd /opt && \
 	cd tensorflow && \
 	git clone https://github.com/tensorflow/models && \
 	cd models/research && \
-	git reset --hard b9ef963d1e84da0bb9c0a6039457c39a699ea149 && \
+	git reset --hard 8518d053936aaf30afb9ed0a4ea01baddca5bd17 && \
 	wget -O protobuf.zip https://github.com/google/protobuf/releases/download/v3.0.0/protoc-3.0.0-linux-x86_64.zip && \
 	unzip -q protobuf.zip && \
 	rm protobuf.zip && \
