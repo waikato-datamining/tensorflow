@@ -7,20 +7,20 @@ Allows processing of images with Tensorflow's Object Detection framework, using 
 Object Detection framework github repo hash:
 
 ```
-b9ef963d1e84da0bb9c0a6039457c39a699ea149
+8518d053936aaf30afb9ed0a4ea01baddca5bd17
 ```
 
 and timestamp:
 
 ```
-Fri Aug 30 14:39:49 2019 -0700
+13 May 2020, 6:41am GMT
 ```
 
 ## Docker
 
 ### Build local image
 
-* Build the image from Docker file (from within /path_to/tensorflow/object_detection/1.15.2_2019-08-31/train)
+* Build the image from Docker file (from within /path_to/tensorflow/object_detection/1.15.2_2020-05-13/train)
 
   ```commandline
   docker build -t tf_train .
@@ -41,21 +41,21 @@ Fri Aug 30 14:39:49 2019 -0700
 * Build
 
   ```commandline
-  docker build -t tensorflow/object_detection_train:1.15.2_2019-08-31 .
+  docker build -t tensorflow/object_detection_train:1.15.2_2020-05-13 .
   ```
   
 * Tag
 
   ```commandline
   docker tag \
-    tensorflow/object_detection_train:1.15.2_2019-08-31 \
-    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_train:1.15.2_2019-08-31
+    tensorflow/object_detection_train:1.15.2_2020-05-13 \
+    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_train:1.15.2_2020-05-13
   ```
   
 * Push
 
   ```commandline
-  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_train:1.15.2_2019-08-31
+  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_train:1.15.2_2020-05-13
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -68,7 +68,7 @@ Fri Aug 30 14:39:49 2019 -0700
   If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
 
   ```commandline
-  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_train:1.15.2_2019-08-31
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_train:1.15.2_2020-05-13
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -79,14 +79,14 @@ Fri Aug 30 14:39:49 2019 -0700
   
   ```commandline
   docker tag \
-    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_train:1.15.2_2019-08-31 \
-    tensorflow/object_detection_train:1.15.2_2019-08-31
+    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_train:1.15.2_2020-05-13 \
+    tensorflow/object_detection_train:1.15.2_2020-05-13
   ```
 
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection_train:1.15.2_2019-08-31 \
+  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection_train:1.15.2_2020-05-13 \
     --pipeline_config_path=/path_to/your_data.config \
     --model_dir=/path_to/your_data/output --num_train_steps=50000 \
     --sample_1_of_n_eval_examples=1 --alsologtostderr
