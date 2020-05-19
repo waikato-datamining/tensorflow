@@ -1,6 +1,6 @@
 # Inference with Object Detection framework
 
-Allows processing of images with Tensorflow's Object Detection framework, using Tensorflow 1.15.3.
+Allows processing of images with Tensorflow's Object Detection framework, using Tensorflow 1.15.2.
 
 ## Version
 
@@ -20,7 +20,7 @@ and timestamp:
 
 ## Build local image
 
-* Build the image from Docker file (from within /path_to/tensorflow/object_detection/1.15.3_2020-05-13/predict)
+* Build the image from Docker file (from within /path_to/tensorflow/object_detection/1.15.2_2020-05-13/predict)
 
   ```commandline
   docker build -t tf_predict .
@@ -41,21 +41,21 @@ and timestamp:
 * Build
 
   ```commandline
-  docker build -t tensorflow/object_detection_predict:1.15.3_2020-05-13 .
+  docker build -t tensorflow/object_detection_predict:1.15.2_2020-05-13 .
   ```
   
 * Tag
 
   ```commandline
   docker tag \
-    tensorflow/object_detection_predict:1.15.3_2020-05-13 \
-    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_predict:1.15.3_2020-05-13
+    tensorflow/object_detection_predict:1.15.2_2020-05-13 \
+    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_predict:1.15.2_2020-05-13
   ```
   
 * Push
 
   ```commandline
-  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_predict:1.15.3_2020-05-13
+  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_predict:1.15.2_2020-05-13
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -68,7 +68,7 @@ and timestamp:
   If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
 
   ```commandline
-  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_predict:1.15.3_2020-05-13
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_predict:1.15.2_2020-05-13
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -79,14 +79,14 @@ and timestamp:
   
   ```commandline
   docker tag \
-    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_predict:1.15.3_2020-05-13 \
-    tensorflow/object_detection_predict:1.15.3_2020-05-13
+    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection_predict:1.15.2_2020-05-13 \
+    tensorflow/object_detection_predict:1.15.2_2020-05-13
   ```
 
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection_predict:1.15.3_2020-05-13 \
+  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection_predict:1.15.2_2020-05-13 \
     --graph /path_to/your_data/output/exported_graphs/frozen_inference_graph.pb \
     --labels /path_to/your_data_label_map.pbtxt --prediction_in /path_to/your_data/test_images/ \
     --prediction_out /path_to/your_data/output/results --score 0.1
