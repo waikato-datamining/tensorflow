@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd /opt/automl/efficientdet
+python model_inspect.py "$@"
