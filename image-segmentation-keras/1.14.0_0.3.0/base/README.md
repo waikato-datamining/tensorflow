@@ -20,7 +20,7 @@ image-segmentation-keras version: 0.3.0
 * Run image `isk` in interactive mode (i.e., using `bash`) as container `isk_container`
 
   ```commandline
-  docker run --runtime=nvidia --name _container -ti -v \
+  docker run --runtime=nvidia --name isk_container -ti -v \
     /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container \
     isk bash
   ```
