@@ -5,7 +5,11 @@ Arxiv link: https://arxiv.org/abs/1911.09070
 
 ## Version
 
-git hash
+Code from here:
+
+https://github.com/google/automl/tree/master/efficientdet
+
+Using the following git hash:
 
 ```
 786f9f459e52d9d90650b1635f200ffaf21c6677
