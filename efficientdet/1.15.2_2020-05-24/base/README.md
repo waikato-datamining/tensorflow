@@ -17,6 +17,31 @@ Using the following git hash:
 
 ## Docker
 
+### Quick start
+
+* Log into registry using *public* credentials:
+
+  ```commandline
+  docker login -u public -p public public.aml-repo.cms.waikato.ac.nz:443 
+  ```
+
+* Pull and run image (adjust volume mappings `-v`):
+
+  ```commandline
+  docker run --runtime=nvidia \
+    -v /local/dir:/container/dir \
+    -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/efficientdet:1.15.2_2020-05-24
+  ```
+
+  **NB:** For docker versions 19.03 (`docker version`) and newer, use `--gpus=all` instead of `--runtime=nvidia`.
+
+* If need be, remove all containers and images from your system:
+
+  ```commandline
+  docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q) && docker system prune -a
+  ```
+
+
 ### Build local image
 
 * Build image `eft` from Docker file (from within /path_to/tensorflow/efficientdet/1.15.2_2020-05-24/base)
