@@ -9,7 +9,7 @@ RUN apt-get update && \
     pip uninstall -y pycocotools && \
     pip install "git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI" && \
     pip uninstall -y numpy && \
-    pip install "numpy==1.17.4" && \
+    pip install "numpy<=1.17.4" && \
     rm -Rf /root/.cache/pip
 
 
