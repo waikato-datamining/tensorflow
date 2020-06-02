@@ -115,3 +115,13 @@ Using the following git hash:
   docker run --runtime=nvidia -v /local:/container -it tensorflow/eft:1.15.2_2020-05-24
   ```
   `/local:/container` maps a local disk directory into a directory inside the container
+
+
+### Command-line tools
+
+The following command-line toosl are available:
+
+* `ed_main` - calls `/opt/automl/efficientdet/main.py`
+* `ed_model_inspect` - calls `/opt/automl/efficientdet/model_inspect.py`
+* `ed_create_coco_tfrecord` - calls `/opt/automl/efficientdet/dataset/create_coco_tfrecord.py`
+* `ed_create_pascal_tfrecord` - calls `/opt/automl/efficientdet/dataset/create_pascal_tfrecord.py`

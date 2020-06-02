@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cd /opt/automl/efficientdet
+
+export PYTHONPATH=".:$PYTHONPATH"
+
+python dataset/create_pascal_tfrecord.py "$@"

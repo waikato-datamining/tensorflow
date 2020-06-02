@@ -18,6 +18,6 @@ RUN cd /opt && \
     cd /opt/automl && \
     git checkout 786f9f459e52d9d90650b1635f200ffaf21c6677
 
-COPY efficientdet_* /usr/bin/
+COPY ed_* /usr/bin/
 
 WORKDIR /opt/automl/efficientdet
