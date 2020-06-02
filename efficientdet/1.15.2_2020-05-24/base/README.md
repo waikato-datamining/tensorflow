@@ -15,6 +15,10 @@ Using the following git hash:
 786f9f459e52d9d90650b1635f200ffaf21c6677
 ```
 
+## Notes
+
+* requires sharded TFRecords
+
 ## Docker
 
 ### Quick start
