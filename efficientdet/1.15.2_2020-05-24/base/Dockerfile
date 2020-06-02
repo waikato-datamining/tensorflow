@@ -8,6 +8,8 @@ RUN apt-get update && \
     pip install contextlib2 "Pillow>=6.0.0" pyyaml lxml matplotlib scikit-image wai.annotations==0.3.5 wai.tfutils==0.0.3 "opencv-python<=4.2" python-image-complete "six>=1.12.0" "tensorflow-addons>=0.9.1" && \
     pip uninstall -y pycocotools && \
     pip install "git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI" && \
+    pip uninstall -y numpy && \
+    pip install "numpy==1.17.4" && \
     rm -Rf /root/.cache/pip
 
 
