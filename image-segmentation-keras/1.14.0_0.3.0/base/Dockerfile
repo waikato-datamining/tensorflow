@@ -12,4 +12,6 @@ RUN apt-get update && \
     pip install "numpy<=1.17.4" && \
 	rm -Rf /root/.cache/pip
 	
+COPY bash.bashrc /etc/bash.bashrc
+
 WORKDIR /opt/keras-image-segmentation/

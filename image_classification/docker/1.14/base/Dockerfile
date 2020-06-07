@@ -7,6 +7,10 @@ RUN apt-get update && \
         rm -rf /var/lib/apt/lists/* && \
         pip install Cython && \
         pip install wai.tfimageclass && \
+        pip uninstall -y numpy && \
+        pip install "numpy<=1.17.4" && \
         rm -Rf /root/.cache/pip
+
+COPY bash.bashrc /etc/bash.bashrc
 
 WORKDIR /

@@ -25,4 +25,6 @@ RUN cd /opt && \
 
 ENV PYTHONPATH=/opt/tensorflow/models/research:/opt/tensorflow/models/research/slim:/opt/tensorflow/models/research/object_detection
 	
+COPY bash.bashrc /etc/bash.bashrc
+
 WORKDIR /opt/tensorflow/
