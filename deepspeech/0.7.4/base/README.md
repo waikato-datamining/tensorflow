@@ -1,0 +1,110 @@
+# DeepSpeech
+
+Mozilla's [DeepSpeech](https://github.com/mozilla/DeepSpeech) ([documentation](https://deepspeech.readthedocs.io/en/v0.7.4/)).
+
+
+## Version
+
+Version of DeepSpeech:
+
+```
+0.7.4
+```
+
+## Docker
+
+### Quick start
+
+* Log into registry using *public* credentials:
+
+  ```commandline
+  docker login -u public -p public public.aml-repo.cms.waikato.ac.nz:443 
+  ```
+
+* Pull and run image (adjust volume mappings `-v`):
+
+  ```commandline
+  docker run --runtime=nvidia \
+    -v /local/dir:/container/dir \
+    -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech:0.7.4
+  ```
+
+  **NB:** For docker versions 19.03 (`docker version`) and newer, use `--gpus=all` instead of `--runtime=nvidia`.
+
+* If need be, remove all containers and images from your system:
+
+  ```commandline
+  docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q) && docker system prune -a
+  ```
+
+
+### Build local image
+
+* Build image `ds` from Docker file (from within /path_to/tensorflow/deepspeech/0.7.4/base)
+
+  ```commandline
+  docker build -t ds .
+  ```
+  
+* Run image `ds` in interactive mode (i.e., using `bash`) as container `isk_container`
+
+  ```commandline
+  docker run --runtime=nvidia --name ds_container -ti -v \
+    /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container \
+    ds bash
+  ```
+
+### Pre-built images
+
+* Build
+
+  ```commandline
+  docker build -t tensorflow/ds:0.7.4 .
+  ```
+  
+* Tag
+
+  ```commandline
+  docker tag \
+    tensorflow/ds:0.7.4 \
+    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech:0.7.4
+  ```
+  
+* Push
+
+  ```commandline
+  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech:0.7.4
+  ```
+  If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
+  
+  ```commandline
+  docker login public-push.aml-repo.cms.waikato.ac.nz:443
+  ```
+  
+* Pull
+
+  If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
+
+  ```commandline
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech:0.7.4
+  ```
+  If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
+  
+  ```commandline
+  docker login public.aml-repo.cms.waikato.ac.nz:443
+  ```
+  Then tag by running:
+  
+  ```commandline
+  docker tag \
+    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech:0.7.4 \
+    tensorflow/ds:0.7.4
+  ```
+  
+* <a name="run">Run</a>
+
+  ```commandline
+  docker run --runtime=nvidia -v /local:/container -it tensorflow/ds:0.7.4
+  ```
+  `/local:/container` maps a local disk directory into a directory inside the container
+
