@@ -109,6 +109,13 @@ Version of DeepSpeech:
   `/local:/container` maps a local disk directory into a directory inside the container
 
 
+## Tools
+
+The following tools are available:
+
+* `/usr/bin/deepspeech_predict` - for batch processing audio files
+* `/usr/bin/deepspeech_pause_splitter` - for splitting audio files into chunks based on identified pauses
+
 
 ## Permissions
 
