@@ -46,7 +46,7 @@ Version of DeepSpeech:
   docker build -t ds .
   ```
   
-* Run image `ds` in interactive mode (i.e., using `bash`) as container `isk_container`
+* Run image `ds` in interactive mode (i.e., using `bash`) as container `ds_container`
 
   ```commandline
   docker run --runtime=nvidia --name ds_container -ti -v \
