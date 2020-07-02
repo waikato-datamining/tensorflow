@@ -4,6 +4,7 @@ FROM ${DOCKER_REGISTRY}nvidia/cuda:10.0-base-ubuntu18.04
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git-core wget libglib2.0-0 libsm6 libxrender-dev libxext6 python3 python3-pip ffmpeg sox && \
     ln -s /usr/bin/pip3 /usr/bin/pip && \
+    ln -s /usr/bin/python3 /usr/bin/python && \
     rm -rf /var/lib/apt/lists/* && \
     pip install Cython && \
     pip install "numpy<1.18.0" && \
@@ -11,5 +12,11 @@ RUN apt-get update && \
     rm -Rf /root/.cache/pip
 
 COPY bash.bashrc /etc/bash.bashrc
+COPY pause_splitter.py /opt/deepspeech
+COPY predict.py /opt/deepspeech
+COPY deepspeech_pause_splitter /usr/bin
+COPY deepspeech_predict /usr/bin
+
+ENV PYTHONPATH=/opt/deepspeech
 
 WORKDIR /

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd /opt/deepspeech
+python pause_splitter.py "$@"
