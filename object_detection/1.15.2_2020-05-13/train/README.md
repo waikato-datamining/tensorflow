@@ -30,7 +30,7 @@ and timestamp:
 
   ```commandline
   docker run --runtime=nvidia -ti -v \
-    /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container tf_train \
+    /local/dir:/container/dir tf_train \
     --pipeline_config_path=/path_to/your_data.config \
     --model_dir=/path_to/your_data/output --num_train_steps=50000 \
     --sample_1_of_n_eval_examples=1 --alsologtostderr
@@ -86,12 +86,12 @@ and timestamp:
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection_train:1.15.2_2020-05-13 \
+  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/object_detection_train:1.15.2_2020-05-13 \
     --pipeline_config_path=/path_to/your_data.config \
     --model_dir=/path_to/your_data/output --num_train_steps=50000 \
     --sample_1_of_n_eval_examples=1 --alsologtostderr
   ```
-  `/local:/container` maps a local disk directory into a directory inside the container
+  `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 
 
 ## Permissions

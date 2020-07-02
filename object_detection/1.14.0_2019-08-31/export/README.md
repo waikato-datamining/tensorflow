@@ -30,7 +30,7 @@ Fri Aug 30 14:39:49 2019 -0700
 
   ```commandline
   docker run --runtime=nvidia -ti -v \
-    /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container tf_export \
+    /local/dir:/container/dir tf_export \
     --input_type image_tensor --pipeline_config_path /path_to/your_data.config \
     --trained_checkpoint_prefix /path_to/your_data/output/model.ckpt-50000 \
     --output_directory /path_to/your_data/output/exported_graphs
@@ -86,12 +86,12 @@ Fri Aug 30 14:39:49 2019 -0700
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection_export:1.14.0_2019-08-31 \
+  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/object_detection_export:1.14.0_2019-08-31 \
     --input_type image_tensor --pipeline_config_path /path_to/your_data.config \
     --trained_checkpoint_prefix /path_to/your_data/output/model.ckpt-50000 \
     --output_directory /path_to/your_data/output/exported_graphs
   ```
-  `/local:/container` maps a local disk directory into a directory inside the container
+  `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 
 
 ## Permissions

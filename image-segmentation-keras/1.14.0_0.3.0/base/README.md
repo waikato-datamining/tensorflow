@@ -46,7 +46,7 @@ image-segmentation-keras version: 0.3.0
 
   ```commandline
   docker run --runtime=nvidia --name isk_container -ti -v \
-    /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container \
+    /local/dir:/container/dir \
     isk bash
   ```
 
@@ -100,6 +100,6 @@ image-segmentation-keras version: 0.3.0
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/isk:1.14.0_2019-02-22
+  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/isk:1.14.0_2019-02-22
   ```
-  `/local:/container` maps a local disk directory into a directory inside the container
+  `/local/dir:/container/dir` maps a local disk directory into a directory inside the container

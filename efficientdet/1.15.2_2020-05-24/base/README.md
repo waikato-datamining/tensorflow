@@ -58,7 +58,7 @@ Using the following git hash:
 
   ```commandline
   docker run --runtime=nvidia --name eft_container -ti -v \
-    /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container \
+    /local/dir:/container/dir \
     eft bash
   ```
 
@@ -112,9 +112,9 @@ Using the following git hash:
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/eft:1.15.2_2020-05-24
+  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/eft:1.15.2_2020-05-24
   ```
-  `/local:/container` maps a local disk directory into a directory inside the container
+  `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 
 
 ### Command-line tools

@@ -21,7 +21,7 @@ library.
 * Run the container
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tfic_poll
+  docker run --runtime=nvidia -v /local/dir:/container/dir -it tfic_poll
   ```
 
 ### Pre-built images
@@ -74,7 +74,7 @@ library.
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/image_classification_poll:1.14 \
+  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/image_classification_poll:1.14 \
     --image /path/to/image.jpg \
     --graph /path/to/output_graph.pb \
     --labels /path/to/output_labels.txt \
@@ -82,5 +82,5 @@ library.
     --in_dir /path/to/predictions/in \ 
     --out_dir /path/to/predictions/out 
   ```
-  `/local:/container` maps a local disk directory into a directory inside the container
+  `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 

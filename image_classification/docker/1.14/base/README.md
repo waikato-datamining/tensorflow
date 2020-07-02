@@ -40,7 +40,7 @@ Allows labeling of images with Tensorflow's image classification capabilities, u
 * Run the container
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tfic_base
+  docker run --runtime=nvidia -v /local/dir:/container/dir -it tfic_base
   ```
 
 ### Pre-built images
@@ -93,7 +93,7 @@ Allows labeling of images with Tensorflow's image classification capabilities, u
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/image_classification:1.14
+  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/image_classification:1.14
   ```
-  `/local:/container` maps a local disk directory into a directory inside the container
+  `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 

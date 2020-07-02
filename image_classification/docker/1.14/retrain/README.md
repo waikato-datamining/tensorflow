@@ -18,7 +18,7 @@ library.
 * Run the container
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tfic_retrain
+  docker run --runtime=nvidia -v /local/dir:/container/dir -it tfic_retrain
   ```
 
 ### Pre-built images
@@ -71,7 +71,7 @@ library.
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/image_classification_retrain:1.14 \
+  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/image_classification_retrain:1.14 \
     --image_dir /path/to/data/ \
     --image_lists_dir /path/to/output/ \
     --output_graph /path/to/output/output_graph.pb \
@@ -86,5 +86,5 @@ library.
     --validation_percentage 20 \
     --training_steps 2000
   ```
-  `/local:/container` maps a local disk directory into a directory inside the container
+  `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 

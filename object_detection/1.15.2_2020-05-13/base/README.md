@@ -55,7 +55,7 @@ and timestamp:
 
   ```commandline
   docker run --runtime=nvidia --name tf_container -ti -v \
-    /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container \
+    /local/dir:/container/dir \
     tf bash
   ```
 
@@ -109,9 +109,9 @@ and timestamp:
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/object_detection:1.15.2_2020-05-13
+  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/object_detection:1.15.2_2020-05-13
   ```
-  `/local:/container` maps a local disk directory into a directory inside the container
+  `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 
 ### Usage
 
