@@ -54,7 +54,7 @@ Version of DeepSpeech:
 
   ```commandline
   docker run --runtime=nvidia --name ds_predict_container -ti -v \
-    /path_to/local_disk/containing_data:/path_to/mount/inside/docker_container \
+    /local/dir:/container/dir \
     ds_predict bash
   ```
 
@@ -108,13 +108,13 @@ Version of DeepSpeech:
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local:/container -it tensorflow/ds_predict:0.7.4 \
+  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/ds_predict:0.7.4 \
     --model /data/deepspeech-0.7.4-models.pbmm \
     --scorer /data/deepspeech-0.7.4-models.scorer \
     --prediction_in /data/predictions/in \
     --prediction_out /data/predictions/out/
   ```
-  `/local:/container` maps a local disk directory into a directory inside the container
+  `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 
 
 

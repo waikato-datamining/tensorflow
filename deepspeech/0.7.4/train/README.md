@@ -1,6 +1,6 @@
-# DeepSpeech
+# Inference with DeepSpeech
 
-Mozilla's [DeepSpeech](https://github.com/mozilla/DeepSpeech) ([documentation](https://deepspeech.readthedocs.io/en/v0.7.4/)).
+Allows training of models for Mozilla's [DeepSpeech](https://github.com/mozilla/DeepSpeech) ([documentation](https://deepspeech.readthedocs.io/en/v0.7.4/)).
 
 
 ## Version
@@ -25,8 +25,11 @@ Version of DeepSpeech:
 
   ```commandline
   docker run --runtime=nvidia \
-    -v /local/dir:/container/dir \
-    -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech:0.7.4
+     -v /local/dir:/container/dir \
+     -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech_train:0.7.4
+     --train_files ../data/CV/en/clips/train.csv \
+     --dev_files ../data/CV/en/clips/dev.csv \
+     --test_files ../data/CV/en/clips/test.csv
   ```
 
   **NB:** For docker versions 19.03 (`docker version`) and newer, use `--gpus=all` instead of `--runtime=nvidia`.
@@ -40,18 +43,18 @@ Version of DeepSpeech:
 
 ### Build local image
 
-* Build image `ds` from Docker file (from within /path_to/tensorflow/deepspeech/0.7.4/base)
+* Build image `ds_train` from Docker file (from within /path_to/tensorflow/deepspeech/0.7.4/train)
 
   ```commandline
-  docker build -t ds .
+  docker build -t ds_train .
   ```
   
-* Run image `ds` in interactive mode (i.e., using `bash`) as container `ds_container`
+* Run image `ds_train` in interactive mode (i.e., using `bash`) as container `ds_train_container`
 
   ```commandline
-  docker run --runtime=nvidia --name ds_container -ti -v \
+  docker run --runtime=nvidia --name ds_train_container -ti -v \
     /local/dir:/container/dir \
-    ds bash
+    ds_train bash
   ```
 
 ### Pre-built images
@@ -59,21 +62,21 @@ Version of DeepSpeech:
 * Build
 
   ```commandline
-  docker build -t tensorflow/ds:0.7.4 .
+  docker build -t tensorflow/ds_train:0.7.4 .
   ```
   
 * Tag
 
   ```commandline
   docker tag \
-    tensorflow/ds:0.7.4 \
-    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech:0.7.4
+    tensorflow/ds_train:0.7.4 \
+    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech_train:0.7.4
   ```
   
 * Push
 
   ```commandline
-  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech:0.7.4
+  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech_train:0.7.4
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -86,7 +89,7 @@ Version of DeepSpeech:
   If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
 
   ```commandline
-  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech:0.7.4
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech_train:0.7.4
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -97,31 +100,21 @@ Version of DeepSpeech:
   
   ```commandline
   docker tag \
-    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech:0.7.4 \
-    tensorflow/ds:0.7.4
+    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech_train:0.7.4 \
+    tensorflow/ds_train:0.7.4
   ```
   
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/ds:0.7.4
+  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/ds_train:0.7.4 \
+     --train_files ../data/CV/en/clips/train.csv \
+     --dev_files ../data/CV/en/clips/dev.csv \
+     --test_files ../data/CV/en/clips/test.csv
   ```
   `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 
 
-## Tools
-
-The following tools are available:
-
-* `/usr/bin/deepspeech` - default [deepspeech excecutable](https://deepspeech.readthedocs.io/en/v0.7.4/)
-* `/usr/bin/deepspeech_train` - for [training models](https://deepspeech.readthedocs.io/en/v0.7.4/TRAINING.html)
-* `/usr/bin/deepspeech_predict` - for batch processing audio files
-* `/usr/bin/deepspeech_pause_splitter` - for splitting audio files into chunks based on identified pauses
-* all Python scripts in [/DeepSpeech/bin](https://github.com/mozilla/DeepSpeech/tree/v0.7.4/bin) (like `import_cv2.py`) are sym-linked
-  in `/usr/bin` with prefix `deepspeech_` and no `.py` extension. E.g., in case 
-  of `import_cv2.py` is available system-wide as `/usr/bin/deepspeech_import_cv2`
-
-Most tools support `-h/--help` to display a help screen on the available command-line options.
 
 ## Permissions
 
