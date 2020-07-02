@@ -113,7 +113,7 @@ Version of DeepSpeech:
 
 The following tools are available:
 
-* `/usr/bin/deepspeech` - default [deepspeech excecutable](https://deepspeech.readthedocs.io/en/v0.7.4/)
+* `/usr/bin/deepspeech` - default [deepspeech executable](https://deepspeech.readthedocs.io/en/v0.7.4/)
 * `/usr/bin/deepspeech_train` - for [training models](https://deepspeech.readthedocs.io/en/v0.7.4/TRAINING.html)
 * `/usr/bin/deepspeech_predict` - for batch processing audio files
 * `/usr/bin/deepspeech_pause_splitter` - for splitting audio files into chunks based on identified pauses
