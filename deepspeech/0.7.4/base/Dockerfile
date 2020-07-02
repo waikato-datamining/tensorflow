@@ -12,8 +12,8 @@ RUN apt-get update && \
     rm -Rf /root/.cache/pip
 
 COPY bash.bashrc /etc/bash.bashrc
-COPY pause_splitter.py /opt/deepspeech
-COPY predict.py /opt/deepspeech
+COPY pause_splitter.py /opt/deepspeech/pause_splitter.py
+COPY predict.py /opt/deepspeech/predict.py
 COPY deepspeech_pause_splitter /usr/bin
 COPY deepspeech_predict /usr/bin
 
