@@ -77,7 +77,9 @@ COPY pause_splitter.py /opt/deepspeech/pause_splitter.py
 COPY predict.py /opt/deepspeech/predict.py
 COPY deepspeech_pause_splitter /usr/bin/deepspeech_pause_splitter
 COPY deepspeech_predict /usr/bin/deepspeech_predict
-COPY deepspeech_train /usr/bin/deepspeech_train
+
+# sym-link training script as "/usr/bin/deepspeech_train"
+RUN ln -s /DeepSpeech/DeepSpeech.py /usr/bin/deepspeech_train
 
 # sym-link other utilities as "/usr/bin/deepspeech_"
 RUN cd /DeepSpeech/bin/; \

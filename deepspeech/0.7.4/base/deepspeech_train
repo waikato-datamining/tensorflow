@@ -1,4 +1,0 @@
-#!/bin/bash
-
-cd /DeepSpeech
-python DeepSpeech.py "$@"
