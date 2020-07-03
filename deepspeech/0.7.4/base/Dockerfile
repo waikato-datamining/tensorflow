@@ -76,9 +76,6 @@ COPY bash.bashrc /etc/bash.bashrc
 COPY pause_splitter.py /opt/deepspeech/pause_splitter.py
 COPY predict.py /opt/deepspeech/predict.py
 COPY gen_alphabet.py /opt/deepspeech/gen_alphabet.py
-COPY deepspeech_pause_splitter /usr/bin/deepspeech_pause_splitter
-COPY deepspeech_predict /usr/bin/deepspeech_predict
-COPY deepspeech_gen_alphabet /usr/bin/deepspeech_gen_alphabet
 
 # sym-link scripts
 RUN ln -s /DeepSpeech/DeepSpeech.py /usr/bin/deepspeech_train
