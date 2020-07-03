@@ -71,6 +71,9 @@ RUN ./bin/run-ldc93s1.sh
 RUN pip install deepspeech-gpu==0.7.4 pydub && \
     rm -Rf /root/.cache/pip
 
+# cache dir
+RUN mkdir /.local && chmod 0777 /.local
+
 # copy scripts
 COPY bash.bashrc /etc/bash.bashrc
 COPY pause_splitter.py /opt/deepspeech/pause_splitter.py
