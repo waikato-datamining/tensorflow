@@ -10,6 +10,7 @@ import time
 import traceback
 import os
 from pydub import AudioSegment
+from pydub import effects
 import sys
 import wave
 
@@ -17,8 +18,8 @@ SUPPORTED_EXTS = [".mp3", ".ogg", ".wav"]
 """ supported file extensions (lower case). """
 
 
-def process(model, prediction_in, prediction_out, prediction_tmp, continuous, delete_input,
-            json, candidate_transcripts):
+def process(model, prediction_in, prediction_out, prediction_tmp=None, continuous=False, delete_input=False,
+            json=False, candidate_transcripts=3, normalize=False):
     """
     Process sound files.
 
@@ -38,6 +39,8 @@ def process(model, prediction_in, prediction_out, prediction_tmp, continuous, de
     :type json: bool
     :param candidate_transcripts: the number of candidate transcripts to include in JSON output
     :type candidate_transcripts: int
+    :param normalize: whether to perform amplitude normalization
+    :type normalize: bool
     """
 
     desired_sample_rate = model.sampleRate()
@@ -62,19 +65,26 @@ def process(model, prediction_in, prediction_out, prediction_tmp, continuous, de
             print("%s - %s" % (str(datetime.now()), os.path.basename(sound_file)))
             try:
                 # convert to WAV?
+                tmp_file = None
+                audio = None
                 if sound_file.lower().endswith(".mp3"):
                     tmp_file = os.path.join(prediction_out, os.path.basename(sound_file) + ".wav")
                     audio = AudioSegment.from_mp3(sound_file)
-                    audio.export(tmp_file, format="wav")
                 elif sound_file.lower().endswith(".ogg"):
                     tmp_file = os.path.join(prediction_out, os.path.basename(sound_file) + ".wav")
                     audio = AudioSegment.from_ogg(sound_file)
-                    audio.export(tmp_file, format="wav")
                 elif sound_file.lower().endswith(".wav"):
-                    tmp_file = None
+                    if normalize:
+                        tmp_file = os.path.join(prediction_out, os.path.basename(sound_file) + "-norm.wav")
+                        audio = AudioSegment.from_wav(sound_file)
                 else:
                     print("  unsupported file format: %s" % sound_file)
                     continue
+
+                if audio is not None:
+                    if normalize:
+                        audio = effects.normalize(audio)
+                    audio.export(tmp_file, format="wav")
 
                 # load audio file
                 if tmp_file is None:
@@ -136,6 +146,7 @@ def main():
     parser.add_argument('--lm_beta', type=float, help='Word insertion bonus (lm_beta). If not specified, use default from the scorer package.')
     parser.add_argument('--json', required=False, action='store_true', help='Output json from metadata with timestamp of each word')
     parser.add_argument('--candidate_transcripts', type=int, default=3, help='Number of candidate transcripts to include in JSON output')
+    parser.add_argument('--normalize', required=False, action='store_true', help='Whether to apply standard amplitude normalization')
     parsed = parser.parse_args()
 
     print('Loading model from file {}'.format(parsed.model))
@@ -152,7 +163,7 @@ def main():
     process(model=ds,
             prediction_in=parsed.prediction_in, prediction_out=parsed.prediction_out, prediction_tmp=parsed.prediction_tmp,
             continuous=parsed.continuous, delete_input=parsed.delete_input,
-            json=parsed.json, candidate_transcripts=parsed.candidate_transcripts)
+            json=parsed.json, candidate_transcripts=parsed.candidate_transcripts, normalize=parsed.normalize)
 
 
 if __name__ == '__main__':
