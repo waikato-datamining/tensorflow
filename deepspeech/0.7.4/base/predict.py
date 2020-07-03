@@ -9,10 +9,11 @@ import numpy as np
 import time
 import traceback
 import os
+from pydub import AudioSegment
 import sys
 import wave
 
-SUPPORTED_EXTS = [".wav"]
+SUPPORTED_EXTS = [".mp3", ".ogg", ".wav"]
 """ supported file extensions (lower case). """
 
 
@@ -60,8 +61,26 @@ def process(model, prediction_in, prediction_out, prediction_tmp, continuous, de
         for sound_file in sound_files:
             print("%s - %s" % (str(datetime.now()), os.path.basename(sound_file)))
             try:
+                # convert to WAV?
+                if sound_file.lower().endswith(".mp3"):
+                    tmp_file = os.path.join(prediction_out, os.path.basename(sound_file) + ".wav")
+                    audio = AudioSegment.from_mp3(sound_file)
+                    audio.export(tmp_file, format="wav")
+                elif sound_file.lower().endswith(".ogg"):
+                    tmp_file = os.path.join(prediction_out, os.path.basename(sound_file) + ".wav")
+                    audio = AudioSegment.from_ogg(sound_file)
+                    audio.export(tmp_file, format="wav")
+                elif sound_file.lower().endswith(".wav"):
+                    tmp_file = None
+                else:
+                    print("  unsupported file format: %s" % sound_file)
+                    continue
+
                 # load audio file
-                fin = wave.open(sound_file, 'rb')
+                if tmp_file is None:
+                    fin = wave.open(sound_file, 'rb')
+                else:
+                    fin = wave.open(tmp_file, 'rb')
                 fs_orig = fin.getframerate()
                 if fs_orig != desired_sample_rate:
                     print('  Warning: original sample rate ({}) is different than {}hz.\n  Resampling might produce erratic speech recognition.'.format(fs_orig, desired_sample_rate), file=sys.stderr)
@@ -86,6 +105,8 @@ def process(model, prediction_in, prediction_out, prediction_tmp, continuous, de
                     of.write("\n")
                 if prediction_tmp is not None:
                     os.rename(out_file, os.path.join(prediction_out, os.path.basename(out_file)))
+                if tmp_file is not None:
+                    os.remove(tmp_file)
 
             except:
                 print("Failed to process: %s" % sound_file)
