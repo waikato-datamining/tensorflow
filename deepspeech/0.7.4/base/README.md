@@ -117,6 +117,7 @@ The following tools are available:
 * `/usr/bin/deepspeech_train` - for [training models](https://deepspeech.readthedocs.io/en/v0.7.4/TRAINING.html)
 * `/usr/bin/deepspeech_predict` - for batch processing audio files
 * `/usr/bin/deepspeech_pause_splitter` - for splitting audio files into chunks based on identified pauses
+* `/usr/bin/deepspeech_gen_alphabet` - for generating an alphabet file from CSV files
 * all Python scripts in [/DeepSpeech/bin](https://github.com/mozilla/DeepSpeech/tree/v0.7.4/bin) (like `import_cv2.py`) are sym-linked
   in `/usr/bin` with prefix `deepspeech_` and no `.py` extension. E.g., in case 
   of `import_cv2.py` is available system-wide as `/usr/bin/deepspeech_import_cv2`

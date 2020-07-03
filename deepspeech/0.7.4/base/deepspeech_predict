@@ -1,4 +1,0 @@
-#!/bin/bash
-
-cd /opt/deepspeech
-python predict.py "$@"
