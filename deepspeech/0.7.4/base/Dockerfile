@@ -68,7 +68,7 @@ RUN DS_NODECODER=y DS_NOTENSORFLOW=y pip3 install --upgrade -e .
 RUN ./bin/run-ldc93s1.sh
 
 # install DeepSpeech client
-RUN pip install deepspeech-gpu==0.7.4 && \
+RUN pip install deepspeech-gpu==0.7.4 pydub && \
     rm -Rf /root/.cache/pip
 
 # copy scripts
