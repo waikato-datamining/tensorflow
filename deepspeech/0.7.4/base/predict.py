@@ -126,7 +126,7 @@ def main():
     parser = argparse.ArgumentParser(description='Running DeepSpeech inference.')
     parser.add_argument('--model', required=True, help='Path to the model (protocol buffer binary file)')
     parser.add_argument('--scorer', required=False, help='Path to the external scorer file')
-    parser.add_argument('--prediction_in', required=True, help='Path to the directory with sound files (mp3/wav) to analyze')
+    parser.add_argument('--prediction_in', required=True, help='Path to the directory with sound files (mp3/ogg/wav) to analyze')
     parser.add_argument('--prediction_out', required=True, help='Path to the directory for moving the processed sound files to')
     parser.add_argument('--prediction_tmp', required=False, help='Path to the temp directory for storing the predictions initially before moving them to "--prediction_out"')
     parser.add_argument('--continuous', action='store_true', help='Whether to continuously load test images and perform prediction', required=False, default=False)
