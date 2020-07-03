@@ -25,7 +25,8 @@ RUN apt-get update && \
         python3 \
         python3-pip \
         ffmpeg \
-        sox && \
+        sox \
+        libsox-fmt-all && \
     rm -rf /var/lib/apt/lists/* && \
     ln -s /usr/bin/pip3 /usr/bin/pip && \
     ln -s /usr/bin/python3 /usr/bin/python && \
