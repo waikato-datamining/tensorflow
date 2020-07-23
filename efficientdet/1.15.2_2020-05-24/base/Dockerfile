@@ -5,7 +5,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends git-core wget libglib2.0-0 libsm6 libxrender-dev libxext6 && \
     rm -rf /var/lib/apt/lists/* && \
     pip install Cython && \
-    pip install contextlib2 "Pillow>=6.0.0" pyyaml lxml matplotlib scikit-image wai.annotations==0.3.5 wai.tfutils==0.0.3 "opencv-python<=4.2" python-image-complete "six>=1.12.0" "tensorflow-addons>=0.9.1" && \
+    pip install contextlib2 "Pillow>=6.0.0" pyyaml lxml matplotlib scikit-image "wai.annotations<=0.3.5" wai.tfutils==0.0.3 "opencv-python<=4.2" python-image-complete "six>=1.12.0" "tensorflow-addons>=0.9.1" && \
     pip uninstall -y pycocotools && \
     pip install "git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI" && \
     pip uninstall -y numpy && \
