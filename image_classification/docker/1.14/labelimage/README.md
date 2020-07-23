@@ -34,7 +34,7 @@ library.
 
   ```commandline
   docker tag \
-    tensorflow/image_classification:1.14 \
+    tensorflow/image_classification_labelimage:1.14 \
     public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification_labelimage:1.14
   ```
   

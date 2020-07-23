@@ -29,14 +29,14 @@ library.
 * Build
 
   ```commandline
-  docker build -t tensorflow/image_classification:1.14_poll .
+  docker build -t tensorflow/image_classification_poll:1.14 .
   ```
   
 * Tag
 
   ```commandline
   docker tag \
-    tensorflow/image_classification:1.14 \
+    tensorflow/image_classificatio_poll:1.14 \
     public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification_poll:1.14
   ```
   
