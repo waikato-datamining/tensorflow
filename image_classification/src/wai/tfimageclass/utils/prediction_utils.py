@@ -50,9 +50,9 @@ def read_tensor_from_image_file(file_name,
 
     :param file_name: the image to load
     :type file_name: str
-    :param input_height: the image height
+    :param input_height: the image height, use -1 for not resizing
     :type input_height: int
-    :param input_width: the image width
+    :param input_width: the image width, use -1 for not resizing
     :type input_width: int
     :param input_mean: the mean to use
     :type input_mean: int
@@ -75,7 +75,10 @@ def read_tensor_from_image_file(file_name,
         image_reader = tf.image.decode_jpeg(file_reader, channels=3, name="jpeg_reader")
     float_caster = tf.cast(image_reader, tf.float32)
     dims_expander = tf.expand_dims(float_caster, 0)
-    resized = tf.compat.v1.image.resize_bilinear(dims_expander, [input_height, input_width])
+    if (input_width == -1) or (input_height == -1):
+        resized = dims_expander
+    else:
+        resized = tf.compat.v1.image.resize_bilinear(dims_expander, [input_height, input_width])
     normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
     if sess is None:
         sess = tf.compat.v1.Session()
