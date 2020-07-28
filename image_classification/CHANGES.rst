@@ -1,9 +1,11 @@
 Changelog
 =========
 
-0.0.3 (2020-01-22)
+0.0.3 (2020-07-28)
 ------------------
 
+- `poll.py`: added ability to split images into grid of equal sized images, obtaining
+  a classification for each sub-image.
 - fixed license: now uses Apache 2.0 instead of MIT
 
 
