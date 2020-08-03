@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.0.4 (2020-08-04)
+------------------
+
+- `poll.py` now has new `--continuous` flag to allow for continuous or single batch predictions
+
+
 0.0.3 (2020-07-28)
 ------------------
 

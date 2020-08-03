@@ -157,7 +157,7 @@ def predict_grid(sess, graph, input_layer, output_layer, labels, top_x, tensor, 
             rf.write("\n")
 
 
-def poll(sess, graph, input_layer, output_layer, labels, in_dir, out_dir, height, width, mean, std, top_x, delete,
+def poll(sess, graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, height, width, mean, std, top_x, delete,
          grid_size=None, grid_threshold=0.9, grid_ignored=None):
     """
     Performs continuous predictions on files appearing in the "in_dir" and outputting the results in "out_dir".
@@ -176,6 +176,8 @@ def poll(sess, graph, input_layer, output_layer, labels, in_dir, out_dir, height
     :type in_dir: str
     :param out_dir: the output directory for the results
     :type out_dir: str
+    :param continuous: whether to continuously poll for images or exit ones no more images to process
+    :type continuous: bool
     :param height: the expected height of the images
     :type height: int
     :param width: the expected height of the images
@@ -204,7 +206,7 @@ def poll(sess, graph, input_layer, output_layer, labels, in_dir, out_dir, height
         for label in grid_ignored.split(","):
             ignored_labels.add(label.strip())
 
-    while True:
+    while continuous:
         any = False
         files = [(in_dir + os.sep + x) for x in os.listdir(in_dir) if (x.lower().endswith(".png") or x.lower().endswith(".jpg"))]
         for f in files:
@@ -283,6 +285,7 @@ def main(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--in_dir", metavar="DIR", help="the input directory to poll for images", required=True)
     parser.add_argument("--out_dir", metavar="DIR", help="the output directory for processed images and predictions", required=True)
+    parser.add_argument('--continuous', action='store_true', help='Whether to continuously load test images and perform prediction', required=False, default=False)
     parser.add_argument('--delete', default=False, help="Whether to delete images rather than move them to the output directory.", action='store_true')
     parser.add_argument("--graph", metavar="FILE", help="graph/model to be executed", required=True)
     parser.add_argument("--labels", metavar="FILE", help="name of file containing labels", required=True)
@@ -302,7 +305,7 @@ def main(args=None):
     labels = load_labels(args.labels)
 
     with tf.compat.v1.Session(graph=graph) as sess:
-        poll(sess, graph, args.input_layer, args.output_layer, labels, args.in_dir, args.out_dir,
+        poll(sess, graph, args.input_layer, args.output_layer, labels, args.in_dir, args.out_dir, args.continuous,
              args.input_height, args.input_width, args.input_mean, args.input_std, args.top_x, args.delete,
              grid_size=args.grid_size, grid_threshold=args.grid_threshold, grid_ignored=args.grid_ignored)
 
