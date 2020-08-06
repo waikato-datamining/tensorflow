@@ -1,4 +1,4 @@
-# Copyright 2019 University of Waikato, Hamilton, NZ.
+# Copyright 2019-2020 University of Waikato, Hamilton, NZ.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ from time import sleep
 import os
 import tensorflow as tf
 import traceback
-from wai.tfimageclass.utils.prediction_utils import load_graph, load_labels, read_tensor_from_image_file, tensor_to_probs, top_k_probs
+from wai.tfimageclass.utils.prediction_utils import load_graph, load_labels, read_tensor_from_image_file, tensor_to_probs, top_k_probs, load_info_file
 
 
 def predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, output_file):
@@ -282,31 +282,50 @@ def main(args=None):
     :param args: the commandline arguments, uses sys.argv if not supplied
     :type args: list
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="For bulk or continuous prediction output using a trained model.",
+        prog="tfic-poll",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--in_dir", metavar="DIR", help="the input directory to poll for images", required=True)
     parser.add_argument("--out_dir", metavar="DIR", help="the output directory for processed images and predictions", required=True)
     parser.add_argument('--continuous', action='store_true', help='Whether to continuously load test images and perform prediction', required=False, default=False)
     parser.add_argument('--delete', default=False, help="Whether to delete images rather than move them to the output directory.", action='store_true')
     parser.add_argument("--graph", metavar="FILE", help="graph/model to be executed", required=True)
-    parser.add_argument("--labels", metavar="FILE", help="name of file containing labels", required=True)
+    parser.add_argument("--info", help="name of json file with model info (dimensions, layers); overrides input_height/input_width/labels/input_layer/output_layer options", default=None)
+    parser.add_argument("--labels", metavar="FILE", help="name of file containing labels", required=False)
     parser.add_argument("--input_height", metavar="INT", type=int, help="input height", default=299)
     parser.add_argument("--input_width", metavar="INT", type=int, help="input width", default=299)
-    parser.add_argument("--input_mean", metavar="INT", type=int, help="input mean", default=0)
-    parser.add_argument("--input_std", metavar="INT", type=int, help="input std", default=255)
     parser.add_argument("--input_layer", metavar="NAME", help="name of input layer", default="Placeholder")
     parser.add_argument("--output_layer", metavar="NAME", help="name of output layer", default="final_result")
+    parser.add_argument("--input_mean", metavar="INT", type=int, help="input mean", default=0)
+    parser.add_argument("--input_std", metavar="INT", type=int, help="input std", default=255)
     parser.add_argument("--top_x", metavar="INT", type=int, help="output only the top K labels; use <1 for all", default=5)
     parser.add_argument("--grid_size", metavar="INT", type=int, help="the number of columns and rows to divide the image in, passing each sub-image through the model to obtain predictions", default=None)
     parser.add_argument("--grid_threshold", metavar="0-1", type=float, help="the minimum probability threshold for predictions in the grid to show up in the output", default=0.9)
     parser.add_argument("--grid_ignored", metavar="label1,label2,...", help="the labels to ignore when in grid prediction mode (comma-separated list)", default=None)
     args = parser.parse_args(args=args)
 
+    # values from options
+    labels = None
+    input_height = args.input_height
+    input_width = args.input_width
+    input_layer = args.input_layer
+    output_layer = args.output_layer
+
+    # override from info file?
+    if args.info is not None:
+        input_height, input_width, input_layer, output_layer, labels = load_info_file(args.info)
+
+    if (labels is None) and (args.labels is not None):
+        labels = load_labels(args.labels)
+    if labels is None:
+        raise Exception("No labels determined, either supply --info or --labels!")
+
     graph = load_graph(args.graph)
-    labels = load_labels(args.labels)
 
     with tf.compat.v1.Session(graph=graph) as sess:
-        poll(sess, graph, args.input_layer, args.output_layer, labels, args.in_dir, args.out_dir, args.continuous,
-             args.input_height, args.input_width, args.input_mean, args.input_std, args.top_x, args.delete,
+        poll(sess, graph, input_layer, output_layer, labels, args.in_dir, args.out_dir, args.continuous,
+             input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete,
              grid_size=args.grid_size, grid_threshold=args.grid_threshold, grid_ignored=args.grid_ignored)
 
 

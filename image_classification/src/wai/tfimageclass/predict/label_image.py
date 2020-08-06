@@ -1,5 +1,5 @@
 # Copyright 2017 The TensorFlow Authors. All Rights Reserved.
-# Copyright 2019 University of Waikato, Hamilton, NZ.
+# Copyright 2019-2020 University of Waikato, Hamilton, NZ.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import argparse
 import traceback
 import tensorflow as tf
 
-from wai.tfimageclass.utils.prediction_utils import load_graph, load_labels, read_tensor_from_image_file, tensor_to_probs, top_k_probs
+from wai.tfimageclass.utils.prediction_utils import load_graph, load_labels, read_tensor_from_image_file, tensor_to_probs, top_k_probs, load_info_file
 
 
 def main(args=None):
@@ -32,31 +32,51 @@ def main(args=None):
     :param args: the commandline arguments, uses sys.argv if not supplied
     :type args: list
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Outputs predictions for single image using a trained model.",
+        prog="tfic-labelimage",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--image", help="image to be processed", required=True)
     parser.add_argument("--graph", help="graph/model to be executed", required=True)
-    parser.add_argument("--labels", help="name of file containing labels", required=True)
+    parser.add_argument("--info", help="name of json file with model info (dimensions, layers); overrides input_height/input_width/labels/input_layer/output_layer options", default=None)
+    parser.add_argument("--labels", help="name of file containing labels", required=False)
     parser.add_argument("--input_height", type=int, help="input height", default=299)
     parser.add_argument("--input_width", type=int, help="input width", default=299)
-    parser.add_argument("--input_mean", type=int, help="input mean", default=0)
-    parser.add_argument("--input_std", type=int, help="input std", default=255)
     parser.add_argument("--input_layer", help="name of input layer", default="Placeholder")
     parser.add_argument("--output_layer", help="name of output layer", default="final_result")
+    parser.add_argument("--input_mean", type=int, help="input mean", default=0)
+    parser.add_argument("--input_std", type=int, help="input std", default=255)
     parser.add_argument("--top_x", type=int, help="output only the top K labels; use <1 for all", default=5)
     args = parser.parse_args(args=args)
 
+    # values from options
+    labels = None
+    input_height = args.input_height
+    input_width = args.input_width
+    input_layer = args.input_layer
+    output_layer = args.output_layer
+
+    # override from info file?
+    if args.info is not None:
+        input_height, input_width, input_layer, output_layer, labels = load_info_file(args.info)
+
+    if (labels is None) and (args.labels is not None):
+        labels = load_labels(args.labels)
+    if labels is None:
+        raise Exception("No labels determined, either supply --info or --labels!")
+
     graph = load_graph(args.graph)
-    labels = load_labels(args.labels)
+
     with tf.compat.v1.Session(graph=graph) as sess:
         tensor = read_tensor_from_image_file(
             args.image,
-            input_height=args.input_height,
-            input_width=args.input_width,
+            input_height=input_height,
+            input_width=input_width,
             input_mean=args.input_mean,
             input_std=args.input_std,
             sess=sess)
 
-        results = tensor_to_probs(graph, args.input_layer, args.output_layer, tensor, sess)
+        results = tensor_to_probs(graph, input_layer, output_layer, tensor, sess)
         top_x = top_k_probs(results, args.top_x)
         if args.top_x > 0:
             print("Top " + str(args.top_x) + " labels")

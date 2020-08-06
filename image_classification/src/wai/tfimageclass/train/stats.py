@@ -1,4 +1,4 @@
-# Copyright 2019 University of Waikato, Hamilton, NZ.
+# Copyright 2019-2020 University of Waikato, Hamilton, NZ.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import os
 import traceback
 import tensorflow as tf
 from wai.tfimageclass.utils.train_utils import load_image_list, locate_sub_dirs, locate_images
-from wai.tfimageclass.utils.prediction_utils import load_graph, read_tensor_from_image_file, tensor_to_probs, load_labels, top_k_probs
+from wai.tfimageclass.utils.prediction_utils import load_graph, read_tensor_from_image_file, tensor_to_probs, load_labels, top_k_probs, load_info_file
 from wai.tfimageclass.utils.logging_utils import logging_level_verbosity
 
 
@@ -153,28 +153,47 @@ def main(args=None):
     :param args: the commandline arguments, uses sys.argv if not supplied
     :type args: list
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Generates statistics in CSV format by recording predictions on images list files.",
+        prog="tfic-stats",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--image_dir', type=str, default='', help='Path to folders of labeled images.')
-    parser.add_argument('--image_list', type=str, required=False, help='The JSON file with images per .')
+    parser.add_argument('--image_list', type=str, required=False, help='The JSON file with images per sub-directory.')
     parser.add_argument("--graph", help="graph/model to be executed", required=True)
-    parser.add_argument("--labels", help="name of file containing labels", required=True)
+    parser.add_argument("--info", help="name of json file with model info (dimensions, layers); overrides input_height/input_width/labels/input_layer/output_layer options", default=None)
+    parser.add_argument("--labels", help="name of file containing labels", required=False)
     parser.add_argument("--input_height", type=int, help="input height", default=299)
     parser.add_argument("--input_width", type=int, help="input width", default=299)
-    parser.add_argument("--input_mean", type=int, help="input mean", default=0)
-    parser.add_argument("--input_std", type=int, help="input std", default=255)
     parser.add_argument("--input_layer", help="name of input layer", default="Placeholder")
     parser.add_argument("--output_layer", help="name of output layer", default="final_result")
+    parser.add_argument("--input_mean", type=int, help="input mean", default=0)
+    parser.add_argument("--input_std", type=int, help="input std", default=255)
     parser.add_argument('--output_preds', type=str, required=True, help='The CSV file to store the predictions in.')
     parser.add_argument('--output_stats', type=str, required=True, help='The CSV file to store the statistics in.')
     parser.add_argument('--logging_verbosity', type=str, default='INFO', choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'], help='How much logging output should be produced.')
     args = parser.parse_args(args=args)
 
+    # values from options
+    labels = None
+    input_height = args.input_height
+    input_width = args.input_width
+    input_layer = args.input_layer
+    output_layer = args.output_layer
+
+    # override from info file?
+    if args.info is not None:
+        input_height, input_width, input_layer, output_layer, labels = load_info_file(args.info)
+
+    if (labels is None) and (args.labels is not None):
+        labels = load_labels(args.labels)
+    if labels is None:
+        raise Exception("No labels determined, either supply --info or --labels!")
+
     graph = load_graph(args.graph)
-    labels = load_labels(args.labels)
 
     with tf.compat.v1.Session(graph=graph) as sess:
-        generate_stats(sess, graph, args.input_layer, args.output_layer, labels, args.image_dir, args.image_list,
-                 args.input_height, args.input_width, args.input_mean, args.input_std,
+        generate_stats(sess, graph, input_layer, output_layer, labels, args.image_dir, args.image_list,
+                 input_height, input_width, args.input_mean, args.input_std,
                  args.output_preds, args.output_stats, args.logging_verbosity)
 
 

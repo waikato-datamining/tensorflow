@@ -1162,7 +1162,10 @@ def main(args=None):
 
     global FLAGS
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Trains a pre-trained model with new images.",
+        prog="tfic-retrain",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--image_dir', type=str, default='', help='Path to folders of labeled images.')
     parser.add_argument('--image_lists_dir', type=str, required=False, help='Where to save the lists of images used for training, validation and testing (in JSON); ignored if directory does not exist.')
     parser.add_argument('--output_graph', type=str, default='/tmp/output_graph.pb', help='Where to save the trained graph.')
