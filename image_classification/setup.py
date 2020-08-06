@@ -1,6 +1,3 @@
-# setup.py
-# Copyright (C) 2019 Fracpete (fracpete at waikato dot ac dot nz)
-
 from setuptools import setup, find_namespace_packages
 
 def _read(f) -> bytes:
@@ -35,7 +32,7 @@ setup(
     namespace_packages=[
         "wai",
     ],
-    version="0.0.4",
+    version="0.0.5",
     author='Peter Reutemann and TensorFlow Team',
     author_email='fracpete@waikato.ac.nz',
     install_requires=[
