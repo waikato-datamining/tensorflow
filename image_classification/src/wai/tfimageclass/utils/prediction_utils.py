@@ -1,5 +1,5 @@
 # Copyright 2015 The TensorFlow Authors. All Rights Reserved.
-# Copyright 2019 University of Waikato, Hamilton, NZ.
+# Copyright 2019-2020 University of Waikato, Hamilton, NZ.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 # limitations under the License.
 # ==============================================================================
 
+import json
 import numpy as np
 import tensorflow as tf
 
@@ -151,3 +152,22 @@ def top_k_probs(probs, k):
         return probs.argsort()[-k:][::-1]
     else:
         return probs.argsort()[:][::-1]
+
+
+def load_info_file(info):
+    """
+    Loads the info JSON file generated with the --output_info option of the retrain.py script.
+
+    :param info: the info file to load
+    :type info: str
+    :return: tuple of input_height, input_width, input_layer, output_layer, labels (list of strings)
+    :rtype: tuple
+    """
+    with open(info, "r") as info_file:
+        info = json.load(info_file)
+    input_height = info['input_height']
+    input_width = info['input_width']
+    input_layer = info['input_layer']
+    output_layer = info['output_layer']
+    labels = info['labels']
+    return input_height, input_width, input_layer, output_layer, labels
