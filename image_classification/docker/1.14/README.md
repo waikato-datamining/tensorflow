@@ -97,3 +97,12 @@ Allows labeling of images with Tensorflow's image classification capabilities, u
   ```
   `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 
+## Tools
+
+The following tools are available (see [here](../../README.md) for more details):
+
+* `tfic-retrain` - for (re)training a pre-trained model on new data
+* `tfic-stats` - for generating statistics for a trained model
+* `tfic-labelimage` - labeling a single image
+* `tfic-poll` - for batch or continuous predictions
+  
