@@ -31,7 +31,7 @@ Allows labeling of images with Tensorflow's image classification capabilities, u
 
 ### Build local image
 
-* Build the image from Docker file (from within /path_to/tensorflow/image_classification/docker/1.14/base_cpu)
+* Build the image from Docker file (from within /path_to/tensorflow/image_classification/docker/1.14_cpu)
 
   ```commandline
   docker build -t tfic_base_cpu .
