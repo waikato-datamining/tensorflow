@@ -22,7 +22,7 @@ image-segmentation-keras version: 0.3.0
   ```commandline
   docker run --runtime=nvidia \
     -v /local/dir:/container/dir \
-    -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/image-segmentation-keras:1.14.0_2019-02-22
+    -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/image-segmentation-keras:1.14.0_0.3.0
   ```
 
   **NB:** For docker versions 19.03 (`docker version`) and newer, use `--gpus=all` instead of `--runtime=nvidia`.
@@ -36,7 +36,7 @@ image-segmentation-keras version: 0.3.0
 
 ### Build local image
 
-* Build image `isk` from Docker file (from within /path_to/tensorflow/image-segmentation-keras/1.14.0_0.3.0/base)
+* Build image `isk` from Docker file (from within /path_to/tensorflow/image-segmentation-keras/1.14.0_0.3.0)
 
   ```commandline
   docker build -t isk .
@@ -55,21 +55,21 @@ image-segmentation-keras version: 0.3.0
 * Build
 
   ```commandline
-  docker build -t tensorflow/isk:1.14.0_2019-02-22 .
+  docker build -t tensorflow/isk:1.14.0_0.3.0 .
   ```
   
 * Tag
 
   ```commandline
   docker tag \
-    tensorflow/isk:1.14.0_2019-02-22 \
-    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/image-segmentation-keras:1.14.0_2019-02-22
+    tensorflow/isk:1.14.0_0.3.0 \
+    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/image-segmentation-keras:1.14.0_0.3.0
   ```
   
 * Push
 
   ```commandline
-  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/image-segmentation-keras:1.14.0_2019-02-22
+  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/image-segmentation-keras:1.14.0_0.3.0
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -82,7 +82,7 @@ image-segmentation-keras version: 0.3.0
   If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
 
   ```commandline
-  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/image-segmentation-keras:1.14.0_2019-02-22
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/image-segmentation-keras:1.14.0_0.3.0
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -93,13 +93,13 @@ image-segmentation-keras version: 0.3.0
   
   ```commandline
   docker tag \
-    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/image-segmentation-keras:1.14.0_2019-02-22 \
-    tensorflow/isk:1.14.0_2019-02-22
+    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/image-segmentation-keras:1.14.0_0.3.0 \
+    tensorflow/isk:1.14.0_0.3.0
   ```
   
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/isk:1.14.0_2019-02-22
+  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/isk:1.14.0_0.3.0
   ```
   `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
