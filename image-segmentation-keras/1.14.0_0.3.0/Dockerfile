@@ -14,5 +14,6 @@ RUN apt-get update && \
 	rm -Rf /root/.cache/pip
 	
 COPY bash.bashrc /etc/bash.bashrc
+COPY keras_seg /usr/bin/keras_seg
 
-WORKDIR /opt/keras-image-segmentation/
+WORKDIR /

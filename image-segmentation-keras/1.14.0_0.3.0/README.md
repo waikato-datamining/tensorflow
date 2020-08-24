@@ -103,3 +103,16 @@ image-segmentation-keras version: 0.3.0
   docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/isk:1.14.0_0.3.0
   ```
   `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
+
+
+## Tools
+
+* `keras_seg` - shortcut for `python -m keras_segmentation`
+
+
+## Usage
+
+* [Training](https://github.com/divamgupta/image-segmentation-keras#training-the-model)
+* [Predicting](https://github.com/divamgupta/image-segmentation-keras#getting-the-predictions)
+* [Predicting (video)](https://github.com/divamgupta/image-segmentation-keras#video-inference)
+* [Evaluation](https://github.com/divamgupta/image-segmentation-keras#model-evaluation)
