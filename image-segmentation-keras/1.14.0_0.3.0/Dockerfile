@@ -8,7 +8,7 @@ RUN apt-get update && \
 	pip install Cython && \
 	pip install "opencv-python<4.2" && \
 	pip install "Keras<2.3.0" && \
-	pip install keras-segmentation && \
+	pip install "keras-segmentation==0.3.0" && \
     pip uninstall -y numpy && \
     pip install "numpy<=1.17.4" && \
 	rm -Rf /root/.cache/pip
