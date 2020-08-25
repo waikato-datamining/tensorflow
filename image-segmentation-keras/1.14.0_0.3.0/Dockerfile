@@ -16,10 +16,12 @@ RUN apt-get update && \
 	
 COPY bash.bashrc /etc/bash.bashrc
 COPY keras_seg /usr/bin/keras_seg
-COPY keras_seg_poll /usr/bin/keras_seg_poll
 COPY keras_seg_conv /usr/bin/keras_seg_conv
+COPY keras_seg_poll /usr/bin/keras_seg_poll
+COPY keras_seg_train /usr/bin/keras_seg_train
 COPY convert.py /opt/image-segmentation-keras/convert.py
 COPY predict.py /opt/image-segmentation-keras/predict.py
+COPY train.py /opt/image-segmentation-keras/train.py
 
 ENV PYTHONPATH=/opt/image-segmentation-keras
 
