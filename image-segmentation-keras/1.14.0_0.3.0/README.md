@@ -106,11 +106,30 @@ image-segmentation-keras version: 0.3.0
   ```
   `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 
+### Caching of models
+
+Keras will cache the base models it uses. However, when using Docker, these cached images will
+disappear once the container is exited/stopped. To avoid constant downloads, you can
+map the cache directory used in the container to a directory on the host. 
+
+* Map cache directory (`/root/.keras`) when running container as root:
+
+  ```commandline  
+  -v /local/dir/keras_cache:/root/.keras
+  ```
+
+* Or when running as regular user (`/tmp/.keras`):
+
+  ```commandline  
+  -v /local/dir/keras_cache:/tmp/.keras
+  ```
+
 
 ## Tools
 
 * `keras_seg` - shortcut for `python -m keras_segmentation`
 * `keras_seg_poll` - for continuous predictions, monitors input directory for new images to process 
+* `keras_seg_conv` - converts indexed PNGs into PNG files with the indices in the blue channel 
 
 
 ## Usage
@@ -122,7 +141,7 @@ image-segmentation-keras version: 0.3.0
 
 **Notes:**
 
-* for training, the `--input_height` and `--input_width` parameters must be multiples of 32
+* In case of training, the `--input_height` and `--input_width` parameters must be multiples of 32.
 
 
 ## Permissions
