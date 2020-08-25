@@ -18,8 +18,8 @@ COPY bash.bashrc /etc/bash.bashrc
 COPY keras_seg /usr/bin/keras_seg
 COPY keras_seg_poll /usr/bin/keras_seg_poll
 COPY keras_seg_conv /usr/bin/keras_seg_conv
-COPY convert.py /opt/image-segmentation-keras
-COPY predict.py /opt/image-segmentation-keras
+COPY convert.py /opt/image-segmentation-keras/convert.py
+COPY predict.py /opt/image-segmentation-keras/predict.py
 
 ENV PYTHONPATH=/opt/image-segmentation-keras
 
