@@ -11,9 +11,14 @@ RUN apt-get update && \
 	pip install "keras-segmentation==0.3.0" && \
     pip uninstall -y numpy && \
     pip install "numpy<=1.17.4" && \
+	pip install "python-image-complete" && \
 	rm -Rf /root/.cache/pip
 	
 COPY bash.bashrc /etc/bash.bashrc
 COPY keras_seg /usr/bin/keras_seg
+COPY keras_seg_poll /usr/bin/keras_seg_poll
+COPY predict.py /opt/image-segmentation-keras
+
+ENV PYTHONPATH=/opt/image-segmentation-keras
 
 WORKDIR /

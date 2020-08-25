@@ -108,6 +108,7 @@ image-segmentation-keras version: 0.3.0
 ## Tools
 
 * `keras_seg` - shortcut for `python -m keras_segmentation`
+* `keras_seg_poll` - for continuous predictions, monitors input directory for new images to process 
 
 
 ## Usage
