@@ -1,3 +1,6 @@
 Cython
 opencv-python<4.2
-keras-segmentation
+numpy<=1.17.4
+Keras<2.3.0
+keras-segmentation==0.3.0
+python-image-complete
