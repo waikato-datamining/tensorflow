@@ -113,7 +113,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="Allows continuous processing of images appearing in the input directory, storing the predictions "
                     + "in the output directory. Input files can either be moved to the output directory or deleted.")
-    parser.add_argument('--checkpoints', help='Directory with checkpoint file(s) and _config.json (checkpoint names: ".X" with X=0..n)', required=True, default=None)
+    parser.add_argument('--checkpoints_path', help='Directory with checkpoint file(s) and _config.json (checkpoint names: ".X" with X=0..n)', required=True, default=None)
     parser.add_argument('--prediction_in', help='Path to the test images', required=True, default=None)
     parser.add_argument('--prediction_out', help='Path to the output csv files folder', required=True, default=None)
     parser.add_argument('--prediction_tmp', help='Path to the temporary csv files folder', required=False, default=None)
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     parsed = parser.parse_args()
 
     try:
-        model_dir = os.path.join(parsed.checkpoints, '')
+        model_dir = os.path.join(parsed.checkpoints_path, '')
         print("Loading model from %s" % model_dir)
         model = model_from_checkpoint_path(model_dir)
         while True:
