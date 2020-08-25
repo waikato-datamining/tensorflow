@@ -52,7 +52,7 @@ if __name__ == '__main__':
               steps_per_epoch=args.steps_per_epoch,
               val_steps_per_epoch=args.val_steps_per_epoch,
               optimizer_name=args.optimizer_name,
-              gen_use_multiprocessing=args.use_multiprocessing,
+              gen_use_multiprocessing=args.use_multi_processing,
               ignore_zero_class=args.ignore_zero_class,
               do_augment=args.do_augment,
               augmentation_name=args.augmentation_name)
