@@ -153,3 +153,64 @@ the container):
 ```commandline
 docker run -u $(id -u):$(id -g) ...
 ```
+
+## Examples
+
+### Start docker container
+
+The following command starts up the docker container, which is used for the examples further down:
+* the datasets are stored in `/some/where/keras/data`, mapped to `/data`
+* the models etc are getting stored in `/some/where/keras/output`, mapped to `/output`
+* the predictions (in/out directories) are located in `/some/where/keras/predictions`, mapped to `/predictions`  
+
+```commandline
+docker run --gpus=all -u $(id -u):$(id -g) \
+  -v /some/where/keras/data:/data \
+  -v /some/where/keras/output:/output \
+  -v /some/where/keras/cache:/tmp/.keras \
+  -v /some/where/keras/predictions:/predictions \
+  -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/image-segmentation-keras:1.14.0_0.3.0
+```
+
+### Convert
+
+Converts the PNGs with indexed palette in `/data/cooldataset/indexed/` into regular RBG ones and
+stores them in `/data/cooldataset/annotations/`: 
+
+```commandline
+keras_seg_conv \
+  --input_dir /data/cooldataset/indexed/ \
+  --output_dir /data/cooldataset/annotations/ \
+  --verbose
+```
+
+### Train
+
+Trains `resnet50_unet` for 5 epochs on our *cooldataset*, using the original images in `/data/cooldataset/images/`
+and the converted RGB images in `/data/cooldataset/annotations/`. The number of classes is two, background and the
+single type of object that we are interested in. The images get scaled to 1024x704 (multiples of 32).
+
+```commandline
+keras_seg train \
+  --checkpoints_path=/output/cooldataset/ \
+  --train_images=/data/cooldataset/images/ \
+  --train_annotations=/data/cooldataset/annotations/ \
+  --epochs=5 \
+  --n_classes=2 \
+  --input_height=704 \
+  --input_width=1024 \
+  --model_name=resnet50_unet
+```
+
+### Predict
+
+Once trained, we can use our model to continuously process images and generate predictions. New images get picked up
+from `/predictions/in` and the generated prediction images (and original input images) get output in `/predictions/out`:
+
+```commandline
+keras_seg_poll \
+  --checkpoints_path /output/cooldataset/ \
+  --prediction_in /predictions/in \
+  --prediction_out /predictions/out \
+  --continuous
+```
