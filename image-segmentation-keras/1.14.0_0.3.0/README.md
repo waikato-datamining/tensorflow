@@ -120,6 +120,10 @@ image-segmentation-keras version: 0.3.0
 * [Predicting (video)](https://github.com/divamgupta/image-segmentation-keras#video-inference)
 * [Evaluation](https://github.com/divamgupta/image-segmentation-keras#model-evaluation)
 
+**Notes:**
+
+* for training, the `--input_height` and `--input_width` parameters must be multiples of 32
+
 
 ## Permissions
 
