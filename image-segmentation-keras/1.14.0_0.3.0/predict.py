@@ -3,6 +3,8 @@ from datetime import datetime
 import os
 import time
 import traceback
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
 from keras_segmentation.predict import model_from_checkpoint_path
 from image_complete import auto
 
@@ -120,12 +122,22 @@ if __name__ == '__main__':
     parser.add_argument('--continuous', action='store_true', help='Whether to continuously load test images and perform prediction', required=False, default=False)
     parser.add_argument('--delete_input', action='store_true', help='Whether to delete the input images rather than move them to --prediction_out directory', required=False, default=False)
     parser.add_argument('--clash_suffix', help='The file name suffix to use in case the input file is already a PNG and moving it to the output directory would overwrite the prediction PNG', required=False, default="-in")
+    parser.add_argument('--memory_fraction', type=float, help='Memory fraction to use by tensorflow, i.e., limiting memory usage', required=False, default=0.5)
     parsed = parser.parse_args()
 
     try:
+        # apply memory usage
+        print("Using memory fraction: %f" % parsed.memory_fraction)
+        config = tf.ConfigProto()
+        config.gpu_options.per_process_gpu_memory_fraction = parsed.memory_fraction
+        set_session(tf.Session(config=config))
+
+        # load model
         model_dir = os.path.join(parsed.checkpoints_path, '')
         print("Loading model from %s" % model_dir)
         model = model_from_checkpoint_path(model_dir)
+
+        # predict
         while True:
             predict_on_images(model, parsed.prediction_in, parsed.prediction_out, parsed.prediction_tmp,
                               parsed.delete_input, clash_suffix=parsed.clash_suffix)
