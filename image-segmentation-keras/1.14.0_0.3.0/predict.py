@@ -110,7 +110,9 @@ def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input, clash
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Allows continuous processing of images appearing in the input directory, storing the predictions "
+                    + "in the output directory. Input files can either be moved to the output directory or deleted.")
     parser.add_argument('--checkpoints', help='Directory with checkpoint file(s) and _config.json (checkpoint names: ".X" with X=0..n)', required=True, default=None)
     parser.add_argument('--prediction_in', help='Path to the test images', required=True, default=None)
     parser.add_argument('--prediction_out', help='Path to the output csv files folder', required=True, default=None)
