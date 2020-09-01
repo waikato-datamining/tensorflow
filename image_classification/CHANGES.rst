@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.0.6 (2020-09-02)
+------------------
+
+- `poll.py` in non-continuous mode now works as expected (didn't scan input directory previously)
+
+
 0.0.5 (2020-08-06)
 ------------------
 
