@@ -206,7 +206,7 @@ def poll(sess, graph, input_layer, output_layer, labels, in_dir, out_dir, contin
         for label in grid_ignored.split(","):
             ignored_labels.add(label.strip())
 
-    while continuous:
+    while True:
         any = False
         files = [(in_dir + os.sep + x) for x in os.listdir(in_dir) if (x.lower().endswith(".png") or x.lower().endswith(".jpg"))]
         for f in files:
@@ -269,6 +269,10 @@ def poll(sess, graph, input_layer, output_layer, labels, in_dir, out_dir, contin
 
             timediff = datetime.now() - start
             print("  time:", timediff)
+
+        # exit if not in continuous mode
+        if not continuous:
+            break
 
         # nothing processed at all, lets wait for files to appear
         if not any:
