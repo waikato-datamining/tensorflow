@@ -34,13 +34,13 @@ Allows labeling of images with Tensorflow's image classification capabilities, u
 * Build the image from Docker file (from within /path_to/tensorflow/image_classification/docker/1.14_cpu)
 
   ```commandline
-  docker build -t tfic_base_cpu .
+  docker build -t tfic_cpu .
   ```
 
 * Run the container
 
   ```commandline
-  docker run --runtime=nvidia -v /local/dir:/container/dir -it tfic_base_cpu
+  docker run --runtime=nvidia -v /local/dir:/container/dir -it tfic_cpu
   ```
 
 ### Pre-built images
