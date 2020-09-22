@@ -62,7 +62,7 @@ def predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor,
     with open(output_file, "w") as rf:
         rf.write("label,probability\n")
         for i in top_probs:
-            rf.write(labels[i] + "," + str(probs[top_probs[i]]) + "\n")
+            rf.write(labels[top_probs[i]] + "," + str(probs[top_probs[i]]) + "\n")
 
 
 def to_cell(label, prob, threshold, ignored_labels):
