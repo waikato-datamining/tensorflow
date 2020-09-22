@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.0.7 (2020-09-22)
+------------------
+
+- `poll.py` now outputs the top-X predictions with the correct labels/probability
+
+
 0.0.6 (2020-09-02)
 ------------------
 
