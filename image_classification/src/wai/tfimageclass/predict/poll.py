@@ -196,7 +196,7 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
 
     while True:
         num_processed = 0
-        reset_session = False
+        do_reset_session = False
         with tf.compat.v1.Session(graph=graph) as sess:
             while True:
                 any = False
@@ -265,14 +265,14 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
 
                     if num_processed >= reset_session:
                         print("\nResetting session...\n")
-                        reset_session = True
+                        do_reset_session = True
                         break
 
                 # exit if not in continuous mode
                 if not continuous:
                     return
 
-                if reset_session:
+                if do_reset_session:
                     break
 
                 # nothing processed at all, lets wait for files to appear
