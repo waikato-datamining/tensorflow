@@ -41,14 +41,6 @@ def predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor,
     :type output_layer: str
     :param labels: the list of labels to use
     :type labels: list
-    :param height: the expected height of the images
-    :type height: int
-    :param width: the expected height of the images
-    :type width: int
-    :param mean: the mean to use for the images
-    :type mean: int
-    :param std: the std deviation to use for the images
-    :type std: int
     :param top_x: the number of labels with the highest probabilities to return, <1 for all
     :type top_x: int
     :param tensor: the image as tensor
@@ -108,10 +100,6 @@ def predict_grid(sess, graph, input_layer, output_layer, labels, top_x, tensor, 
     :type height: int
     :param width: the expected height of the images
     :type width: int
-    :param mean: the mean to use for the images
-    :type mean: int
-    :param std: the std deviation to use for the images
-    :type std: int
     :param top_x: the number of labels with the highest probabilities to return, <1 for all
     :type top_x: int
     :param tensor: the image as tensor
@@ -157,13 +145,11 @@ def predict_grid(sess, graph, input_layer, output_layer, labels, top_x, tensor, 
             rf.write("\n")
 
 
-def poll(sess, graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, height, width, mean, std, top_x, delete,
-         grid_size=None, grid_threshold=0.9, grid_ignored=None):
+def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, height, width, mean, std, top_x, delete,
+         grid_size=None, grid_threshold=0.9, grid_ignored=None, reset_session=50):
     """
     Performs continuous predictions on files appearing in the "in_dir" and outputting the results in "out_dir".
 
-    :param sess: the tensorflow session to use
-    :type sess: tf.Session
     :param graph: the tensorflow graph to use
     :type graph: tf.Graph
     :param input_layer: the name of input layer in the graph to use
@@ -197,6 +183,8 @@ def poll(sess, graph, input_layer, output_layer, labels, in_dir, out_dir, contin
     :type grid_threshold: float
     :param grid_ignored: the list of ignored labels, default is None
     :type grid_ignored: str
+    :param reset_session: the number of processed images after which to reinitialize the session to avoid memory leaks
+    :type reset_session: int
     """
 
     print("Class labels: %s" % str(labels))
@@ -207,76 +195,89 @@ def poll(sess, graph, input_layer, output_layer, labels, in_dir, out_dir, contin
             ignored_labels.add(label.strip())
 
     while True:
-        any = False
-        files = [(in_dir + os.sep + x) for x in os.listdir(in_dir) if (x.lower().endswith(".png") or x.lower().endswith(".jpg"))]
-        for f in files:
-            any = True
-            start = datetime.now()
-            print(start, "-", f)
+        num_processed = 0
+        reset_session = False
+        with tf.compat.v1.Session(graph=graph) as sess:
+            while True:
+                any = False
+                files = [(in_dir + os.sep + x) for x in os.listdir(in_dir) if (x.lower().endswith(".png") or x.lower().endswith(".jpg"))]
+                for f in files:
+                    any = True
+                    start = datetime.now()
+                    print(start, "-", f)
 
-            img_path = out_dir + os.sep + os.path.basename(f)
-            roi_csv = out_dir + os.sep + os.path.splitext(os.path.basename(f))[0] + ".csv"
-            roi_tmp = out_dir + os.sep + os.path.splitext(os.path.basename(f))[0] + ".tmp"
+                    img_path = out_dir + os.sep + os.path.basename(f)
+                    roi_csv = out_dir + os.sep + os.path.splitext(os.path.basename(f))[0] + ".csv"
+                    roi_tmp = out_dir + os.sep + os.path.splitext(os.path.basename(f))[0] + ".tmp"
 
-            tensor = None
-            try:
-                if grid_size is None:
-                    tensor = read_tensor_from_image_file(f, height, width, mean, std, sess)
-                else:
-                    tensor = read_tensor_from_image_file(f, -1, -1, mean, std, sess)
-            except Exception as e:
-                print(traceback.format_exc())
-
-            try:
-                # delete any existing old files in output dir
-                if os.path.exists(img_path):
+                    tensor = None
                     try:
-                        os.remove(img_path)
-                    except:
-                        print("Failed to remove existing image in output directory: ", img_path)
-                if os.path.exists(roi_tmp):
+                        if grid_size is None:
+                            tensor = read_tensor_from_image_file(f, height, width, mean, std, sess)
+                        else:
+                            tensor = read_tensor_from_image_file(f, -1, -1, mean, std, sess)
+                    except Exception as e:
+                        print(traceback.format_exc())
+
                     try:
-                        os.remove(roi_tmp)
+                        # delete any existing old files in output dir
+                        if os.path.exists(img_path):
+                            try:
+                                os.remove(img_path)
+                            except:
+                                print("Failed to remove existing image in output directory: ", img_path)
+                        if os.path.exists(roi_tmp):
+                            try:
+                                os.remove(roi_tmp)
+                            except:
+                                print("Failed to remove existing ROI file (tmp) in output directory: ", roi_tmp)
+                        if os.path.exists(roi_csv):
+                            try:
+                                os.remove(roi_csv)
+                            except:
+                                print("Failed to remove existing ROI file in output directory: ", roi_csv)
+                        # delete or move into output dir
+                        if delete:
+                            os.remove(f)
+                        else:
+                            os.rename(f, img_path)
                     except:
-                        print("Failed to remove existing ROI file (tmp) in output directory: ", roi_tmp)
-                if os.path.exists(roi_csv):
+                        img_path = None
+
+                    if tensor is None:
+                        continue
+                    if img_path is None:
+                        continue
+
                     try:
-                        os.remove(roi_csv)
-                    except:
-                        print("Failed to remove existing ROI file in output directory: ", roi_csv)
-                # delete or move into output dir
-                if delete:
-                    os.remove(f)
-                else:
-                    os.rename(f, img_path)
-            except:
-                img_path = None
+                        if grid_size is None:
+                            predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, roi_tmp)
+                        else:
+                            predict_grid(sess, graph, input_layer, output_layer, labels, top_x, tensor, height, width,
+                                         grid_size, grid_threshold, ignored_labels, roi_tmp)
+                        os.rename(roi_tmp, roi_csv)
+                        num_processed += 1
+                    except Exception as e:
+                        print(traceback.format_exc())
 
-            if tensor is None:
-                continue
-            if img_path is None:
-                continue
+                    timediff = datetime.now() - start
+                    print("  time:", timediff)
 
-            try:
-                if grid_size is None:
-                    predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, roi_tmp)
-                else:
-                    predict_grid(sess, graph, input_layer, output_layer, labels, top_x, tensor, height, width,
-                                 grid_size, grid_threshold, ignored_labels, roi_tmp)
-                os.rename(roi_tmp, roi_csv)
-            except Exception as e:
-                print(traceback.format_exc())
+                    if num_processed >= reset_session:
+                        print("\nResetting session...\n")
+                        reset_session = True
+                        break
 
-            timediff = datetime.now() - start
-            print("  time:", timediff)
+                # exit if not in continuous mode
+                if not continuous:
+                    return
 
-        # exit if not in continuous mode
-        if not continuous:
-            break
+                if reset_session:
+                    break
 
-        # nothing processed at all, lets wait for files to appear
-        if not any:
-            sleep(1)
+                # nothing processed at all, lets wait for files to appear
+                if not any:
+                    sleep(1)
 
 
 def main(args=None):
@@ -307,6 +308,7 @@ def main(args=None):
     parser.add_argument("--grid_size", metavar="INT", type=int, help="the number of columns and rows to divide the image in, passing each sub-image through the model to obtain predictions", default=None)
     parser.add_argument("--grid_threshold", metavar="0-1", type=float, help="the minimum probability threshold for predictions in the grid to show up in the output", default=0.9)
     parser.add_argument("--grid_ignored", metavar="label1,label2,...", help="the labels to ignore when in grid prediction mode (comma-separated list)", default=None)
+    parser.add_argument("--reset_session", metavar="INT", type=int, help="The number of processed images after which to reinitialize the Tensorflow session to reduce memory leaks.", default=50)
     args = parser.parse_args(args=args)
 
     # values from options
@@ -327,10 +329,10 @@ def main(args=None):
 
     graph = load_graph(args.graph)
 
-    with tf.compat.v1.Session(graph=graph) as sess:
-        poll(sess, graph, input_layer, output_layer, labels, args.in_dir, args.out_dir, args.continuous,
-             input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete,
-             grid_size=args.grid_size, grid_threshold=args.grid_threshold, grid_ignored=args.grid_ignored)
+    poll(graph, input_layer, output_layer, labels, args.in_dir, args.out_dir, args.continuous,
+         input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete,
+         grid_size=args.grid_size, grid_threshold=args.grid_threshold, grid_ignored=args.grid_ignored,
+         reset_session=args.reset_session)
 
 
 def sys_main() -> int:
