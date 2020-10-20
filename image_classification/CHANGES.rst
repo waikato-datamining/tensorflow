@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.0.8 (2020-10-21)
+------------------
+
+- `poll.py` now re-initializes the Tensorflow session every X processed images to avoid
+  out of memory problems (`--reset_session` option).
+
+
 0.0.7 (2020-09-22)
 ------------------
 
