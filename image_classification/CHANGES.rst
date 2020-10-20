@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.0.9 (2020-10-21)
+------------------
+
+- `poll.py` accidentally redefined variable for resetting the session.
+
+
 0.0.8 (2020-10-21)
 ------------------
 
