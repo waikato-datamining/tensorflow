@@ -304,7 +304,7 @@ Once you have built a model, you can use as follows:
                    [--input_height INT] [--input_width INT] [--input_layer NAME]
                    [--output_layer NAME] [--input_mean INT] [--input_std INT]
                    [--top_x INT] [--grid_size INT] [--grid_threshold 0-1]
-                   [--grid_ignored label1,label2,...]
+                   [--grid_ignored label1,label2,...] [--reset_session INT]
 
   For bulk or continuous prediction output using a trained model.
 
@@ -338,4 +338,7 @@ Once you have built a model, you can use as follows:
     --grid_ignored label1,label2,...
                           the labels to ignore when in grid prediction mode
                           (comma-separated list) (default: None)
+    --reset_session INT   The number of processed images after which to
+                          reinitialize the Tensorflow session to reduce memory
+                          leaks. (default: 50)
   ```
