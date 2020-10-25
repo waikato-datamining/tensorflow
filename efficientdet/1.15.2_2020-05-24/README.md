@@ -32,12 +32,12 @@ Using the following git hash:
 * Pull and run image (adjust volume mappings `-v`):
 
   ```commandline
-  docker run --runtime=nvidia \
+  docker run --gpus=all \
     -v /local/dir:/container/dir \
     -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/efficientdet:1.15.2_2020-05-24
   ```
 
-  **NB:** For docker versions 19.03 (`docker version`) and newer, use `--gpus=all` instead of `--runtime=nvidia`.
+  **NB:** For docker versions older than 19.03 (`docker version`), use `--runtime=nvidia` instead of `--gpus=all`.
 
 * If need be, remove all containers and images from your system:
 
@@ -57,7 +57,7 @@ Using the following git hash:
 * Run image `eft` in interactive mode (i.e., using `bash`) as container `isk_container`
 
   ```commandline
-  docker run --runtime=nvidia --name eft_container -ti -v \
+  docker run --gpus=all --name eft_container -ti -v \
     /local/dir:/container/dir \
     eft bash
   ```
@@ -112,7 +112,7 @@ Using the following git hash:
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/eft:1.15.2_2020-05-24
+  docker run --gpus=all -v /local/dir:/container/dir -it tensorflow/eft:1.15.2_2020-05-24
   ```
   `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 

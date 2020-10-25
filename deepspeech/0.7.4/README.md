@@ -24,12 +24,12 @@ Version of DeepSpeech:
 * Pull and run image (adjust volume mappings `-v`):
 
   ```commandline
-  docker run --runtime=nvidia \
+  docker run --gpus=all \
     -v /local/dir:/container/dir \
     -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/deepspeech:0.7.4
   ```
 
-  **NB:** For docker versions 19.03 (`docker version`) and newer, use `--gpus=all` instead of `--runtime=nvidia`.
+  **NB:** For docker versions older than 19.03 (`docker version`), use `--runtime=nvidia` instead of `--gpus=all`.
 
 * If need be, remove all containers and images from your system:
 
@@ -49,7 +49,7 @@ Version of DeepSpeech:
 * Run image `ds` in interactive mode (i.e., using `bash`) as container `ds_container`
 
   ```commandline
-  docker run --runtime=nvidia --name ds_container -ti -v \
+  docker run --gpus=all --name ds_container -ti -v \
     /local/dir:/container/dir \
     ds bash
   ```
@@ -104,7 +104,7 @@ Version of DeepSpeech:
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/ds:0.7.4
+  docker run --gpus=all -v /local/dir:/container/dir -it tensorflow/ds:0.7.4
   ```
   `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 

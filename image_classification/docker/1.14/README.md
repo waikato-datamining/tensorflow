@@ -15,12 +15,12 @@ Allows labeling of images with Tensorflow's image classification capabilities, u
 * Pull and run image (adjust volume mappings `-v`):
 
   ```commandline
-  docker run --runtime=nvidia \
+  docker run --gpus=all \
     -v /local/dir:/container/dir \
     -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification:1.14
   ```
 
-  **NB:** For docker versions 19.03 (`docker version`) and newer, use `--gpus=all` instead of `--runtime=nvidia`.
+  **NB:** For docker versions older than 19.03 (`docker version`), use `--runtime=nvidia` instead of `--gpus=all`.
 
 * If need be, remove all containers and images from your system:
 
@@ -40,7 +40,7 @@ Allows labeling of images with Tensorflow's image classification capabilities, u
 * Run the container
 
   ```commandline
-  docker run --runtime=nvidia -v /local/dir:/container/dir -it tfic
+  docker run --gpus=all -v /local/dir:/container/dir -it tfic
   ```
 
 ### Pre-built images
@@ -93,7 +93,7 @@ Allows labeling of images with Tensorflow's image classification capabilities, u
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --runtime=nvidia -v /local/dir:/container/dir -it tensorflow/image_classification:1.14
+  docker run --gpus=all -v /local/dir:/container/dir -it tensorflow/image_classification:1.14
   ```
   `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 
