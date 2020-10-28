@@ -34,7 +34,7 @@ MAX_INCOMPLETE = 3
 
 def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_threshold, categories, num_imgs, inference_times,
                       delete_input, output_polygons, mask_threshold, mask_nth, output_minrect, view_margin, fully_connected,
-                      fit_bbox_to_polygon, output_width_height, bbox_as_fallback):
+                      fit_bbox_to_polygon, output_width_height, bbox_as_fallback, output_mask_image):
     """
     Method performing predictions on all images ony by one or combined as specified by the int value of num_imgs.
 
@@ -75,6 +75,8 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
     :type output_width_height: bool
     :param bbox_as_fallback: if ratio between polygon-bbox and bbox is smaller than this value, use bbox as fallback polygon, ignored if < 0
     :type bbox_as_fallback: float
+    :param output_mask_image: generates PNGs with indexed palette with the detected objects
+    :type output_mask_image: float
     """
 
     # Iterate through all files present in "test_images_directory"
@@ -183,10 +185,13 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
                 max_height += img_height
                 prev_min = max_height
                 roi_path = "{}/{}-rois.csv".format(output_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
+                img_path = "{}/{}-mask.png".format(output_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
                 if tmp_dir is not None:
                     roi_path_tmp = "{}/{}-rois.tmp".format(tmp_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
+                    img_path_tmp = "{}/{}-mask.tmp".format(tmp_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
                 else:
                     roi_path_tmp = "{}/{}-rois.tmp".format(output_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
+                    img_path_tmp = "{}/{}-mask.tmp".format(output_dir, os.path.splitext(os.path.basename(im_list[i]))[0])
 
                 roiobjs = []
                 for index in range(output_dict['num_detections']):
@@ -218,6 +223,7 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
                     pyn = None
                     bw = None
                     bh = None
+                    mask_comb = None
                     if output_polygons:
                         px = []
                         py = []
@@ -257,6 +263,16 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
                                         x0, y0, x1, y1 = polygon_to_bbox(lists_to_polygon(px, py))
                                         x0n, y0n, x1n, y1n = polygon_to_bbox(lists_to_polygon(pxn, pyn))
 
+                    if output_mask_image and 'detection_masks'in output_dict:
+                        mask_img = output_dict['detection_masks'][index].copy()
+                        mask_img[mask_img < mask_threshold] = 0
+                        mask_img[mask_img >= mask_threshold] = label+1  # first label is 0
+                        if mask_comb is None:
+                            mask_comb = mask_img
+                        else:
+                            tmp = np.where(mask_comb==0, mask_img, mask_comb)
+                            mask_comb = tmp
+
                     roiobj = ROIObject(x0, y0, x1, y1, x0n, y0n, x1n, y1n, label, label_str, score=score,
                                        poly_x=px, poly_y=py, poly_xn=pxn, poly_yn=pyn,
                                        minrect_w=bw, minrect_h=bh)
@@ -271,6 +287,11 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
                 roiwriter.save([roiext])
                 if tmp_dir is not None:
                     os.rename(roi_path_tmp, roi_path)
+
+                if mask_comb is not None:
+                    im = Image.fromarray(np.uint8(mask_comb), 'P')
+                    im.save(img_path_tmp, "PNG")
+                    os.rename(img_path_tmp, img_path)
         except:
             print("Failed processing images: {}".format(",".join(im_list)))
             print(traceback.format_exc())
@@ -330,6 +351,7 @@ if __name__ == '__main__':
     parser.add_argument('--view_margin', default=2, type=int, required=False, help='The number of pixels to use as margin around the masks when determining the polygon')
     parser.add_argument('--fully_connected', default='high', choices=['high', 'low'], required=False, help='When determining polygons, whether regions of high or low values should be fully-connected at isthmuses')
     parser.add_argument('--output_width_height', action='store_true', help="Whether to output x/y/w/h instead of x0/y0/x1/y1 in the ROI CSV files", required=False, default=False)
+    parser.add_argument('--output_mask_image', action='store_true', default=False, help="Whether to output a mask image (PNG) when predictions generate masks (independent of outputting polygons)", required=False)
     parsed = parser.parse_args()
 
     if parsed.fit_bbox_to_polygon and (parsed.bbox_as_fallback >= 0):
@@ -352,7 +374,7 @@ if __name__ == '__main__':
                                       parsed.delete_input, parsed.output_polygons, parsed.mask_threshold,
                                       parsed.mask_nth, parsed.output_minrect, parsed.view_margin, parsed.fully_connected,
                                       parsed.fit_bbox_to_polygon, parsed.output_width_height,
-                                      parsed.bbox_as_fallback)
+                                      parsed.bbox_as_fallback, parsed.output_mask_image)
 
                     # Exit if not continuous
                     if not parsed.continuous:
