@@ -42,7 +42,7 @@ MAX_INCOMPLETE = 3
 """ the maximum number of times an image can return 'incomplete' status before getting moved/deleted. """
 
 
-def predict(model, inp, out_fname=None, verbose=False):
+def predict(model, inp, out_fname=None, colors=None, verbose=False):
     """
     Generates a prediction with the model.
 
@@ -51,6 +51,8 @@ def predict(model, inp, out_fname=None, verbose=False):
     :type inp: np.ndarray or str
     :param out_fname: the name for the mask file to generate
     :type out_fname: str
+    :param colors: the list of colors to use (flat list of r,g,b values, eg "0, 0, 0, 127, 127, 127, ..."), needs to have 768 entries
+    :type colors: list
     :param verbose: whether to output more logging information
     :type verbose: bool
     :return: the tuple of prediction and mask arrays (np.ndarray)
@@ -60,6 +62,9 @@ def predict(model, inp, out_fname=None, verbose=False):
     assert (inp is not None)
     assert ((type(inp) is np.ndarray) or isinstance(inp, six.string_types)),\
         "Input should be the CV image or the input file name"
+
+    if colors is not None:
+        assert (len(colors) == 768), "list of colors must be 768 (256 r,g,b triplets)"
 
     if isinstance(inp, six.string_types):
         inp = cv2.imread(inp)
@@ -89,13 +94,16 @@ def predict(model, inp, out_fname=None, verbose=False):
     if out_fname is not None:
         im = Image.fromarray(pr_mask)
         im = im.convert("P")
-        im.putpalette(class_colors)
+        if colors is not None:
+            im.putpalette(colors)
+        else:
+            im.putpalette(class_colors)
         im.save(out_fname)
 
     return pr, pr_mask
 
 
-def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input, clash_suffix="-in", verbose=False):
+def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input, clash_suffix="-in", colors=None, verbose=False):
     """
     Performs predictions on images found in input_dir and outputs the prediction PNG files in output_dir.
 
@@ -110,6 +118,8 @@ def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input, clash
     :type delete_input: bool
     :param clash_suffix: the suffix to use for clashes, ie when the input is already a PNG image
     :type clash_suffix: str
+    :param colors: the list of colors to use (flat list of r,g,b values, eg "0, 0, 0, 127, 127, 127"), will get padded to 256 triplets
+    :type colors: list
     :param verbose: whether to output more logging information
     :type verbose: bool
     """
@@ -117,6 +127,13 @@ def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input, clash
     # counter for keeping track of images that cannot be processed
     incomplete_counter = dict()
     num_imgs = 1
+
+    # ensure colors list has correct length for PNG palette
+    if colors is not None:
+        if len(colors) < 768:
+            colors.extend(class_colors[len(colors):])
+        if len(colors) > 768:
+            colors = colors[0:768]
 
     while True:
         start_time = datetime.now()
@@ -171,7 +188,7 @@ def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input, clash
                 else:
                     out_file = os.path.join(output_dir, parts[0] + ".png")
                 #model.predict_segmentation(inp=im_list[i], out_fname=out_file)
-                predict(model, im_list[i], out_fname=out_file, verbose=verbose)
+                predict(model, im_list[i], out_fname=out_file, colors=colors, verbose=verbose)
         except:
             print("Failed processing images: {}".format(",".join(im_list)))
             print(traceback.format_exc())
@@ -206,6 +223,7 @@ if __name__ == '__main__':
     parser.add_argument('--delete_input', action='store_true', help='Whether to delete the input images rather than move them to --prediction_out directory', required=False, default=False)
     parser.add_argument('--clash_suffix', help='The file name suffix to use in case the input file is already a PNG and moving it to the output directory would overwrite the prediction PNG', required=False, default="-in")
     parser.add_argument('--memory_fraction', type=float, help='Memory fraction to use by tensorflow, i.e., limiting memory usage', required=False, default=0.5)
+    parser.add_argument('--colors', help='The list of colors (RGB triplets) to use for the PNG palette, e.g.: 0,0,0,255,0,0,0,0,255 for black,red,blue', required=False, default=None)
     parser.add_argument('--verbose', action='store_true', help='Whether to output more logging info', required=False, default=False)
     parsed = parser.parse_args()
 
@@ -221,10 +239,17 @@ if __name__ == '__main__':
         print("Loading model from %s" % model_dir)
         model = model_from_checkpoint_path(model_dir)
 
+        # color palette
+        colors = None
+        if parsed.colors is not None:
+            colors = parsed.colors.split(",")
+            colors = [int(x) for x in colors]
+
         # predict
         while True:
             predict_on_images(model, parsed.prediction_in, parsed.prediction_out, parsed.prediction_tmp,
-                              parsed.delete_input, clash_suffix=parsed.clash_suffix, verbose=parsed.verbose)
+                              parsed.delete_input, clash_suffix=parsed.clash_suffix, colors=colors,
+                              verbose=parsed.verbose)
             if not parsed.continuous:
                 break
 

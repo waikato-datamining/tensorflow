@@ -215,3 +215,15 @@ keras_seg_poll \
   --prediction_out /predictions/out \
   --continuous
 ```
+
+You can provide a custom color palette as well, using the `--colors` parameter. The following example uses
+black, red and blue, with the remainder of the 256 PNG palette getting filled up with random colors:
+
+```commandline
+keras_seg_poll \
+  --checkpoints_path /output/cooldataset/ \
+  --prediction_in /predictions/in \
+  --prediction_out /predictions/out \
+  --colors 0,0,0,255,0,0,0,0,255 \
+  --continuous
+```
