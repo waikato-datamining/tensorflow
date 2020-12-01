@@ -7,6 +7,33 @@ import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 from keras_segmentation.predict import model_from_checkpoint_path
 from image_complete import auto
+import six
+import numpy as np
+import cv2
+from keras_segmentation.data_utils.data_loader import get_image_array
+from keras_segmentation.models.config import IMAGE_ORDERING
+from PIL import Image
+import random
+
+# colors taken from:
+# conservative 8-color palettes for color blindness
+# http://mkweb.bcgsc.ca/colorblind/palettes.mhtml
+class_colors = [
+      0,   0,   0,
+     34, 113, 178,
+     61, 183, 233,
+    247,  72, 165,
+     53, 155, 115,
+    213,  94,   0,
+    230, 159,   0,
+    240, 228,  66,
+]
+num_colors = 256 - 8
+r = [random.randint(0,255) for _ in range(num_colors)]
+g = [random.randint(0,255) for _ in range(num_colors)]
+b = [random.randint(0,255) for _ in range(num_colors)]
+for rgb in zip(r, g, b):
+    class_colors.extend(rgb)
 
 SUPPORTED_EXTS = [".jpg", ".jpeg", ".png", ".bmp"]
 """ supported file extensions (lower case). """
@@ -15,7 +42,60 @@ MAX_INCOMPLETE = 3
 """ the maximum number of times an image can return 'incomplete' status before getting moved/deleted. """
 
 
-def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input, clash_suffix="-in"):
+def predict(model, inp, out_fname=None, verbose=False):
+    """
+    Generates a prediction with the model.
+
+    :param model: the model to use
+    :param inp: the image, either a numpy array or a filename
+    :type inp: np.ndarray or str
+    :param out_fname: the name for the mask file to generate
+    :type out_fname: str
+    :param verbose: whether to output more logging information
+    :type verbose: bool
+    :return: the tuple of prediction and mask arrays (np.ndarray)
+    :rtype: tuple
+    """
+
+    assert (inp is not None)
+    assert ((type(inp) is np.ndarray) or isinstance(inp, six.string_types)),\
+        "Input should be the CV image or the input file name"
+
+    if isinstance(inp, six.string_types):
+        inp = cv2.imread(inp)
+
+    assert len(inp.shape) == 3, "Image should be h,w,3 "
+
+    output_width = model.output_width
+    output_height = model.output_height
+    input_width = model.input_width
+    input_height = model.input_height
+    n_classes = model.n_classes
+
+    x = get_image_array(inp, input_width, input_height,
+                        ordering=IMAGE_ORDERING)
+    pr = model.predict(np.array([x]))[0]
+    pr = pr.reshape((output_height,  output_width, n_classes)).argmax(axis=2)
+
+    original_h = inp.shape[0]
+    original_w = inp.shape[1]
+    pr_mask = pr.astype('uint8')
+    pr_mask = cv2.resize(pr_mask, (original_w, original_h), interpolation=cv2.INTER_NEAREST)
+    if verbose:
+        unique, count = np.unique(pr_mask, return_counts=True)
+        print("  unique:", unique)
+        print("  count:", count)
+
+    if out_fname is not None:
+        im = Image.fromarray(pr_mask)
+        im = im.convert("P")
+        im.putpalette(class_colors)
+        im.save(out_fname)
+
+    return pr, pr_mask
+
+
+def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input, clash_suffix="-in", verbose=False):
     """
     Performs predictions on images found in input_dir and outputs the prediction PNG files in output_dir.
 
@@ -30,6 +110,8 @@ def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input, clash
     :type delete_input: bool
     :param clash_suffix: the suffix to use for clashes, ie when the input is already a PNG image
     :type clash_suffix: str
+    :param verbose: whether to output more logging information
+    :type verbose: bool
     """
 
     # counter for keeping track of images that cannot be processed
@@ -88,7 +170,8 @@ def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input, clash
                     out_file = os.path.join(tmp_dir, parts[0] + ".png")
                 else:
                     out_file = os.path.join(output_dir, parts[0] + ".png")
-                model.predict_segmentation(inp=im_list[i], out_fname=out_file)
+                #model.predict_segmentation(inp=im_list[i], out_fname=out_file)
+                predict(model, im_list[i], out_fname=out_file, verbose=verbose)
         except:
             print("Failed processing images: {}".format(",".join(im_list)))
             print(traceback.format_exc())
@@ -123,6 +206,7 @@ if __name__ == '__main__':
     parser.add_argument('--delete_input', action='store_true', help='Whether to delete the input images rather than move them to --prediction_out directory', required=False, default=False)
     parser.add_argument('--clash_suffix', help='The file name suffix to use in case the input file is already a PNG and moving it to the output directory would overwrite the prediction PNG', required=False, default="-in")
     parser.add_argument('--memory_fraction', type=float, help='Memory fraction to use by tensorflow, i.e., limiting memory usage', required=False, default=0.5)
+    parser.add_argument('--verbose', action='store_true', help='Whether to output more logging info', required=False, default=False)
     parsed = parser.parse_args()
 
     try:
@@ -140,7 +224,7 @@ if __name__ == '__main__':
         # predict
         while True:
             predict_on_images(model, parsed.prediction_in, parsed.prediction_out, parsed.prediction_tmp,
-                              parsed.delete_input, clash_suffix=parsed.clash_suffix)
+                              parsed.delete_input, clash_suffix=parsed.clash_suffix, verbose=parsed.verbose)
             if not parsed.continuous:
                 break
 
