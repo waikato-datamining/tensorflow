@@ -12,6 +12,7 @@ RUN apt-get update && \
     pip uninstall -y numpy && \
     pip install "numpy<=1.17.4" && \
 	pip install "python-image-complete" && \
+	pip install "simple-file-poller>=0.0.2" && \
 	rm -Rf /root/.cache/pip
 	
 COPY bash.bashrc /etc/bash.bashrc
