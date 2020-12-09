@@ -1,7 +1,5 @@
 import argparse
-from datetime import datetime
 import os
-import time
 import traceback
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
@@ -37,10 +35,7 @@ for rgb in zip(r, g, b):
     class_colors.extend(rgb)
 
 SUPPORTED_EXTS = [".jpg", ".jpeg"]
-""" supported file extensions (lower case). """
-
-MAX_INCOMPLETE = 3
-""" the maximum number of times an image can return 'incomplete' status before getting moved/deleted. """
+""" supported file extensions (lower case with dot). """
 
 
 def predict(model, inp, out_fname=None, colors=None, verbose=False):
@@ -144,7 +139,9 @@ def process_image(fname, output_dir, poller):
 
 
 def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input,
-                      colors=None, continuous=False, verbose=False):
+                      colors=None, continuous=False, poll_wait=1,
+                      use_watchdog=False, watchdog_check_interval=10,
+                      verbose=False):
     """
     Performs predictions on images found in input_dir and outputs the prediction PNG files in output_dir.
 
@@ -159,8 +156,14 @@ def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input,
     :type delete_input: bool
     :param colors: the list of colors to use (flat list of r,g,b values, eg "0, 0, 0, 127, 127, 127"), will get padded to 256 triplets
     :type colors: list
+    :param poll_wait: the amount of seconds between polls when not in watchdog mode
+    :type poll_wait: int
     :param continuous: whether to poll for files continuously
     :type continuous: bool
+    :param use_watchdog: whether to react to file creation events rather than use fixed-interval polling
+    :type use_watchdog: bool
+    :param watchdog_check_interval: the interval for the watchdog process to check for files that were missed due to potential race conditions
+    :type watchdog_check_interval: int
     :param verbose: whether to output more logging information
     :type verbose: bool
     """
@@ -184,7 +187,10 @@ def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input,
     poller.progress = True
     poller.check_file = check_image
     poller.process_file = process_image
+    poller.poll_wait = poll_wait
     poller.continuous = continuous
+    poller.use_watchdog = use_watchdog
+    poller.watchdog_check_interval = watchdog_check_interval
     poller.poll()
 
 
@@ -196,7 +202,10 @@ if __name__ == '__main__':
     parser.add_argument('--prediction_in', help='Path to the test images', required=True, default=None)
     parser.add_argument('--prediction_out', help='Path to the output csv files folder', required=True, default=None)
     parser.add_argument('--prediction_tmp', help='Path to the temporary csv files folder', required=False, default=None)
+    parser.add_argument('--poll_wait', type=int, help='poll interval in seconds when not using watchdog mode', required=False, default=1)
     parser.add_argument('--continuous', action='store_true', help='Whether to continuously load test images and perform prediction', required=False, default=False)
+    parser.add_argument('--use_watchdog', action='store_true', help='Whether to react to file creation events rather than performing fixed-interval polling', required=False, default=False)
+    parser.add_argument('--watchdog_check_interval', type=int, help='check interval in seconds for the watchdog', required=False, default=10)
     parser.add_argument('--delete_input', action='store_true', help='Whether to delete the input images rather than move them to --prediction_out directory', required=False, default=False)
     parser.add_argument('--memory_fraction', type=float, help='Memory fraction to use by tensorflow, i.e., limiting memory usage', required=False, default=0.5)
     parser.add_argument('--colors', help='The list of colors (RGB triplets) to use for the PNG palette, e.g.: 0,0,0,255,0,0,0,0,255 for black,red,blue', required=False, default=None)
@@ -223,7 +232,9 @@ if __name__ == '__main__':
 
         # predict
         predict_on_images(model, parsed.prediction_in, parsed.prediction_out, parsed.prediction_tmp,
-                          parsed.delete_input, colors=colors, continuous=parsed.continuous, verbose=parsed.verbose)
+                          parsed.delete_input, colors=colors, continuous=parsed.continuous,
+                          use_watchdog=parsed.use_watchdog, watchdog_check_interval=parsed.watchdog_check_interval,
+                          verbose=parsed.verbose)
 
     except Exception as e:
         print(traceback.format_exc())

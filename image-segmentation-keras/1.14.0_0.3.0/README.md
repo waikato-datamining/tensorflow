@@ -227,3 +227,5 @@ keras_seg_poll \
   --colors 0,0,0,255,0,0,0,0,255 \
   --continuous
 ```
+
+Use `--use_watchdog` to react to file creation events rather than using fixed-interval polling.
