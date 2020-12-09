@@ -131,7 +131,7 @@ def process_image(fname, output_dir, poller):
     result = []
     try:
         out_file = os.path.join(output_dir, os.path.splitext(os.path.basename(fname))[0] + ".png")
-        predict(poller.model, fname, out_fname=out_file, colors=poller.colors, verbose=poller.verbose)
+        predict(poller.params.model, fname, out_fname=out_file, colors=poller.params.colors, verbose=poller.verbose)
         result.append(out_file)
     except:
         poller.log("Failed to process image: %s\n%s" % (fname, traceback.format_exc()))
@@ -176,8 +176,6 @@ def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input,
             colors = colors[0:768]
 
     poller = Poller()
-    poller.model = model
-    poller.colors = colors
     poller.input_dir = input_dir
     poller.output_dir = output_dir
     poller.tmp_dir = tmp_dir
@@ -191,6 +189,8 @@ def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input,
     poller.continuous = continuous
     poller.use_watchdog = use_watchdog
     poller.watchdog_check_interval = watchdog_check_interval
+    poller.params.model = model
+    poller.params.colors = colors
     poller.poll()
 
 
