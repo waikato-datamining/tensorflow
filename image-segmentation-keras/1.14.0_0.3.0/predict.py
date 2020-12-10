@@ -134,8 +134,7 @@ def process_image(fname, output_dir, poller):
         predict(poller.params.model, fname, out_fname=out_file, colors=poller.params.colors, verbose=poller.verbose)
         result.append(out_file)
     except KeyboardInterrupt:
-        poller.error("Interruped, exiting")
-        poller.stop()
+        poller.keyboard_interrupt()
     except:
         poller.error("Failed to process image: %s\n%s" % (fname, traceback.format_exc()))
     return result
