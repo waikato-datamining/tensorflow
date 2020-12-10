@@ -55,48 +55,49 @@ def predict(model, inp, out_fname=None, colors=None, verbose=False):
     :rtype: tuple
     """
 
-    assert (inp is not None)
-    assert ((type(inp) is np.ndarray) or isinstance(inp, six.string_types)),\
-        "Input should be the CV image or the input file name"
+    with graph.as_default():
+        assert (inp is not None)
+        assert ((type(inp) is np.ndarray) or isinstance(inp, six.string_types)),\
+            "Input should be the CV image or the input file name"
 
-    if colors is not None:
-        assert (len(colors) == 768), "list of colors must be 768 (256 r,g,b triplets)"
-
-    if isinstance(inp, six.string_types):
-        inp = cv2.imread(inp)
-
-    assert len(inp.shape) == 3, "Image should be h,w,3 "
-
-    output_width = model.output_width
-    output_height = model.output_height
-    input_width = model.input_width
-    input_height = model.input_height
-    n_classes = model.n_classes
-
-    x = get_image_array(inp, input_width, input_height,
-                        ordering=IMAGE_ORDERING)
-    pr = model.predict(np.array([x]))[0]
-    pr = pr.reshape((output_height,  output_width, n_classes)).argmax(axis=2)
-
-    original_h = inp.shape[0]
-    original_w = inp.shape[1]
-    pr_mask = pr.astype('uint8')
-    pr_mask = cv2.resize(pr_mask, (original_w, original_h), interpolation=cv2.INTER_NEAREST)
-    if verbose:
-        unique, count = np.unique(pr_mask, return_counts=True)
-        print("  unique:", unique)
-        print("  count:", count)
-
-    if out_fname is not None:
-        im = Image.fromarray(pr_mask)
-        im = im.convert("P")
         if colors is not None:
-            im.putpalette(colors)
-        else:
-            im.putpalette(class_colors)
-        im.save(out_fname)
+            assert (len(colors) == 768), "list of colors must be 768 (256 r,g,b triplets)"
 
-    return pr, pr_mask
+        if isinstance(inp, six.string_types):
+            inp = cv2.imread(inp)
+
+        assert len(inp.shape) == 3, "Image should be h,w,3 "
+
+        output_width = model.output_width
+        output_height = model.output_height
+        input_width = model.input_width
+        input_height = model.input_height
+        n_classes = model.n_classes
+
+        x = get_image_array(inp, input_width, input_height,
+                            ordering=IMAGE_ORDERING)
+        pr = model.predict(np.array([x]))[0]
+        pr = pr.reshape((output_height,  output_width, n_classes)).argmax(axis=2)
+
+        original_h = inp.shape[0]
+        original_w = inp.shape[1]
+        pr_mask = pr.astype('uint8')
+        pr_mask = cv2.resize(pr_mask, (original_w, original_h), interpolation=cv2.INTER_NEAREST)
+        if verbose:
+            unique, count = np.unique(pr_mask, return_counts=True)
+            print("  unique:", unique)
+            print("  count:", count)
+
+        if out_fname is not None:
+            im = Image.fromarray(pr_mask)
+            im = im.convert("P")
+            if colors is not None:
+                im.putpalette(colors)
+            else:
+                im.putpalette(class_colors)
+            im.save(out_fname)
+
+        return pr, pr_mask
 
 
 def check_image(fname, poller):
@@ -228,6 +229,9 @@ if __name__ == '__main__':
         model_dir = os.path.join(parsed.checkpoints_path, '')
         print("Loading model from %s" % model_dir)
         model = model_from_checkpoint_path(model_dir)
+
+        global graph
+        graph = tf.get_default_graph()
 
         # color palette
         colors = None
