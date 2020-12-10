@@ -141,8 +141,8 @@ def process_image(fname, output_dir, poller):
 
 
 def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input,
-                      colors=None, continuous=False, poll_wait=1,
-                      use_watchdog=False, watchdog_check_interval=10,
+                      colors=None, continuous=False, poll_wait=1.0,
+                      use_watchdog=False, watchdog_check_interval=10.0,
                       verbose=False, quiet=False):
     """
     Performs predictions on images found in input_dir and outputs the prediction PNG files in output_dir.
