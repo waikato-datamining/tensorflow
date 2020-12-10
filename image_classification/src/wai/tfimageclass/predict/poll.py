@@ -94,8 +94,6 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
 
     print("Class labels: %s" % str(labels))
 
-    ignored_labels = set()
-
     while True:
         num_processed = 0
         do_reset_session = False
