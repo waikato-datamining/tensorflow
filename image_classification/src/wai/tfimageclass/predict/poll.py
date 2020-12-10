@@ -57,96 +57,8 @@ def predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor,
             rf.write(labels[top_probs[i]] + "," + str(probs[top_probs[i]]) + "\n")
 
 
-def to_cell(label, prob, threshold, ignored_labels):
-    """
-    Turns label and probability into a string for a spreadsheet cell.
-    Uses empty string if the label is an ignored label or the probability
-    is below the threshold.
-
-    :param label:
-    :param prob:
-    :param threshold:
-    :return:
-    """
-
-    if label in ignored_labels:
-        label = ""
-    elif prob < threshold:
-        label = ""
-    if label == "":
-        cell = ""
-    else:
-        cell = label + "=" + str(prob)
-    return cell
-
-
-def predict_grid(sess, graph, input_layer, output_layer, labels, top_x, tensor, height, width,
-                 grid_size, threshold, ignored_labels, output_file):
-    """
-    Obtains predictions for the image (in tensor representation) from the graph and outputs
-    them in the output file.
-
-    :param sess: the tensorflow session to use
-    :type sess: tf.Session
-    :param graph: the tensorflow graph to use
-    :type graph: tf.Graph
-    :param input_layer: the name of input layer in the graph to use
-    :type input_layer: str
-    :param output_layer: the name of output layer in the graph to use
-    :type output_layer: str
-    :param labels: the list of labels to use
-    :type labels: list
-    :param height: the expected height of the images
-    :type height: int
-    :param width: the expected height of the images
-    :type width: int
-    :param top_x: the number of labels with the highest probabilities to return, <1 for all
-    :type top_x: int
-    :param tensor: the image as tensor
-    :type tensor: tf.Tensor
-    :param grid_size: the number of columns/rows to divide the original image into and passing each sub-image through the
-                 model, default is None (= whole image)
-    :type grid_size: int
-    :param threshold: the threshold that the grid cell predictions have to meet before ending up in the output
-    :type threshold: float
-    :param ignored_labels: the list of ignored labels, default is None
-    :type ignored_labels: set
-    :param output_file: the file to store the predictions in
-    :type: str
-    """
-    crops = tf.reshape(tensor, (-1, grid_size, tensor.shape[1] // grid_size, grid_size,
-                                tensor.shape[2] // grid_size, tensor.shape[3]))
-    crops = tf.transpose(crops, [0, 1, 3, 2, 4, 5])
-
-    header = "y,x"
-    for i in range(top_x):
-        header += ",label" + str(i+1)
-    lines = []
-    lines.append(header)
-
-    for y in range(grid_size):
-        for x in range(grid_size):
-            sub = crops[0][y][x]
-            dims_expander = tf.expand_dims(sub, 0)
-            resized = tf.compat.v1.image.resize_bilinear(dims_expander, [height, width])
-            results = tensor_to_probs(graph, input_layer, output_layer, resized.eval(), sess)
-            top = top_k_probs(results, top_x)
-            cells = [str(y), str(x)]
-            for i in range(top_x):
-                if i < len(top):
-                    cells.append(to_cell(labels[top[i]], results[top[i]], threshold, ignored_labels))
-                else:
-                    cells.append("")
-            lines.append(",".join(cells))
-
-    with open(output_file, "w") as rf:
-        for line in lines:
-            rf.write(line)
-            rf.write("\n")
-
-
 def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, height, width, mean, std, top_x, delete,
-         grid_size=None, grid_threshold=0.9, grid_ignored=None, reset_session=50):
+         reset_session=50):
     """
     Performs continuous predictions on files appearing in the "in_dir" and outputting the results in "out_dir".
 
@@ -176,13 +88,6 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
     :type top_x: int
     :param delete: whether to delete the input images (True) or move them to the output directory (False)
     :type delete: bool
-    :param grid_size: the number of columns/rows to divide the original image into and passing each sub-image through the
-                 model, default is None (= whole image)
-    :type grid_size: int
-    :param grid_threshold: the threshold that the grid cell predictions have to meet before ending up in the output
-    :type grid_threshold: float
-    :param grid_ignored: the list of ignored labels, default is None
-    :type grid_ignored: str
     :param reset_session: the number of processed images after which to reinitialize the session to avoid memory leaks
     :type reset_session: int
     """
@@ -190,9 +95,6 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
     print("Class labels: %s" % str(labels))
 
     ignored_labels = set()
-    if grid_ignored is not None:
-        for label in grid_ignored.split(","):
-            ignored_labels.add(label.strip())
 
     while True:
         num_processed = 0
@@ -212,10 +114,7 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
 
                     tensor = None
                     try:
-                        if grid_size is None:
-                            tensor = read_tensor_from_image_file(f, height, width, mean, std, sess)
-                        else:
-                            tensor = read_tensor_from_image_file(f, -1, -1, mean, std, sess)
+                        tensor = read_tensor_from_image_file(f, height, width, mean, std, sess)
                     except Exception as e:
                         print(traceback.format_exc())
 
@@ -250,11 +149,7 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
                         continue
 
                     try:
-                        if grid_size is None:
-                            predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, roi_tmp)
-                        else:
-                            predict_grid(sess, graph, input_layer, output_layer, labels, top_x, tensor, height, width,
-                                         grid_size, grid_threshold, ignored_labels, roi_tmp)
+                        predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, roi_tmp)
                         os.rename(roi_tmp, roi_csv)
                         num_processed += 1
                     except Exception as e:
@@ -305,9 +200,6 @@ def main(args=None):
     parser.add_argument("--input_mean", metavar="INT", type=int, help="input mean", default=0)
     parser.add_argument("--input_std", metavar="INT", type=int, help="input std", default=255)
     parser.add_argument("--top_x", metavar="INT", type=int, help="output only the top K labels; use <1 for all", default=5)
-    parser.add_argument("--grid_size", metavar="INT", type=int, help="the number of columns and rows to divide the image in, passing each sub-image through the model to obtain predictions", default=None)
-    parser.add_argument("--grid_threshold", metavar="0-1", type=float, help="the minimum probability threshold for predictions in the grid to show up in the output", default=0.9)
-    parser.add_argument("--grid_ignored", metavar="label1,label2,...", help="the labels to ignore when in grid prediction mode (comma-separated list)", default=None)
     parser.add_argument("--reset_session", metavar="INT", type=int, help="The number of processed images after which to reinitialize the Tensorflow session to reduce memory leaks.", default=50)
     args = parser.parse_args(args=args)
 
@@ -331,7 +223,6 @@ def main(args=None):
 
     poll(graph, input_layer, output_layer, labels, args.in_dir, args.out_dir, args.continuous,
          input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete,
-         grid_size=args.grid_size, grid_threshold=args.grid_threshold, grid_ignored=args.grid_ignored,
          reset_session=args.reset_session)
 
 

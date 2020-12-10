@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.0.10 (2020-??-??)
+------------------
+
+- removed ability to split images into grid from `poll.py`
+
+
 0.0.9 (2020-10-21)
 ------------------
 

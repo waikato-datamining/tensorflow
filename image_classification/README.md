@@ -303,42 +303,33 @@ Once you have built a model, you can use as follows:
                    --graph FILE [--info INFO] [--labels FILE]
                    [--input_height INT] [--input_width INT] [--input_layer NAME]
                    [--output_layer NAME] [--input_mean INT] [--input_std INT]
-                   [--top_x INT] [--grid_size INT] [--grid_threshold 0-1]
-                   [--grid_ignored label1,label2,...] [--reset_session INT]
+                   [--top_x INT] [--reset_session INT]
 
   For bulk or continuous prediction output using a trained model.
 
   optional arguments:
-    -h, --help            show this help message and exit
-    --in_dir DIR          the input directory to poll for images (default: None)
-    --out_dir DIR         the output directory for processed images and
-                          predictions (default: None)
-    --continuous          Whether to continuously load test images and perform
-                          prediction (default: False)
-    --delete              Whether to delete images rather than move them to the
-                          output directory. (default: False)
-    --graph FILE          graph/model to be executed (default: None)
-    --info INFO           name of json file with model info (dimensions,
-                          layers); overrides input_height/input_width/labels/inp
-                          ut_layer/output_layer options (default: None)
-    --labels FILE         name of file containing labels (default: None)
-    --input_height INT    input height (default: 299)
-    --input_width INT     input width (default: 299)
-    --input_layer NAME    name of input layer (default: Placeholder)
-    --output_layer NAME   name of output layer (default: final_result)
-    --input_mean INT      input mean (default: 0)
-    --input_std INT       input std (default: 255)
-    --top_x INT           output only the top K labels; use <1 for all (default:
-                          5)
-    --grid_size INT       the number of columns and rows to divide the image in,
-                          passing each sub-image through the model to obtain
-                          predictions (default: None)
-    --grid_threshold 0-1  the minimum probability threshold for predictions in
-                          the grid to show up in the output (default: 0.9)
-    --grid_ignored label1,label2,...
-                          the labels to ignore when in grid prediction mode
-                          (comma-separated list) (default: None)
-    --reset_session INT   The number of processed images after which to
-                          reinitialize the Tensorflow session to reduce memory
-                          leaks. (default: 50)
+    -h, --help           show this help message and exit
+    --in_dir DIR         the input directory to poll for images (default: None)
+    --out_dir DIR        the output directory for processed images and
+                         predictions (default: None)
+    --continuous         Whether to continuously load test images and perform
+                         prediction (default: False)
+    --delete             Whether to delete images rather than move them to the
+                         output directory. (default: False)
+    --graph FILE         graph/model to be executed (default: None)
+    --info INFO          name of json file with model info (dimensions, layers);
+                         overrides input_height/input_width/labels/input_layer/o
+                         utput_layer options (default: None)
+    --labels FILE        name of file containing labels (default: None)
+    --input_height INT   input height (default: 299)
+    --input_width INT    input width (default: 299)
+    --input_layer NAME   name of input layer (default: Placeholder)
+    --output_layer NAME  name of output layer (default: final_result)
+    --input_mean INT     input mean (default: 0)
+    --input_std INT      input std (default: 255)
+    --top_x INT          output only the top K labels; use <1 for all (default:
+                         5)
+    --reset_session INT  The number of processed images after which to
+                         reinitialize the Tensorflow session to reduce memory
+                         leaks. (default: 50)
   ```
