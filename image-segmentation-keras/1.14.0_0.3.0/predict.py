@@ -133,15 +133,18 @@ def process_image(fname, output_dir, poller):
         out_file = os.path.join(output_dir, os.path.splitext(os.path.basename(fname))[0] + ".png")
         predict(poller.params.model, fname, out_fname=out_file, colors=poller.params.colors, verbose=poller.verbose)
         result.append(out_file)
+    except KeyboardInterrupt:
+        poller.error("Interruped, exiting")
+        poller.stop()
     except:
-        poller.log("Failed to process image: %s\n%s" % (fname, traceback.format_exc()))
+        poller.error("Failed to process image: %s\n%s" % (fname, traceback.format_exc()))
     return result
 
 
 def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input,
                       colors=None, continuous=False, poll_wait=1,
                       use_watchdog=False, watchdog_check_interval=10,
-                      verbose=False):
+                      verbose=False, quiet=False):
     """
     Performs predictions on images found in input_dir and outputs the prediction PNG files in output_dir.
 
@@ -166,6 +169,8 @@ def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input,
     :type watchdog_check_interval: int
     :param verbose: whether to output more logging information
     :type verbose: bool
+    :param quiet: whether to suppress output
+    :type quiet: bool
     """
 
     # ensure colors list has correct length for PNG palette
@@ -182,7 +187,7 @@ def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input,
     poller.extensions = SUPPORTED_EXTS
     poller.delete_input = delete_input
     poller.verbose = verbose
-    poller.progress = True
+    poller.progress = not quiet
     poller.check_file = check_image
     poller.process_file = process_image
     poller.poll_wait = poll_wait
@@ -210,6 +215,7 @@ if __name__ == '__main__':
     parser.add_argument('--memory_fraction', type=float, help='Memory fraction to use by tensorflow, i.e., limiting memory usage', required=False, default=0.5)
     parser.add_argument('--colors', help='The list of colors (RGB triplets) to use for the PNG palette, e.g.: 0,0,0,255,0,0,0,0,255 for black,red,blue', required=False, default=None)
     parser.add_argument('--verbose', action='store_true', help='Whether to output more logging info', required=False, default=False)
+    parser.add_argument('--quiet', action='store_true', help='Whether to suppress output', required=False, default=False)
     parsed = parser.parse_args()
 
     try:
@@ -232,9 +238,9 @@ if __name__ == '__main__':
 
         # predict
         predict_on_images(model, parsed.prediction_in, parsed.prediction_out, parsed.prediction_tmp,
-                          parsed.delete_input, colors=colors, continuous=parsed.continuous,
+                          parsed.delete_input, colors=colors, poll_wait=parsed.poll_wait, continuous=parsed.continuous,
                           use_watchdog=parsed.use_watchdog, watchdog_check_interval=parsed.watchdog_check_interval,
-                          verbose=parsed.verbose)
+                          verbose=parsed.verbose, quiet=parsed.quiet)
 
     except Exception as e:
         print(traceback.format_exc())
