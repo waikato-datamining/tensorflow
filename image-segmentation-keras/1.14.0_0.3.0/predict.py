@@ -165,7 +165,7 @@ def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input,
     :param use_watchdog: whether to react to file creation events rather than use fixed-interval polling
     :type use_watchdog: bool
     :param watchdog_check_interval: the interval for the watchdog process to check for files that were missed due to potential race conditions
-    :type watchdog_check_interval: int
+    :type watchdog_check_interval: float
     :param verbose: whether to output more logging information
     :type verbose: bool
     :param quiet: whether to suppress output
@@ -209,7 +209,7 @@ if __name__ == '__main__':
     parser.add_argument('--poll_wait', type=float, help='poll interval in seconds when not using watchdog mode', required=False, default=1.0)
     parser.add_argument('--continuous', action='store_true', help='Whether to continuously load test images and perform prediction', required=False, default=False)
     parser.add_argument('--use_watchdog', action='store_true', help='Whether to react to file creation events rather than performing fixed-interval polling', required=False, default=False)
-    parser.add_argument('--watchdog_check_interval', type=int, help='check interval in seconds for the watchdog', required=False, default=10)
+    parser.add_argument('--watchdog_check_interval', type=float, help='check interval in seconds for the watchdog', required=False, default=10.0)
     parser.add_argument('--delete_input', action='store_true', help='Whether to delete the input images rather than move them to --prediction_out directory', required=False, default=False)
     parser.add_argument('--memory_fraction', type=float, help='Memory fraction to use by tensorflow, i.e., limiting memory usage', required=False, default=0.5)
     parser.add_argument('--colors', help='The list of colors (RGB triplets) to use for the PNG palette, e.g.: 0,0,0,255,0,0,0,0,255 for black,red,blue', required=False, default=None)
