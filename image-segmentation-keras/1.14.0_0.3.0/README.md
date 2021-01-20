@@ -229,3 +229,6 @@ keras_seg_poll \
 ```
 
 Use `--use_watchdog` to react to file creation events rather than using fixed-interval polling.
+
+Using `--remove_background` (and no colors), you can output the original image with only the 
+identified segments left over (the image segmentation regions are used as a mask).  

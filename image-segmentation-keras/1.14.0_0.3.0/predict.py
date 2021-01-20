@@ -38,7 +38,7 @@ SUPPORTED_EXTS = [".jpg", ".jpeg"]
 """ supported file extensions (lower case with dot). """
 
 
-def predict(model, inp, out_fname=None, colors=None, verbose=False):
+def predict(model, inp, out_fname=None, colors=None, remove_background=False, verbose=False):
     """
     Generates a prediction with the model.
 
@@ -49,6 +49,8 @@ def predict(model, inp, out_fname=None, colors=None, verbose=False):
     :type out_fname: str
     :param colors: the list of colors to use (flat list of r,g,b values, eg "0, 0, 0, 127, 127, 127, ..."), needs to have 768 entries
     :type colors: list
+    :param remove_background: whether to use the mask to remove the background
+    :type remove_background: bool
     :param verbose: whether to output more logging information
     :type verbose: bool
     :return: the tuple of prediction and mask arrays (np.ndarray)
@@ -67,6 +69,9 @@ def predict(model, inp, out_fname=None, colors=None, verbose=False):
             inp = cv2.imread(inp)
 
         assert len(inp.shape) == 3, "Image should be h,w,3 "
+
+        if remove_background:
+            inp_orig = np.copy(inp)
 
         output_width = model.output_width
         output_height = model.output_height
@@ -89,13 +94,20 @@ def predict(model, inp, out_fname=None, colors=None, verbose=False):
             print("  count:", count)
 
         if out_fname is not None:
-            im = Image.fromarray(pr_mask)
-            im = im.convert("P")
-            if colors is not None:
-                im.putpalette(colors)
+            if remove_background:
+                onebit_mask = np.where(pr_mask > 0, 1, 0)
+                no_background = inp_orig.copy()
+                for i in range(inp_orig.shape[2]):
+                    no_background[:,:,i] = no_background[:,:,i] * onebit_mask
+                cv2.imwrite(out_fname, no_background)
             else:
-                im.putpalette(class_colors)
-            im.save(out_fname)
+                im = Image.fromarray(pr_mask)
+                im = im.convert("P")
+                if colors is not None:
+                    im.putpalette(colors)
+                else:
+                    im.putpalette(class_colors)
+                im.save(out_fname)
 
         return pr, pr_mask
 
@@ -132,7 +144,8 @@ def process_image(fname, output_dir, poller):
     result = []
     try:
         out_file = os.path.join(output_dir, os.path.splitext(os.path.basename(fname))[0] + ".png")
-        predict(poller.params.model, fname, out_fname=out_file, colors=poller.params.colors, verbose=poller.verbose)
+        predict(poller.params.model, fname, out_fname=out_file, colors=poller.params.colors,
+                remove_background=poller.params.remove_background, verbose=poller.verbose)
         result.append(out_file)
     except KeyboardInterrupt:
         poller.keyboard_interrupt()
@@ -144,7 +157,7 @@ def process_image(fname, output_dir, poller):
 def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input,
                       colors=None, continuous=False, poll_wait=1.0,
                       use_watchdog=False, watchdog_check_interval=10.0,
-                      verbose=False, quiet=False):
+                      remove_background=False, verbose=False, quiet=False):
     """
     Performs predictions on images found in input_dir and outputs the prediction PNG files in output_dir.
 
@@ -167,6 +180,8 @@ def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input,
     :type use_watchdog: bool
     :param watchdog_check_interval: the interval for the watchdog process to check for files that were missed due to potential race conditions
     :type watchdog_check_interval: float
+    :param remove_background: whether to use the mask to remove the background
+    :type remove_background: bool
     :param verbose: whether to output more logging information
     :type verbose: bool
     :param quiet: whether to suppress output
@@ -196,6 +211,7 @@ def predict_on_images(model, input_dir, output_dir, tmp_dir, delete_input,
     poller.watchdog_check_interval = watchdog_check_interval
     poller.params.model = model
     poller.params.colors = colors
+    poller.params.remove_background = remove_background
     poller.poll()
 
 
@@ -214,6 +230,7 @@ if __name__ == '__main__':
     parser.add_argument('--delete_input', action='store_true', help='Whether to delete the input images rather than move them to --prediction_out directory', required=False, default=False)
     parser.add_argument('--memory_fraction', type=float, help='Memory fraction to use by tensorflow, i.e., limiting memory usage', required=False, default=0.5)
     parser.add_argument('--colors', help='The list of colors (RGB triplets) to use for the PNG palette, e.g.: 0,0,0,255,0,0,0,0,255 for black,red,blue', required=False, default=None)
+    parser.add_argument('--remove_background', action='store_true', help='Whether to use the predicted mask to remove the background and output this modified image instead of the mask', required=False, default=False)
     parser.add_argument('--verbose', action='store_true', help='Whether to output more logging info', required=False, default=False)
     parser.add_argument('--quiet', action='store_true', help='Whether to suppress output', required=False, default=False)
     parsed = parser.parse_args()
@@ -243,7 +260,7 @@ if __name__ == '__main__':
         predict_on_images(model, parsed.prediction_in, parsed.prediction_out, parsed.prediction_tmp,
                           parsed.delete_input, colors=colors, poll_wait=parsed.poll_wait, continuous=parsed.continuous,
                           use_watchdog=parsed.use_watchdog, watchdog_check_interval=parsed.watchdog_check_interval,
-                          verbose=parsed.verbose, quiet=parsed.quiet)
+                          remove_background=parsed.remove_background, verbose=parsed.verbose, quiet=parsed.quiet)
 
     except Exception as e:
         print(traceback.format_exc())
