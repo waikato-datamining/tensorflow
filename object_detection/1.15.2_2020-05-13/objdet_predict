@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd /opt/tensorflow/object_detection/1.15.2_2020-05-13/base
+cd /opt/tensorflow/object_detection/1.15.2_2020-05-13
 python predict.py "$@"
