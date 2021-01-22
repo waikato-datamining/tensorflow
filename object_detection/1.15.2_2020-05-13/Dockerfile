@@ -11,10 +11,7 @@ RUN apt-get update && \
     pip install "numpy<=1.17.4" && \
 	rm -Rf /root/.cache/pip
 
-RUN cd /opt && \
-	git clone https://github.com/waikato-datamining/tensorflow.git && \
-	cp tensorflow/object_detection/1.15.2_2020-05-13/objdet_* /usr/bin/. && \
-	cd tensorflow && \
+RUN cd /opt/tensorflow && \
 	git clone https://github.com/tensorflow/models && \
 	cd models/research && \
 	git reset --hard 8518d053936aaf30afb9ed0a4ea01baddca5bd17 && \
@@ -24,7 +21,9 @@ RUN cd /opt && \
 	./bin/protoc object_detection/protos/*.proto --python_out=.
 
 ENV PYTHONPATH=/opt/tensorflow/models/research:/opt/tensorflow/models/research/slim:/opt/tensorflow/models/research/object_detection
-	
+
 COPY bash.bashrc /etc/bash.bashrc
+COPY objdet_* /usr/bin/
+COPY predict.py /opt/tensorflow/object_detection
 
 WORKDIR /opt/tensorflow/
