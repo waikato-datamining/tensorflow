@@ -25,6 +25,6 @@ ENV PYTHONPATH=/opt/tensorflow/models/research:/opt/tensorflow/models/research/s
 
 COPY bash.bashrc /etc/bash.bashrc
 COPY objdet_* /usr/bin/
-COPY predict.py /opt/tensorflow/object_detection
+COPY predict.py /opt/tensorflow/models/research/object_detection
 
 WORKDIR /opt/tensorflow/

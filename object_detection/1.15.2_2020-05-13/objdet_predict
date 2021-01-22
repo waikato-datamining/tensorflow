@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd /opt/tensorflow/object_detection
-python predict.py "$@"
+cd /opt/tensorflow/models/research
+python object_detection/predict.py "$@"
