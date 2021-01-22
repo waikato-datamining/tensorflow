@@ -11,7 +11,8 @@ RUN apt-get update && \
     pip install "numpy<=1.17.4" && \
 	rm -Rf /root/.cache/pip
 
-RUN cd /opt/tensorflow && \
+RUN mkdir -p /opt/tensorflow && \
+    cd /opt/tensorflow && \
 	git clone https://github.com/tensorflow/models && \
 	cd models/research && \
 	git reset --hard b9ef963d1e84da0bb9c0a6039457c39a699ea149 && \
