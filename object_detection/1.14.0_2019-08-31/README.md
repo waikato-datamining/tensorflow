@@ -45,7 +45,7 @@ Fri Aug 30 14:39:49 2019 -0700
 
 ### Build local image
 
-* Build image `tf` from Docker file (from within /path_to/tensorflow/object_detection/1.14.0_2019-08-31/base)
+* Build image `tf` from Docker file (from within /path_to/tensorflow/object_detection/1.14.0_2019-08-31)
 
   ```commandline
   docker build -t tf .

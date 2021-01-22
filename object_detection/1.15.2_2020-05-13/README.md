@@ -45,7 +45,7 @@ and timestamp:
 
 ### Build local image
 
-* Build image `tf` from Docker file (from within /path_to/tensorflow/object_detection/1.15.2_2020-05-13/base)
+* Build image `tf` from Docker file (from within /path_to/tensorflow/object_detection/1.15.2_2020-05-13)
 
   ```commandline
   docker build -t tf .
