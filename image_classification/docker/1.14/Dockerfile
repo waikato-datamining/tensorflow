@@ -6,6 +6,7 @@ FROM ${DOCKER_REGISTRY}tensorflow/tensorflow:1.14.0-gpu-py3
 RUN apt-get update && \
         rm -rf /var/lib/apt/lists/* && \
         pip install Cython && \
+        pip install tensorflow-hub==0.9.0 && \
         pip install wai.tfimageclass==0.0.9 && \
         pip uninstall -y numpy && \
         pip install "numpy<=1.17.4" && \
