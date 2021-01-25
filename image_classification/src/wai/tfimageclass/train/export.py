@@ -44,8 +44,8 @@ def main(args=None):
     :type args: list
     """
     parser = argparse.ArgumentParser(
-        description="Generates statistics in CSV format by recording predictions on images list files.",
-        prog="tfic-stats",
+        description="Exports a Tensorflow model as Tensorflow lite one.",
+        prog="tfic-export",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--saved_model_dir', type=str, default='', required=True, help='Path to the saved Tensorflow model directory.')
     parser.add_argument('--tflite_model', type=str, default='', required=True, help='The file to export the Tensorflow lite model to.')
