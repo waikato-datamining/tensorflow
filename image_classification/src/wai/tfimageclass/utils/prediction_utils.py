@@ -15,10 +15,15 @@
 # ==============================================================================
 
 import json
-import numpy as np
 import tensorflow as tf
 from PIL import Image
 import numpy as np
+import csv
+import copy
+import io
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
+from datetime import datetime
 
 
 def load_graph(model_file):
@@ -251,3 +256,68 @@ def load_info_file(info):
     output_layer = info['output_layer']
     labels = info['labels']
     return input_height, input_width, input_layer, output_layer, labels
+
+
+def output_predictions(predictions, output_file=None, output_format="plaintext", info=None):
+    """
+    Saves the predictions to a file using the specified format.
+
+    :param predictions: the dictionary with the predictions (label -> probability)
+    :type predictions: dict
+    :param output_file: the file to write the predictions to, prints to stdout if None
+    :type output_file: str
+    :param output_format: the output format (plaintext/txt/csv/xml/json)
+    :type output_format: str
+    :param info: additional information (eg model name) to store in the output (if possible)
+    :type info: dict
+    """
+
+    content = ""
+
+    if (output_format == "plaintext") or (output_format == "txt"):
+        lines = []
+        for k in predictions:
+            lines.append("- %s: %s" % (k, predictions[k]))
+        content = "\n".join(lines)
+
+    elif output_format == "csv":
+        output = io.StringIO()
+        writer = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
+        writer.writerow(["label", "probability"])
+        for k in predictions:
+            writer.writerow([k, float(predictions[k])])
+        content = output.getvalue()
+
+    elif output_format == "xml":
+        root = ET.Element("predictions")
+        if info is not None:
+            for k in info:
+                root.set(k, info[k])
+        root.set("timestamp", str(datetime.now()))
+        for k in predictions:
+            p = ET.SubElement(root, "prediction")
+            p.set("label", k)
+            p.text = str(float(predictions[k]))
+        content = minidom.parseString(ET.tostring(root)).toprettyxml(indent = "  ")
+
+    elif output_format == "json":
+        data = dict()
+        if info is not None:
+            info = copy.copy(info)
+        else:
+            info = dict()
+        info["timestamp"] = str(datetime.now())
+        data["info"] = info
+        data["predictions"] = dict()
+        for k in predictions:
+            data["predictions"][k] = float(predictions[k])
+        content = json.dumps(data)
+
+    else:
+        raise Exception("Unhandled format: %s" % output_format)
+
+    if output_file is None:
+        print(content)
+    else:
+        with open(output_file, "w") as of:
+            of.write(content)

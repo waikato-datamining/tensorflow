@@ -23,13 +23,14 @@ from time import sleep
 import os
 import tensorflow as tf
 import traceback
+from collections import OrderedDict
 from wai.tfimageclass.utils.prediction_utils import load_graph, load_tflite, load_labels, \
     read_tensor_from_image_file, read_tflite_tensor_from_image_file, tensor_to_probs, tflite_tensor_to_probs, \
-    top_k_probs, tflite_top_k_probs, load_info_file
-import numpy as np
+    top_k_probs, tflite_top_k_probs, load_info_file, output_predictions
 
 
-def predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, output_file):
+def predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, output_file,
+                  output_format="csv", info=None):
     """
     Obtains predictions for the image (in tensor representation) from the graph and outputs
     them in the output file.
@@ -50,18 +51,22 @@ def predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor,
     :type tensor: tf.Tensor
     :param output_file: the file to store the predictions in
     :type: str
+    :param output_format: the output format to use
+    :type output_format: str (txt/csv/json/xml)
+    :param info: additional information to output
+    :type info: dict
     """
 
     probs = tensor_to_probs(graph, input_layer, output_layer, tensor, sess)
     top_probs = top_k_probs(probs, top_x)
-    with open(output_file, "w") as rf:
-        rf.write("label,probability\n")
-        for i in top_probs:
-            rf.write(labels[top_probs[i]] + "," + str(probs[top_probs[i]]) + "\n")
+    predictions = OrderedDict()
+    for i in top_probs:
+        predictions[labels[top_probs[i]]] = float(probs[top_probs[i]])
+    output_predictions(predictions, output_file=output_file, output_format=output_format, info=info)
 
 
 def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, height, width, mean, std, top_x, delete,
-         reset_session=50):
+         reset_session=50, output_format="csv", info=None):
     """
     Performs continuous predictions on files appearing in the "in_dir" and outputting the results in "out_dir".
 
@@ -93,6 +98,10 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
     :type delete: bool
     :param reset_session: the number of processed images after which to reinitialize the session to avoid memory leaks
     :type reset_session: int
+    :param output_format: the output format to use
+    :type output_format: str (txt/csv/json/xml)
+    :param info: additional information to output
+    :type info: dict
     """
 
     print("Class labels: %s" % str(labels))
@@ -110,7 +119,7 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
                     print(start, "-", f)
 
                     img_path = out_dir + os.sep + os.path.basename(f)
-                    roi_csv = out_dir + os.sep + os.path.splitext(os.path.basename(f))[0] + ".csv"
+                    roi_csv = out_dir + os.sep + os.path.splitext(os.path.basename(f))[0] + "." + output_format
                     roi_tmp = out_dir + os.sep + os.path.splitext(os.path.basename(f))[0] + ".tmp"
 
                     tensor = None
@@ -150,7 +159,7 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
                         continue
 
                     try:
-                        predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, roi_tmp)
+                        predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, roi_tmp, output_format=output_format, info=info)
                         os.rename(roi_tmp, roi_csv)
                         num_processed += 1
                     except Exception:
@@ -176,7 +185,7 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
                     sleep(1)
 
 
-def tflite_predict_image(interpreter, labels, top_x, tensor, output_file):
+def tflite_predict_image(interpreter, labels, top_x, tensor, output_file, output_format="csv", info=None):
     """
     Obtains predictions for the image (in tensor representation) from the tflite interpreter
     and outputs them in the output file.
@@ -191,17 +200,21 @@ def tflite_predict_image(interpreter, labels, top_x, tensor, output_file):
     :type tensor: tf.Tensor
     :param output_file: the file to store the predictions in
     :type: str
+    :param output_format: the output format to use
+    :type output_format: str (txt/csv/json/xml)
+    :param info: additional information to output
+    :type info: dict
     """
 
     probs = tflite_tensor_to_probs(interpreter, tensor)
     top_probs = tflite_top_k_probs(probs, top_x)
-    with open(output_file, "w") as rf:
-        rf.write("label,probability\n")
-        for i in range(len(top_probs)):
-            rf.write(labels[top_probs[i]] + "," + str(probs[0][top_probs[i]]) + "\n")
+    predictions = OrderedDict()
+    for i in range(len(top_probs)):
+        predictions[labels[top_probs[i]]] = float(probs[0][top_probs[i]])
+    output_predictions(predictions, output_file=output_file, output_format=output_format, info=info)
 
 
-def tflite_poll(interpreter, labels, in_dir, out_dir, continuous, height, width, mean, std, top_x, delete):
+def tflite_poll(interpreter, labels, in_dir, out_dir, continuous, height, width, mean, std, top_x, delete, output_format="csv", info=None):
     """
     Performs continuous predictions on files appearing in the "in_dir" and outputting the results in "out_dir".
 
@@ -227,6 +240,10 @@ def tflite_poll(interpreter, labels, in_dir, out_dir, continuous, height, width,
     :type top_x: int
     :param delete: whether to delete the input images (True) or move them to the output directory (False)
     :type delete: bool
+    :param output_format: the output format to use
+    :type output_format: str (txt/csv/json/xml)
+    :param info: additional information to output
+    :type info: dict
     """
 
     print("Class labels: %s" % str(labels))
@@ -240,7 +257,7 @@ def tflite_poll(interpreter, labels, in_dir, out_dir, continuous, height, width,
             print(start, "-", f)
 
             img_path = out_dir + os.sep + os.path.basename(f)
-            roi_csv = out_dir + os.sep + os.path.splitext(os.path.basename(f))[0] + ".csv"
+            roi_csv = out_dir + os.sep + os.path.splitext(os.path.basename(f))[0] + "." + output_format
             roi_tmp = out_dir + os.sep + os.path.splitext(os.path.basename(f))[0] + ".tmp"
 
             input_data = None
@@ -280,7 +297,7 @@ def tflite_poll(interpreter, labels, in_dir, out_dir, continuous, height, width,
                 continue
 
             try:
-                tflite_predict_image(interpreter, labels, top_x, input_data, roi_tmp)
+                tflite_predict_image(interpreter, labels, top_x, input_data, roi_tmp, output_format=output_format, info=info)
                 os.rename(roi_tmp, roi_csv)
             except Exception:
                 print(traceback.format_exc())
@@ -324,6 +341,7 @@ def main(args=None):
     parser.add_argument("--input_std", metavar="INT", type=int, help="input std", default=255)
     parser.add_argument("--top_x", metavar="INT", type=int, help="output only the top K labels; use <1 for all", default=5)
     parser.add_argument("--reset_session", metavar="INT", type=int, help="The number of processed images after which to reinitialize the Tensorflow session to reduce memory leaks.", default=50)
+    parser.add_argument("--output_format", metavar="TYPE", choices=["csv", "xml", "json"], help="the output format for the predictions", default="csv", required=False)
     args = parser.parse_args(args=args)
 
     # values from options
@@ -342,15 +360,19 @@ def main(args=None):
     if labels is None:
         raise Exception("No labels determined, either supply --info or --labels!")
 
+    info = dict()
+    info["model"] = args.graph
+
     if args.graph_type == "tensorflow":
         graph = load_graph(args.graph)
         poll(graph, input_layer, output_layer, labels, args.in_dir, args.out_dir, args.continuous,
              input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete,
-             reset_session=args.reset_session)
+             reset_session=args.reset_session, output_format=args.output_format, info=info)
     elif args.graph_type == "tflite":
         interpreter = load_tflite(args.graph)
         tflite_poll(interpreter, labels, args.in_dir, args.out_dir, args.continuous,
-                    input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete)
+                    input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete,
+                    output_format=args.output_format, info=info)
     else:
         raise Exception("Unhandled graph type: %s" % args.graph_type)
 

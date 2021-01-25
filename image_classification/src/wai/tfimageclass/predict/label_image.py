@@ -21,10 +21,11 @@ from __future__ import print_function
 import argparse
 import traceback
 import tensorflow as tf
+from collections import OrderedDict
 
 from wai.tfimageclass.utils.prediction_utils import load_graph, load_tflite, load_labels, \
     read_tensor_from_image_file, read_tflite_tensor_from_image_file, tensor_to_probs, tflite_tensor_to_probs, \
-    top_k_probs, tflite_top_k_probs, load_info_file
+    top_k_probs, tflite_top_k_probs, load_info_file, output_predictions
 
 
 def main(args=None):
@@ -50,6 +51,8 @@ def main(args=None):
     parser.add_argument("--input_mean", type=int, help="input mean", default=0)
     parser.add_argument("--input_std", type=int, help="input std", default=255)
     parser.add_argument("--top_x", type=int, help="output only the top K labels; use <1 for all", default=5)
+    parser.add_argument("--output_format", metavar="TYPE", choices=["plaintext", "txt", "csv", "xml", "json"], help="the output format for the predictions", default="plaintext", required=False)
+    parser.add_argument("--output_file", metavar="FILE", help="the file to write the predictions, uses stdout if not provided", default=None, required=False)
     args = parser.parse_args(args=args)
 
     # values from options
@@ -68,10 +71,13 @@ def main(args=None):
     if labels is None:
         raise Exception("No labels determined, either supply --info or --labels!")
 
-    if args.top_x > 0:
-        print("Top " + str(args.top_x) + " labels")
-    else:
-        print("All labels")
+    if args.output_file is None:
+        if args.top_x > 0:
+            print("Top " + str(args.top_x) + " labels")
+        else:
+            print("All labels")
+
+    predictions = OrderedDict()
 
     if args.graph_type == "tensorflow":
         graph = load_graph(args.graph)
@@ -87,7 +93,7 @@ def main(args=None):
             results = tensor_to_probs(graph, input_layer, output_layer, tensor, sess)
             top_x = top_k_probs(results, args.top_x)
             for i in top_x:
-                print("- " + labels[i] + ":", results[i])
+                predictions[labels[i]] = results[i]
     elif args.graph_type == "tflite":
         interpreter = load_tflite(args.graph)
         tensor = read_tflite_tensor_from_image_file(args.image, input_height, input_width,
@@ -95,9 +101,13 @@ def main(args=None):
         results = tflite_tensor_to_probs(interpreter, tensor)
         top_x = tflite_top_k_probs(results, args.top_x)
         for i in range(len(top_x)):
-            print("- " + labels[top_x[i]] + ":", str(results[0][top_x[i]]))
+            predictions[labels[top_x[i]]] = results[0][top_x[i]]
     else:
         raise Exception("Unhandled graph type: %s" % args.graph_type)
+
+    info = dict()
+    info["model"] = args.graph
+    output_predictions(predictions, output_file=args.output_file, output_format=args.output_format, info=info)
 
 
 def sys_main() -> int:

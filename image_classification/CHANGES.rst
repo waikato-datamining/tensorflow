@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.0.11 (????-??-??)
+-------------------
+
+- `poll.py` can output predictions now in: csv, xml, json
+- `label_image.py` can output predictions to stdout or a file and in: plaintext (current), csv, xml, json
+
+
 0.0.10 (2021-01-25)
 -------------------
 
