@@ -17,6 +17,8 @@
 import json
 import numpy as np
 import tensorflow as tf
+from PIL import Image
+import numpy as np
 
 
 def load_graph(model_file):
@@ -38,6 +40,20 @@ def load_graph(model_file):
         tf.import_graph_def(graph_def)
 
     return graph
+
+
+def load_tflite(model_file):
+    """
+    Loads the tflite model from disk.
+
+    :param model_file: the model to load
+    :type model_file: str
+    :return: the tflite interpreter
+    :rtype: tf.lite.Interpreter
+    """
+    interpreter = tf.lite.Interpreter(model_path=model_file)
+    interpreter.allocate_tensors()
+    return interpreter
 
 
 def read_tensor_from_image_file(file_name,
@@ -86,6 +102,33 @@ def read_tensor_from_image_file(file_name,
     result = sess.run(normalized)
 
     return result
+
+
+def read_tflite_tensor_from_image_file(file_name,
+                                input_height,
+                                input_width,
+                                input_mean=0,
+                                input_std=255):
+    """
+    Reads the tensor from the image file.
+
+    :param file_name: the image to load
+    :type file_name: str
+    :param input_height: the image height, use -1 for not resizing
+    :type input_height: int
+    :param input_width: the image width, use -1 for not resizing
+    :type input_width: int
+    :param input_mean: the mean to use
+    :type input_mean: int
+    :param input_std: the standard deviation to use
+    :type input_std: int
+    :return: the tensor
+    """
+
+    img = Image.open(file_name).resize((input_width, input_height))
+    tensor = np.expand_dims(img, axis=0)
+    tensor = (np.float32(tensor) - input_mean) / input_std
+    return tensor
 
 
 def load_labels(label_file):
@@ -137,6 +180,26 @@ def tensor_to_probs(graph, input_layer, output_layer, tensor, sess=None):
     return np.squeeze(results)
 
 
+def tflite_tensor_to_probs(interpreter, tensor):
+    """
+    Turns the image tensor into probabilities.
+
+    :param interpreter: the tflite interpreter to use
+    :type interpreter: tf.lite.Interpreter
+    :param tensor: the image as tensor
+    :type tensor: ndarray
+    :return: the probabilities
+    :rtype: ndarray
+    """
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    interpreter.set_tensor(input_details[0]['index'], tensor)
+    interpreter.invoke()
+    probs = interpreter.get_tensor(output_details[0]['index'])
+    return probs
+
+
 def top_k_probs(probs, k):
     """
     Returns the top K probabilities.
@@ -152,6 +215,23 @@ def top_k_probs(probs, k):
         return probs.argsort()[-k:][::-1]
     else:
         return probs.argsort()[:][::-1]
+
+
+def tflite_top_k_probs(probs, k):
+    """
+    Returns the top K probabilities from tflite probabilities.
+
+    :param probs: the ndarray with the probabilities
+    :type probs: ndarray
+    :param k: the number of top probabilities to return, use -1 for all
+    :type k: int
+    :return: the
+    """
+
+    if k > 0:
+        return np.flip(probs[0].argsort()[-k:])
+    else:
+        return np.flip(probs[0].argsort())
 
 
 def load_info_file(info):

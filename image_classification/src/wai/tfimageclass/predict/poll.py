@@ -23,8 +23,9 @@ from time import sleep
 import os
 import tensorflow as tf
 import traceback
-from wai.tfimageclass.utils.prediction_utils import load_graph, load_labels, read_tensor_from_image_file, tensor_to_probs, top_k_probs, load_info_file
-from PIL import Image
+from wai.tfimageclass.utils.prediction_utils import load_graph, load_tflite, load_labels, \
+    read_tensor_from_image_file, read_tflite_tensor_from_image_file, tensor_to_probs, tflite_tensor_to_probs, \
+    top_k_probs, tflite_top_k_probs, load_info_file
 import numpy as np
 
 
@@ -175,17 +176,13 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
                     sleep(1)
 
 
-def predict_image_tflite(interpreter, labels, top_x, tensor, output_file):
+def tflite_predict_image(interpreter, labels, top_x, tensor, output_file):
     """
     Obtains predictions for the image (in tensor representation) from the tflite interpreter
     and outputs them in the output file.
 
     :param interpreter: the tflite interpreter to use
     :type interpreter: tf.lite.Interpreter
-    :param input_layer: the name of input layer in the graph to use
-    :type input_layer: str
-    :param output_layer: the name of output layer in the graph to use
-    :type output_layer: str
     :param labels: the list of labels to use
     :type labels: list
     :param top_x: the number of labels with the highest probabilities to return, <1 for all
@@ -196,23 +193,15 @@ def predict_image_tflite(interpreter, labels, top_x, tensor, output_file):
     :type: str
     """
 
-    input_details = interpreter.get_input_details()
-    output_details = interpreter.get_output_details()
-
-    interpreter.set_tensor(input_details[0]['index'], tensor)
-    interpreter.invoke()
-    probs = interpreter.get_tensor(output_details[0]['index'])
-    if top_x > 0:
-        top_probs = np.flip(probs[0].argsort()[-top_x:])
-    else:
-        top_probs = np.flip(probs[0].argsort())
+    probs = tflite_tensor_to_probs(interpreter, tensor)
+    top_probs = tflite_top_k_probs(probs, top_x)
     with open(output_file, "w") as rf:
         rf.write("label,probability\n")
         for i in range(len(top_probs)):
             rf.write(labels[top_probs[i]] + "," + str(probs[0][top_probs[i]]) + "\n")
 
 
-def poll_tflite(interpreter, labels, in_dir, out_dir, continuous, height, width, mean, std, top_x, delete):
+def tflite_poll(interpreter, labels, in_dir, out_dir, continuous, height, width, mean, std, top_x, delete):
     """
     Performs continuous predictions on files appearing in the "in_dir" and outputting the results in "out_dir".
 
@@ -256,10 +245,8 @@ def poll_tflite(interpreter, labels, in_dir, out_dir, continuous, height, width,
 
             input_data = None
             try:
-                img = Image.open(f).resize((width, height))
-                input_data = np.expand_dims(img, axis=0)
-                input_data = (np.float32(input_data) - mean) / std
-            except Exception as e:
+                input_data = read_tflite_tensor_from_image_file(f, height, width, input_mean=mean, input_std=std)
+            except Exception:
                 print(traceback.format_exc())
 
             try:
@@ -293,7 +280,7 @@ def poll_tflite(interpreter, labels, in_dir, out_dir, continuous, height, width,
                 continue
 
             try:
-                predict_image_tflite(interpreter, labels, top_x, input_data, roi_tmp)
+                tflite_predict_image(interpreter, labels, top_x, input_data, roi_tmp)
                 os.rename(roi_tmp, roi_csv)
             except Exception:
                 print(traceback.format_exc())
@@ -357,16 +344,13 @@ def main(args=None):
 
     if args.graph_type == "tensorflow":
         graph = load_graph(args.graph)
-
         poll(graph, input_layer, output_layer, labels, args.in_dir, args.out_dir, args.continuous,
              input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete,
              reset_session=args.reset_session)
     elif args.graph_type == "tflite":
-        interpreter = tf.lite.Interpreter(model_path=args.graph)
-        interpreter.allocate_tensors()
-
-        poll_tflite(interpreter, labels, args.in_dir, args.out_dir, args.continuous,
-             input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete)
+        interpreter = load_tflite(args.graph)
+        tflite_poll(interpreter, labels, args.in_dir, args.out_dir, args.continuous,
+                    input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete)
     else:
         raise Exception("Unhandled graph type: %s" % args.graph_type)
 

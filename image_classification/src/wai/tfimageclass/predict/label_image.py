@@ -21,10 +21,10 @@ from __future__ import print_function
 import argparse
 import traceback
 import tensorflow as tf
-from PIL import Image
-import numpy as np
 
-from wai.tfimageclass.utils.prediction_utils import load_graph, load_labels, read_tensor_from_image_file, tensor_to_probs, top_k_probs, load_info_file
+from wai.tfimageclass.utils.prediction_utils import load_graph, load_tflite, load_labels, \
+    read_tensor_from_image_file, read_tflite_tensor_from_image_file, tensor_to_probs, tflite_tensor_to_probs, \
+    top_k_probs, tflite_top_k_probs, load_info_file
 
 
 def main(args=None):
@@ -68,6 +68,11 @@ def main(args=None):
     if labels is None:
         raise Exception("No labels determined, either supply --info or --labels!")
 
+    if args.top_x > 0:
+        print("Top " + str(args.top_x) + " labels")
+    else:
+        print("All labels")
+
     if args.graph_type == "tensorflow":
         graph = load_graph(args.graph)
 
@@ -79,38 +84,18 @@ def main(args=None):
                 input_mean=args.input_mean,
                 input_std=args.input_std,
                 sess=sess)
-
             results = tensor_to_probs(graph, input_layer, output_layer, tensor, sess)
             top_x = top_k_probs(results, args.top_x)
-            if args.top_x > 0:
-                print("Top " + str(args.top_x) + " labels")
-            else:
-                print("All labels")
             for i in top_x:
                 print("- " + labels[i] + ":", results[i])
     elif args.graph_type == "tflite":
-        interpreter = tf.lite.Interpreter(model_path=args.graph)
-        interpreter.allocate_tensors()
-        img = Image.open(args.image).resize((input_width, input_height))
-        tensor = np.expand_dims(img, axis=0)
-        tensor = (np.float32(tensor) - args.input_mean) / args.input_std
-
-        input_details = interpreter.get_input_details()
-        output_details = interpreter.get_output_details()
-
-        interpreter.set_tensor(input_details[0]['index'], tensor)
-        interpreter.invoke()
-        probs = interpreter.get_tensor(output_details[0]['index'])
-        if args.top_x > 0:
-            top_probs = np.flip(probs[0].argsort()[-args.top_x:])
-        else:
-            top_probs = np.flip(probs[0].argsort())
-        if args.top_x > 0:
-            print("Top " + str(args.top_x) + " labels")
-        else:
-            print("All labels")
-        for i in range(len(top_probs)):
-            print("- " + labels[top_probs[i]] + ":", str(probs[0][top_probs[i]]))
+        interpreter = load_tflite(args.graph)
+        tensor = read_tflite_tensor_from_image_file(args.image, input_height, input_width,
+                                                    input_mean=args.input_mean, input_std=args.input_std)
+        results = tflite_tensor_to_probs(interpreter, tensor)
+        top_x = tflite_top_k_probs(results, args.top_x)
+        for i in range(len(top_x)):
+            print("- " + labels[top_x[i]] + ":", str(results[0][top_x[i]]))
     else:
         raise Exception("Unhandled graph type: %s" % args.graph_type)
 
@@ -119,7 +104,8 @@ def sys_main() -> int:
     """
     Runs the main function using the system cli arguments, and
     returns a system error code.
-    :return:    0 for success, 1 for failure.
+
+    :return: 0 for success, 1 for failure.
     """
     try:
         main()
