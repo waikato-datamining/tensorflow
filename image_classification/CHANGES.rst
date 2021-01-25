@@ -6,6 +6,7 @@ Changelog
 
 - removed ability to split images into grid from `poll.py`
 - added `tfic-export` tool to export saved model folder to Tensorflow lite model
+- added support for using tflite models to `tfic-poll` and `tfic-labelimage`
 
 
 0.0.9 (2020-10-21)

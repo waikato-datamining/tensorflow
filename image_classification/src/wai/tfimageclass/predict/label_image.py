@@ -1,5 +1,5 @@
 # Copyright 2017 The TensorFlow Authors. All Rights Reserved.
-# Copyright 2019-2020 University of Waikato, Hamilton, NZ.
+# Copyright 2019-2021 University of Waikato, Hamilton, NZ.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ from __future__ import print_function
 import argparse
 import traceback
 import tensorflow as tf
+from PIL import Image
+import numpy as np
 
 from wai.tfimageclass.utils.prediction_utils import load_graph, load_labels, read_tensor_from_image_file, tensor_to_probs, top_k_probs, load_info_file
 
@@ -38,6 +40,7 @@ def main(args=None):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--image", help="image to be processed", required=True)
     parser.add_argument("--graph", help="graph/model to be executed", required=True)
+    parser.add_argument("--graph_type", metavar="TYPE", choices=["tensorflow", "tflite"], help="the type of graph/model to be loaded", default="tensorflow", required=False)
     parser.add_argument("--info", help="name of json file with model info (dimensions, layers); overrides input_height/input_width/labels/input_layer/output_layer options", default=None)
     parser.add_argument("--labels", help="name of file containing labels", required=False)
     parser.add_argument("--input_height", type=int, help="input height", default=299)
@@ -65,25 +68,51 @@ def main(args=None):
     if labels is None:
         raise Exception("No labels determined, either supply --info or --labels!")
 
-    graph = load_graph(args.graph)
+    if args.graph_type == "tensorflow":
+        graph = load_graph(args.graph)
 
-    with tf.compat.v1.Session(graph=graph) as sess:
-        tensor = read_tensor_from_image_file(
-            args.image,
-            input_height=input_height,
-            input_width=input_width,
-            input_mean=args.input_mean,
-            input_std=args.input_std,
-            sess=sess)
+        with tf.compat.v1.Session(graph=graph) as sess:
+            tensor = read_tensor_from_image_file(
+                args.image,
+                input_height=input_height,
+                input_width=input_width,
+                input_mean=args.input_mean,
+                input_std=args.input_std,
+                sess=sess)
 
-        results = tensor_to_probs(graph, input_layer, output_layer, tensor, sess)
-        top_x = top_k_probs(results, args.top_x)
+            results = tensor_to_probs(graph, input_layer, output_layer, tensor, sess)
+            top_x = top_k_probs(results, args.top_x)
+            if args.top_x > 0:
+                print("Top " + str(args.top_x) + " labels")
+            else:
+                print("All labels")
+            for i in top_x:
+                print("- " + labels[i] + ":", results[i])
+    elif args.graph_type == "tflite":
+        interpreter = tf.lite.Interpreter(model_path=args.graph)
+        interpreter.allocate_tensors()
+        img = Image.open(args.image).resize((input_width, input_height))
+        tensor = np.expand_dims(img, axis=0)
+        tensor = (np.float32(tensor) - args.input_mean) / args.input_std
+
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+
+        interpreter.set_tensor(input_details[0]['index'], tensor)
+        interpreter.invoke()
+        probs = interpreter.get_tensor(output_details[0]['index'])
+        if args.top_x > 0:
+            top_probs = np.flip(probs[0].argsort()[-args.top_x:])
+        else:
+            top_probs = np.flip(probs[0].argsort())
         if args.top_x > 0:
             print("Top " + str(args.top_x) + " labels")
         else:
             print("All labels")
-        for i in top_x:
-            print("- " + labels[i] + ":", results[i])
+        for i in range(len(top_probs)):
+            print("- " + labels[top_probs[i]] + ":", str(probs[0][top_probs[i]]))
+    else:
+        raise Exception("Unhandled graph type: %s" % args.graph_type)
 
 
 def sys_main() -> int:

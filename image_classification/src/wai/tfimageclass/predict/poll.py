@@ -1,4 +1,4 @@
-# Copyright 2019-2020 University of Waikato, Hamilton, NZ.
+# Copyright 2019-2021 University of Waikato, Hamilton, NZ.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@ import os
 import tensorflow as tf
 import traceback
 from wai.tfimageclass.utils.prediction_utils import load_graph, load_labels, read_tensor_from_image_file, tensor_to_probs, top_k_probs, load_info_file
+from PIL import Image
+import numpy as np
 
 
 def predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, output_file):
@@ -150,7 +152,7 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
                         predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, roi_tmp)
                         os.rename(roi_tmp, roi_csv)
                         num_processed += 1
-                    except Exception as e:
+                    except Exception:
                         print(traceback.format_exc())
 
                     timediff = datetime.now() - start
@@ -173,6 +175,141 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
                     sleep(1)
 
 
+def predict_image_tflite(interpreter, labels, top_x, tensor, output_file):
+    """
+    Obtains predictions for the image (in tensor representation) from the tflite interpreter
+    and outputs them in the output file.
+
+    :param interpreter: the tflite interpreter to use
+    :type interpreter: tf.lite.Interpreter
+    :param input_layer: the name of input layer in the graph to use
+    :type input_layer: str
+    :param output_layer: the name of output layer in the graph to use
+    :type output_layer: str
+    :param labels: the list of labels to use
+    :type labels: list
+    :param top_x: the number of labels with the highest probabilities to return, <1 for all
+    :type top_x: int
+    :param tensor: the image as tensor
+    :type tensor: tf.Tensor
+    :param output_file: the file to store the predictions in
+    :type: str
+    """
+
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    interpreter.set_tensor(input_details[0]['index'], tensor)
+    interpreter.invoke()
+    probs = interpreter.get_tensor(output_details[0]['index'])
+    if top_x > 0:
+        top_probs = np.flip(probs[0].argsort()[-top_x:])
+    else:
+        top_probs = np.flip(probs[0].argsort())
+    with open(output_file, "w") as rf:
+        rf.write("label,probability\n")
+        for i in range(len(top_probs)):
+            rf.write(labels[top_probs[i]] + "," + str(probs[0][top_probs[i]]) + "\n")
+
+
+def poll_tflite(interpreter, labels, in_dir, out_dir, continuous, height, width, mean, std, top_x, delete):
+    """
+    Performs continuous predictions on files appearing in the "in_dir" and outputting the results in "out_dir".
+
+    :param interpreter: the tflite interpreter to use
+    :type interpreter: tf.lite.Interpreter
+    :param labels: the list of labels to use
+    :type labels: list
+    :param in_dir: the input directory to poll
+    :type in_dir: str
+    :param out_dir: the output directory for the results
+    :type out_dir: str
+    :param continuous: whether to continuously poll for images or exit ones no more images to process
+    :type continuous: bool
+    :param height: the expected height of the images
+    :type height: int
+    :param width: the expected height of the images
+    :type width: int
+    :param mean: the mean to use for the images
+    :type mean: int
+    :param std: the std deviation to use for the images
+    :type std: int
+    :param top_x: the number of labels with the highest probabilities to return, <1 for all
+    :type top_x: int
+    :param delete: whether to delete the input images (True) or move them to the output directory (False)
+    :type delete: bool
+    """
+
+    print("Class labels: %s" % str(labels))
+
+    while True:
+        any = False
+        files = [(in_dir + os.sep + x) for x in os.listdir(in_dir) if (x.lower().endswith(".png") or x.lower().endswith(".jpg"))]
+        for f in files:
+            any = True
+            start = datetime.now()
+            print(start, "-", f)
+
+            img_path = out_dir + os.sep + os.path.basename(f)
+            roi_csv = out_dir + os.sep + os.path.splitext(os.path.basename(f))[0] + ".csv"
+            roi_tmp = out_dir + os.sep + os.path.splitext(os.path.basename(f))[0] + ".tmp"
+
+            input_data = None
+            try:
+                img = Image.open(f).resize((width, height))
+                input_data = np.expand_dims(img, axis=0)
+                input_data = (np.float32(input_data) - mean) / std
+            except Exception as e:
+                print(traceback.format_exc())
+
+            try:
+                # delete any existing old files in output dir
+                if os.path.exists(img_path):
+                    try:
+                        os.remove(img_path)
+                    except:
+                        print("Failed to remove existing image in output directory: ", img_path)
+                if os.path.exists(roi_tmp):
+                    try:
+                        os.remove(roi_tmp)
+                    except:
+                        print("Failed to remove existing ROI file (tmp) in output directory: ", roi_tmp)
+                if os.path.exists(roi_csv):
+                    try:
+                        os.remove(roi_csv)
+                    except:
+                        print("Failed to remove existing ROI file in output directory: ", roi_csv)
+                # delete or move into output dir
+                if delete:
+                    os.remove(f)
+                else:
+                    os.rename(f, img_path)
+            except:
+                img_path = None
+
+            if input_data is None:
+                continue
+            if img_path is None:
+                continue
+
+            try:
+                predict_image_tflite(interpreter, labels, top_x, input_data, roi_tmp)
+                os.rename(roi_tmp, roi_csv)
+            except Exception:
+                print(traceback.format_exc())
+
+            timediff = datetime.now() - start
+            print("  time:", timediff)
+
+        # exit if not in continuous mode
+        if not continuous:
+            return
+
+        # nothing processed at all, lets wait for files to appear
+        if not any:
+            sleep(1)
+
+
 def main(args=None):
     """
     The main method for parsing command-line arguments and labeling.
@@ -189,6 +326,7 @@ def main(args=None):
     parser.add_argument('--continuous', action='store_true', help='Whether to continuously load test images and perform prediction', required=False, default=False)
     parser.add_argument('--delete', default=False, help="Whether to delete images rather than move them to the output directory.", action='store_true')
     parser.add_argument("--graph", metavar="FILE", help="graph/model to be executed", required=True)
+    parser.add_argument("--graph_type", metavar="TYPE", choices=["tensorflow", "tflite"], help="the type of graph/model to be loaded", default="tensorflow", required=False)
     parser.add_argument("--info", help="name of json file with model info (dimensions, layers); overrides input_height/input_width/labels/input_layer/output_layer options", default=None)
     parser.add_argument("--labels", metavar="FILE", help="name of file containing labels", required=False)
     parser.add_argument("--input_height", metavar="INT", type=int, help="input height", default=299)
@@ -217,11 +355,20 @@ def main(args=None):
     if labels is None:
         raise Exception("No labels determined, either supply --info or --labels!")
 
-    graph = load_graph(args.graph)
+    if args.graph_type == "tensorflow":
+        graph = load_graph(args.graph)
 
-    poll(graph, input_layer, output_layer, labels, args.in_dir, args.out_dir, args.continuous,
-         input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete,
-         reset_session=args.reset_session)
+        poll(graph, input_layer, output_layer, labels, args.in_dir, args.out_dir, args.continuous,
+             input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete,
+             reset_session=args.reset_session)
+    elif args.graph_type == "tflite":
+        interpreter = tf.lite.Interpreter(model_path=args.graph)
+        interpreter.allocate_tensors()
+
+        poll_tflite(interpreter, labels, args.in_dir, args.out_dir, args.continuous,
+             input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete)
+    else:
+        raise Exception("Unhandled graph type: %s" % args.graph_type)
 
 
 def sys_main() -> int:
