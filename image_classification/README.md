@@ -291,6 +291,7 @@ Once you have built a model (Tensorflow or Tensorflow lite), you can use it as f
                          [--input_width INPUT_WIDTH] [--input_layer INPUT_LAYER]
                          [--output_layer OUTPUT_LAYER] [--input_mean INPUT_MEAN]
                          [--input_std INPUT_STD] [--top_x TOP_X]
+                         [--output_format TYPE] [--output_file FILE]
 
   Outputs predictions for single image using a trained model.
 
@@ -318,6 +319,10 @@ Once you have built a model (Tensorflow or Tensorflow lite), you can use it as f
                           input std (default: 255)
     --top_x TOP_X         output only the top K labels; use <1 for all (default:
                           5)
+    --output_format TYPE  the output format for the predictions (default:
+                          plaintext)
+    --output_file FILE    the file to write the predictions, uses stdout if not
+                          provided (default: None)
   ```
   
 * For polling images in a directory and making continous predictions with CSV companion files, use 
@@ -329,34 +334,36 @@ Once you have built a model (Tensorflow or Tensorflow lite), you can use it as f
                    [--labels FILE] [--input_height INT] [--input_width INT]
                    [--input_layer NAME] [--output_layer NAME] [--input_mean INT]
                    [--input_std INT] [--top_x INT] [--reset_session INT]
+                   [--output_format TYPE]
 
   For bulk or continuous prediction output using a trained model.
 
   optional arguments:
-    -h, --help           show this help message and exit
-    --in_dir DIR         the input directory to poll for images (default: None)
-    --out_dir DIR        the output directory for processed images and
-                         predictions (default: None)
-    --continuous         Whether to continuously load test images and perform
-                         prediction (default: False)
-    --delete             Whether to delete images rather than move them to the
-                         output directory. (default: False)
-    --graph FILE         graph/model to be executed (default: None)
-    --graph_type TYPE    the type of graph/model to be loaded (default:
-                         tensorflow)
-    --info INFO          name of json file with model info (dimensions, layers);
-                         overrides input_height/input_width/labels/input_layer/o
-                         utput_layer options (default: None)
-    --labels FILE        name of file containing labels (default: None)
-    --input_height INT   input height (default: 299)
-    --input_width INT    input width (default: 299)
-    --input_layer NAME   name of input layer (default: Placeholder)
-    --output_layer NAME  name of output layer (default: final_result)
-    --input_mean INT     input mean (default: 0)
-    --input_std INT      input std (default: 255)
-    --top_x INT          output only the top K labels; use <1 for all (default:
-                         5)
-    --reset_session INT  The number of processed images after which to
-                         reinitialize the Tensorflow session to reduce memory
-                         leaks. (default: 50)
+    -h, --help            show this help message and exit
+    --in_dir DIR          the input directory to poll for images (default: None)
+    --out_dir DIR         the output directory for processed images and
+                          predictions (default: None)
+    --continuous          Whether to continuously load test images and perform
+                          prediction (default: False)
+    --delete              Whether to delete images rather than move them to the
+                          output directory. (default: False)
+    --graph FILE          graph/model to be executed (default: None)
+    --graph_type TYPE     the type of graph/model to be loaded (default:
+                          tensorflow)
+    --info INFO           name of json file with model info (dimensions,
+                          layers); overrides input_height/input_width/labels/inp
+                          ut_layer/output_layer options (default: None)
+    --labels FILE         name of file containing labels (default: None)
+    --input_height INT    input height (default: 299)
+    --input_width INT     input width (default: 299)
+    --input_layer NAME    name of input layer (default: Placeholder)
+    --output_layer NAME   name of output layer (default: final_result)
+    --input_mean INT      input mean (default: 0)
+    --input_std INT       input std (default: 255)
+    --top_x INT           output only the top K labels; use <1 for all (default:
+                          5)
+    --reset_session INT   The number of processed images after which to
+                          reinitialize the Tensorflow session to reduce memory
+                          leaks. (default: 50)
+    --output_format TYPE  the output format for the predictions (default: csv)
   ```

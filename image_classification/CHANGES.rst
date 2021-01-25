@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.0.11 (????-??-??)
+0.0.11 (2021-01-26)
 -------------------
 
 - `poll.py` can output predictions now in: csv, xml, json
