@@ -21,7 +21,7 @@ rm dist/*
 
 Steps:
 
-* start new release (version: `vX.Y.Z`)
+* start new release (version: `wai.tfimageclass-vX.Y.Z`)
 * enter release notes, i.e., significant changes since last release
 * upload `wai.tfimageclass-X.Y.Z.tar.gz` previously generated with `setyp.py`
 * publish
