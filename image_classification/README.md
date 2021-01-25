@@ -255,16 +255,39 @@ the data directory looks like this::
 ```
 
 
+### Export
+
+Once you have built a model, you can export it to [Tensorflow lite](https://www.tensorflow.org/lite/),
+using the `wai.tfimageclass.train.export` module or the `tfic-export` command-line tool:
+
+```commandline
+usage: tfic-export [-h] --saved_model_dir SAVED_MODEL_DIR --tflite_model
+                   TFLITE_MODEL
+
+Exports a Tensorflow model as Tensorflow lite one.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --saved_model_dir SAVED_MODEL_DIR
+                        Path to the saved Tensorflow model directory.
+                        (default: )
+  --tflite_model TFLITE_MODEL
+                        The file to export the Tensorflow lite model to.
+                        (default: )
+```
+
+
 ### Predict
 
-Once you have built a model, you can use as follows:
+Once you have built a model (Tensorflow or Tensorflow lite), you can use it as follows:
 
 * For making predictions for a single image, use module `wai.tfimageclass.predict.label_image` or console 
   script `tfic-labelimage`
   
   ```
-  usage: tfic-labelimage [-h] --image IMAGE --graph GRAPH [--info INFO]
-                         [--labels LABELS] [--input_height INPUT_HEIGHT]
+  usage: tfic-labelimage [-h] --image IMAGE --graph GRAPH [--graph_type TYPE]
+                         [--info INFO] [--labels LABELS]
+                         [--input_height INPUT_HEIGHT]
                          [--input_width INPUT_WIDTH] [--input_layer INPUT_LAYER]
                          [--output_layer OUTPUT_LAYER] [--input_mean INPUT_MEAN]
                          [--input_std INPUT_STD] [--top_x TOP_X]
@@ -275,6 +298,8 @@ Once you have built a model, you can use as follows:
     -h, --help            show this help message and exit
     --image IMAGE         image to be processed (default: None)
     --graph GRAPH         graph/model to be executed (default: None)
+    --graph_type TYPE     the type of graph/model to be loaded (default:
+                          tensorflow)
     --info INFO           name of json file with model info (dimensions,
                           layers); overrides input_height/input_width/labels/inp
                           ut_layer/output_layer options (default: None)
@@ -300,10 +325,10 @@ Once you have built a model, you can use as follows:
   
   ```
   usage: tfic-poll [-h] --in_dir DIR --out_dir DIR [--continuous] [--delete]
-                   --graph FILE [--info INFO] [--labels FILE]
-                   [--input_height INT] [--input_width INT] [--input_layer NAME]
-                   [--output_layer NAME] [--input_mean INT] [--input_std INT]
-                   [--top_x INT] [--reset_session INT]
+                   --graph FILE [--graph_type TYPE] [--info INFO]
+                   [--labels FILE] [--input_height INT] [--input_width INT]
+                   [--input_layer NAME] [--output_layer NAME] [--input_mean INT]
+                   [--input_std INT] [--top_x INT] [--reset_session INT]
 
   For bulk or continuous prediction output using a trained model.
 
@@ -317,6 +342,8 @@ Once you have built a model, you can use as follows:
     --delete             Whether to delete images rather than move them to the
                          output directory. (default: False)
     --graph FILE         graph/model to be executed (default: None)
+    --graph_type TYPE    the type of graph/model to be loaded (default:
+                         tensorflow)
     --info INFO          name of json file with model info (dimensions, layers);
                          overrides input_height/input_width/labels/input_layer/o
                          utput_layer options (default: None)
