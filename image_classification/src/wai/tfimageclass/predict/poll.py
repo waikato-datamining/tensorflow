@@ -26,7 +26,7 @@ import traceback
 from collections import OrderedDict
 from wai.tfimageclass.utils.prediction_utils import tf_load_model, tflite_load_model, load_labels, \
     tf_read_tensor_from_image_file, tflite_read_tensor_from_image_file, tf_tensor_to_probs, tflite_tensor_to_probs, \
-    tf_top_k_probs, tflite_top_k_probs, load_info_file, tf_output_predictions
+    tf_top_k_probs, tflite_top_k_probs, load_info_file, output_predictions
 
 
 def tf_predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, output_file,
@@ -62,7 +62,7 @@ def tf_predict_image(sess, graph, input_layer, output_layer, labels, top_x, tens
     predictions = OrderedDict()
     for i in top_probs:
         predictions[labels[top_probs[i]]] = float(probs[top_probs[i]])
-    tf_output_predictions(predictions, output_file=output_file, output_format=output_format, info=info)
+    output_predictions(predictions, output_file=output_file, output_format=output_format, info=info)
 
 
 def tf_poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, height, width, mean, std, top_x, delete,
@@ -214,7 +214,7 @@ def tflite_predict_image(interpreter, labels, top_x, tensor, output_file, output
     predictions = OrderedDict()
     for i in range(len(top_probs)):
         predictions[labels[top_probs[i]]] = float(probs[0][top_probs[i]])
-    tf_output_predictions(predictions, output_file=output_file, output_format=output_format, info=info)
+    output_predictions(predictions, output_file=output_file, output_format=output_format, info=info)
 
 
 def tflite_poll(interpreter, labels, in_dir, out_dir, continuous, height, width, mean, std, top_x, delete, output_format="csv", info=None):

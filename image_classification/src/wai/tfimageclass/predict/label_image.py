@@ -25,7 +25,7 @@ from collections import OrderedDict
 
 from wai.tfimageclass.utils.prediction_utils import tf_load_model, tflite_load_model, load_labels, \
     tf_read_tensor_from_image_file, tflite_read_tensor_from_image_file, tf_tensor_to_probs, tflite_tensor_to_probs, \
-    tf_top_k_probs, tflite_top_k_probs, load_info_file, tf_output_predictions
+    tf_top_k_probs, tflite_top_k_probs, load_info_file, output_predictions
 
 
 def main(args=None):
@@ -107,7 +107,7 @@ def main(args=None):
 
     info = dict()
     info["model"] = args.graph
-    tf_output_predictions(predictions, output_file=args.output_file, output_format=args.output_format, info=info)
+    output_predictions(predictions, output_file=args.output_file, output_format=args.output_format, info=info)
 
 
 def sys_main() -> int:

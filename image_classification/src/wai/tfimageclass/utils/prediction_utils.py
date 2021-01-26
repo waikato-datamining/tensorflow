@@ -258,7 +258,7 @@ def load_info_file(info):
     return input_height, input_width, input_layer, output_layer, labels
 
 
-def tf_output_predictions(predictions, output_file=None, output_format="plaintext", info=None):
+def output_predictions(predictions, output_file=None, output_format="plaintext", info=None):
     """
     Saves the predictions to a file using the specified format.
 
