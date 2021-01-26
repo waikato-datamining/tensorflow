@@ -24,13 +24,13 @@ import os
 import tensorflow as tf
 import traceback
 from collections import OrderedDict
-from wai.tfimageclass.utils.prediction_utils import load_graph, load_tflite, load_labels, \
-    read_tensor_from_image_file, read_tflite_tensor_from_image_file, tensor_to_probs, tflite_tensor_to_probs, \
-    top_k_probs, tflite_top_k_probs, load_info_file, output_predictions
+from wai.tfimageclass.utils.prediction_utils import tf_load_model, tflite_load_model, load_labels, \
+    tf_read_tensor_from_image_file, tflite_read_tensor_from_image_file, tf_tensor_to_probs, tflite_tensor_to_probs, \
+    tf_top_k_probs, tflite_top_k_probs, load_info_file, tf_output_predictions
 
 
-def predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, output_file,
-                  output_format="csv", info=None):
+def tf_predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, output_file,
+                     output_format="csv", info=None):
     """
     Obtains predictions for the image (in tensor representation) from the graph and outputs
     them in the output file.
@@ -57,16 +57,16 @@ def predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor,
     :type info: dict
     """
 
-    probs = tensor_to_probs(graph, input_layer, output_layer, tensor, sess)
-    top_probs = top_k_probs(probs, top_x)
+    probs = tf_tensor_to_probs(graph, input_layer, output_layer, tensor, sess)
+    top_probs = tf_top_k_probs(probs, top_x)
     predictions = OrderedDict()
     for i in top_probs:
         predictions[labels[top_probs[i]]] = float(probs[top_probs[i]])
-    output_predictions(predictions, output_file=output_file, output_format=output_format, info=info)
+    tf_output_predictions(predictions, output_file=output_file, output_format=output_format, info=info)
 
 
-def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, height, width, mean, std, top_x, delete,
-         reset_session=50, output_format="csv", info=None):
+def tf_poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, height, width, mean, std, top_x, delete,
+            reset_session=50, output_format="csv", info=None):
     """
     Performs continuous predictions on files appearing in the "in_dir" and outputting the results in "out_dir".
 
@@ -124,7 +124,7 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
 
                     tensor = None
                     try:
-                        tensor = read_tensor_from_image_file(f, height, width, mean, std, sess)
+                        tensor = tf_read_tensor_from_image_file(f, height, width, mean, std, sess)
                     except Exception as e:
                         print(traceback.format_exc())
 
@@ -162,7 +162,7 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
                         continue
 
                     try:
-                        predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, roi_tmp, output_format=output_format, info=info)
+                        tf_predict_image(sess, graph, input_layer, output_layer, labels, top_x, tensor, roi_tmp, output_format=output_format, info=info)
                         os.rename(roi_tmp, roi_csv)
                         num_processed += 1
                     except Exception:
@@ -214,7 +214,7 @@ def tflite_predict_image(interpreter, labels, top_x, tensor, output_file, output
     predictions = OrderedDict()
     for i in range(len(top_probs)):
         predictions[labels[top_probs[i]]] = float(probs[0][top_probs[i]])
-    output_predictions(predictions, output_file=output_file, output_format=output_format, info=info)
+    tf_output_predictions(predictions, output_file=output_file, output_format=output_format, info=info)
 
 
 def tflite_poll(interpreter, labels, in_dir, out_dir, continuous, height, width, mean, std, top_x, delete, output_format="csv", info=None):
@@ -265,7 +265,7 @@ def tflite_poll(interpreter, labels, in_dir, out_dir, continuous, height, width,
 
             input_data = None
             try:
-                input_data = read_tflite_tensor_from_image_file(f, height, width, input_mean=mean, input_std=std)
+                input_data = tflite_read_tensor_from_image_file(f, height, width, input_mean=mean, input_std=std)
             except Exception:
                 print(traceback.format_exc())
 
@@ -367,12 +367,12 @@ def main(args=None):
     info["model"] = args.graph
 
     if args.graph_type == "tensorflow":
-        graph = load_graph(args.graph)
-        poll(graph, input_layer, output_layer, labels, args.in_dir, args.out_dir, args.continuous,
-             input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete,
-             reset_session=args.reset_session, output_format=args.output_format, info=info)
+        graph = tf_load_model(args.graph)
+        tf_poll(graph, input_layer, output_layer, labels, args.in_dir, args.out_dir, args.continuous,
+                input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete,
+                reset_session=args.reset_session, output_format=args.output_format, info=info)
     elif args.graph_type == "tflite":
-        interpreter = load_tflite(args.graph)
+        interpreter = tflite_load_model(args.graph)
         tflite_poll(interpreter, labels, args.in_dir, args.out_dir, args.continuous,
                     input_height, input_width, args.input_mean, args.input_std, args.top_x, args.delete,
                     output_format=args.output_format, info=info)

@@ -18,7 +18,7 @@ import os
 import traceback
 import tensorflow as tf
 from wai.tfimageclass.utils.train_utils import load_image_list, locate_sub_dirs, locate_images
-from wai.tfimageclass.utils.prediction_utils import load_graph, read_tensor_from_image_file, tensor_to_probs, load_labels, top_k_probs, load_info_file
+from wai.tfimageclass.utils.prediction_utils import tf_load_model, tf_read_tensor_from_image_file, tf_tensor_to_probs, load_labels, tf_top_k_probs, load_info_file
 from wai.tfimageclass.utils.logging_utils import logging_level_verbosity
 
 
@@ -110,9 +110,9 @@ def generate_stats(sess, graph, input_layer, output_layer, labels, image_dir, im
                 total[''] += 1
                 total[label_name] += 1
                 full_name = os.path.join(sub_dir, file_name)
-                tensor = read_tensor_from_image_file(full_name, height, width, mean, std, sess)
-                probs = tensor_to_probs(graph, input_layer, output_layer, tensor, sess)
-                for i in top_k_probs(probs, 1):
+                tensor = tf_read_tensor_from_image_file(full_name, height, width, mean, std, sess)
+                probs = tf_tensor_to_probs(graph, input_layer, output_layer, tensor, sess)
+                for i in tf_top_k_probs(probs, 1):
                     pf.write("%s,%s,%s,%s,%f\n" %(full_name, label_name, labels[i], label_name != labels[i], probs[i]))
                     if label_name != labels[i]:
                         incorrect[''] += 1
@@ -189,7 +189,7 @@ def main(args=None):
     if labels is None:
         raise Exception("No labels determined, either supply --info or --labels!")
 
-    graph = load_graph(args.graph)
+    graph = tf_load_model(args.graph)
 
     with tf.compat.v1.Session(graph=graph) as sess:
         generate_stats(sess, graph, input_layer, output_layer, labels, args.image_dir, args.image_list,

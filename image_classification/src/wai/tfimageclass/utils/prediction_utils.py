@@ -26,7 +26,7 @@ from xml.dom import minidom
 from datetime import datetime
 
 
-def load_graph(model_file):
+def tf_load_model(model_file):
     """
     Loads the model from disk.
 
@@ -47,7 +47,7 @@ def load_graph(model_file):
     return graph
 
 
-def load_tflite(model_file):
+def tflite_load_model(model_file):
     """
     Loads the tflite model from disk.
 
@@ -61,12 +61,12 @@ def load_tflite(model_file):
     return interpreter
 
 
-def read_tensor_from_image_file(file_name,
-                                input_height,
-                                input_width,
-                                input_mean=0,
-                                input_std=255,
-                                sess=None):
+def tf_read_tensor_from_image_file(file_name,
+                                   input_height,
+                                   input_width,
+                                   input_mean=0,
+                                   input_std=255,
+                                   sess=None):
     """
     Reads the tensor from the image file.
 
@@ -109,11 +109,11 @@ def read_tensor_from_image_file(file_name,
     return result
 
 
-def read_tflite_tensor_from_image_file(file_name,
-                                input_height,
-                                input_width,
-                                input_mean=0,
-                                input_std=255):
+def tflite_read_tensor_from_image_file(file_name,
+                                       input_height,
+                                       input_width,
+                                       input_mean=0,
+                                       input_std=255):
     """
     Reads the tensor from the image file.
 
@@ -153,7 +153,7 @@ def load_labels(label_file):
     return label
 
 
-def tensor_to_probs(graph, input_layer, output_layer, tensor, sess=None):
+def tf_tensor_to_probs(graph, input_layer, output_layer, tensor, sess=None):
     """
     Turns the image tensor into probabilities.
 
@@ -205,7 +205,7 @@ def tflite_tensor_to_probs(interpreter, tensor):
     return probs
 
 
-def top_k_probs(probs, k):
+def tf_top_k_probs(probs, k):
     """
     Returns the top K probabilities.
 
@@ -258,7 +258,7 @@ def load_info_file(info):
     return input_height, input_width, input_layer, output_layer, labels
 
 
-def output_predictions(predictions, output_file=None, output_format="plaintext", info=None):
+def tf_output_predictions(predictions, output_file=None, output_format="plaintext", info=None):
     """
     Saves the predictions to a file using the specified format.
 

@@ -23,9 +23,9 @@ import traceback
 import tensorflow as tf
 from collections import OrderedDict
 
-from wai.tfimageclass.utils.prediction_utils import load_graph, load_tflite, load_labels, \
-    read_tensor_from_image_file, read_tflite_tensor_from_image_file, tensor_to_probs, tflite_tensor_to_probs, \
-    top_k_probs, tflite_top_k_probs, load_info_file, output_predictions
+from wai.tfimageclass.utils.prediction_utils import tf_load_model, tflite_load_model, load_labels, \
+    tf_read_tensor_from_image_file, tflite_read_tensor_from_image_file, tf_tensor_to_probs, tflite_tensor_to_probs, \
+    tf_top_k_probs, tflite_top_k_probs, load_info_file, tf_output_predictions
 
 
 def main(args=None):
@@ -80,23 +80,23 @@ def main(args=None):
     predictions = OrderedDict()
 
     if args.graph_type == "tensorflow":
-        graph = load_graph(args.graph)
+        graph = tf_load_model(args.graph)
 
         with tf.compat.v1.Session(graph=graph) as sess:
-            tensor = read_tensor_from_image_file(
+            tensor = tf_read_tensor_from_image_file(
                 args.image,
                 input_height=input_height,
                 input_width=input_width,
                 input_mean=args.input_mean,
                 input_std=args.input_std,
                 sess=sess)
-            results = tensor_to_probs(graph, input_layer, output_layer, tensor, sess)
-            top_x = top_k_probs(results, args.top_x)
+            results = tf_tensor_to_probs(graph, input_layer, output_layer, tensor, sess)
+            top_x = tf_top_k_probs(results, args.top_x)
             for i in top_x:
                 predictions[labels[i]] = results[i]
     elif args.graph_type == "tflite":
-        interpreter = load_tflite(args.graph)
-        tensor = read_tflite_tensor_from_image_file(args.image, input_height, input_width,
+        interpreter = tflite_load_model(args.graph)
+        tensor = tflite_read_tensor_from_image_file(args.image, input_height, input_width,
                                                     input_mean=args.input_mean, input_std=args.input_std)
         results = tflite_tensor_to_probs(interpreter, tensor)
         top_x = tflite_top_k_probs(results, args.top_x)
@@ -107,7 +107,7 @@ def main(args=None):
 
     info = dict()
     info["model"] = args.graph
-    output_predictions(predictions, output_file=args.output_file, output_format=args.output_format, info=info)
+    tf_output_predictions(predictions, output_file=args.output_file, output_format=args.output_format, info=info)
 
 
 def sys_main() -> int:
