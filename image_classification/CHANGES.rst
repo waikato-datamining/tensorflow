@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.0.12 (????-??-??)
+-------------------
+
+- `poll.py` now handles keyboard interrupts properly
+
+
 0.0.11 (2021-01-26)
 -------------------
 

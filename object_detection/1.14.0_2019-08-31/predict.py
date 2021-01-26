@@ -292,6 +292,9 @@ def predict_on_images(input_dir, graph, sess, output_dir, tmp_dir, score_thresho
                     im = Image.fromarray(np.uint8(mask_comb), 'P')
                     im.save(img_path_tmp, "PNG")
                     os.rename(img_path_tmp, img_path)
+        except KeyboardInterrupt:
+            print("Interrupted, exiting!")
+            return
         except:
             print("Failed processing images: {}".format(",".join(im_list)))
             print(traceback.format_exc())

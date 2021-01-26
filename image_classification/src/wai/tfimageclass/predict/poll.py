@@ -150,6 +150,9 @@ def poll(graph, input_layer, output_layer, labels, in_dir, out_dir, continuous, 
                             os.remove(f)
                         else:
                             os.rename(f, img_path)
+                    except KeyboardInterrupt:
+                        print("Interrupted, exiting!")
+                        return
                     except:
                         img_path = None
 
