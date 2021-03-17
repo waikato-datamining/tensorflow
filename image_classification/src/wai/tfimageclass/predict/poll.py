@@ -254,10 +254,11 @@ def tflite_poll(interpreter, labels, in_dir, out_dir, continuous, height, width,
     while True:
         any = False
         files = [(in_dir + os.sep + x) for x in os.listdir(in_dir) if (x.lower().endswith(".png") or x.lower().endswith(".jpg"))]
-        for f in files:
+        count = len(files)
+        for i, f in enumerate(files):
             any = True
             start = datetime.now()
-            print(start, "-", f)
+            print(start, "-", "Image: %d/%d" % ((i+1), count), "-", f)
 
             img_path = out_dir + os.sep + os.path.basename(f)
             roi_csv = out_dir + os.sep + os.path.splitext(os.path.basename(f))[0] + "." + output_format
