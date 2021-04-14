@@ -1,10 +1,11 @@
 Changelog
 =========
 
-0.0.12 (????-??-??)
+0.0.12 (2021-04-14)
 -------------------
 
 - `poll.py` now handles keyboard interrupts properly
+- `stats.py` can use tflite model now as well, using `--graph_type tflite`
 
 
 0.0.11 (2021-01-26)
