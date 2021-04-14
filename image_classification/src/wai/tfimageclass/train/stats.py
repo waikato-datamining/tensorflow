@@ -1,4 +1,4 @@
-# Copyright 2019-2020 University of Waikato, Hamilton, NZ.
+# Copyright 2019-2021 University of Waikato, Hamilton, NZ.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import traceback
 import tensorflow as tf
 from wai.tfimageclass.utils.train_utils import load_image_list, locate_sub_dirs, locate_images
 from wai.tfimageclass.utils.prediction_utils import tf_load_model, tf_read_tensor_from_image_file, tf_tensor_to_probs, load_labels, tf_top_k_probs, load_info_file
+from wai.tfimageclass.utils.prediction_utils import tflite_load_model, tflite_read_tensor_from_image_file, tflite_tensor_to_probs, tflite_top_k_probs
 from wai.tfimageclass.utils.logging_utils import logging_level_verbosity
 
 
@@ -39,7 +40,7 @@ def init_counts(labels):
     return result
 
 
-def generate_stats(sess, graph, input_layer, output_layer, labels, image_dir, image_file_list, height, width, mean, std,
+def generate_stats(sess, graph, graph_type, input_layer, output_layer, labels, image_dir, image_file_list, height, width, mean, std,
                    output_preds, output_stats, logging_verbosity):
     """
     Evaluates the built model on images form the specified directory, which can be limited to file listed
@@ -48,7 +49,9 @@ def generate_stats(sess, graph, input_layer, output_layer, labels, image_dir, im
     :param sess: the tensorflow session to use
     :type sess: tf.Session
     :param graph: the tensorflow graph to use
-    :type graph: tf.Graph
+    :type graph: object
+    :param graph_type: the type of graph to use (tensorflow|tflite)
+    :type graph_type: str
     :param input_layer: the name of input layer in the graph to use
     :type input_layer: str
     :param output_layer: the name of output layer in the graph to use
@@ -110,16 +113,31 @@ def generate_stats(sess, graph, input_layer, output_layer, labels, image_dir, im
                 total[''] += 1
                 total[label_name] += 1
                 full_name = os.path.join(sub_dir, file_name)
-                tensor = tf_read_tensor_from_image_file(full_name, height, width, mean, std, sess)
-                probs = tf_tensor_to_probs(graph, input_layer, output_layer, tensor, sess)
-                for i in tf_top_k_probs(probs, 1):
-                    pf.write("%s,%s,%s,%s,%f\n" %(full_name, label_name, labels[i], label_name != labels[i], probs[i]))
-                    if label_name != labels[i]:
-                        incorrect[''] += 1
-                        incorrect[label_name] += 1
-                    else:
-                        correct[''] += 1
-                        correct[label_name] += 1
+                if graph_type == "tensorflow":
+                    tensor = tf_read_tensor_from_image_file(full_name, height, width, input_mean=mean, input_std=std, sess=sess)
+                    probs = tf_tensor_to_probs(graph, input_layer, output_layer, tensor, sess=sess)
+                    for i in tf_top_k_probs(probs, 1):
+                        pf.write("%s,%s,%s,%s,%f\n" %(full_name, label_name, labels[i], label_name != labels[i], probs[i]))
+                        if label_name != labels[i]:
+                            incorrect[''] += 1
+                            incorrect[label_name] += 1
+                        else:
+                            correct[''] += 1
+                            correct[label_name] += 1
+                elif graph_type == "tflite":
+                    tensor = tflite_read_tensor_from_image_file(full_name, height, width, input_mean=mean, input_std=std)
+                    probs = tflite_tensor_to_probs(graph, tensor)
+                    top_probs = tflite_top_k_probs(probs, 1)
+                    for i in range(len(top_probs)):
+                        pf.write("%s,%s,%s,%s,%f\n" %(full_name, label_name, labels[top_probs[i]], label_name != labels[top_probs[i]], float(probs[0][top_probs[i]])))
+                        if label_name != labels[i]:
+                            incorrect[''] += 1
+                            incorrect[label_name] += 1
+                        else:
+                            correct[''] += 1
+                            correct[label_name] += 1
+                else:
+                    raise Exception("Unhandled graph type: %s" % graph_type)
                 # progress
                 count += 1
                 if count % 10 == 0:
@@ -160,6 +178,7 @@ def main(args=None):
     parser.add_argument('--image_dir', type=str, default='', help='Path to folders of labeled images.')
     parser.add_argument('--image_list', type=str, required=False, help='The JSON file with images per sub-directory.')
     parser.add_argument("--graph", help="graph/model to be executed", required=True)
+    parser.add_argument("--graph_type", metavar="TYPE", choices=["tensorflow", "tflite"], help="the type of graph/model to be loaded", default="tensorflow", required=False)
     parser.add_argument("--info", help="name of json file with model info (dimensions, layers); overrides input_height/input_width/labels/input_layer/output_layer options", default=None)
     parser.add_argument("--labels", help="name of file containing labels", required=False)
     parser.add_argument("--input_height", type=int, help="input height", default=299)
@@ -189,12 +208,21 @@ def main(args=None):
     if labels is None:
         raise Exception("No labels determined, either supply --info or --labels!")
 
-    graph = tf_load_model(args.graph)
-
-    with tf.compat.v1.Session(graph=graph) as sess:
-        generate_stats(sess, graph, input_layer, output_layer, labels, args.image_dir, args.image_list,
-                 input_height, input_width, args.input_mean, args.input_std,
-                 args.output_preds, args.output_stats, args.logging_verbosity)
+    if args.graph_type == "tensorflow":
+        graph = tf_load_model(args.graph)
+        with tf.compat.v1.Session(graph=graph) as sess:
+            generate_stats(sess, graph, args.graph_type, input_layer, output_layer, labels, args.image_dir,
+                           args.image_list,
+                           input_height, input_width, args.input_mean, args.input_std,
+                           args.output_preds, args.output_stats, args.logging_verbosity)
+    elif args.graph_type == "tflite":
+        graph = tflite_load_model(args.graph)
+        generate_stats(None, graph, args.graph_type, input_layer, output_layer, labels, args.image_dir,
+                       args.image_list,
+                       input_height, input_width, args.input_mean, args.input_std,
+                       args.output_preds, args.output_stats, args.logging_verbosity)
+    else:
+        raise Exception("Unhandled graph type: %s" % args.graph_type)
 
 
 def sys_main() -> int:

@@ -188,11 +188,12 @@ All scripts support `--help` option to list all available options.
 
   ```
   usage: tfic-stats [-h] [--image_dir IMAGE_DIR] [--image_list IMAGE_LIST]
-                    --graph GRAPH [--info INFO] [--labels LABELS]
-                    [--input_height INPUT_HEIGHT] [--input_width INPUT_WIDTH]
-                    [--input_layer INPUT_LAYER] [--output_layer OUTPUT_LAYER]
-                    [--input_mean INPUT_MEAN] [--input_std INPUT_STD]
-                    --output_preds OUTPUT_PREDS --output_stats OUTPUT_STATS
+                    --graph GRAPH [--graph_type TYPE] [--info INFO]
+                    [--labels LABELS] [--input_height INPUT_HEIGHT]
+                    [--input_width INPUT_WIDTH] [--input_layer INPUT_LAYER]
+                    [--output_layer OUTPUT_LAYER] [--input_mean INPUT_MEAN]
+                    [--input_std INPUT_STD] --output_preds OUTPUT_PREDS
+                    --output_stats OUTPUT_STATS
                     [--logging_verbosity {DEBUG,INFO,WARN,ERROR,FATAL}]
 
   Generates statistics in CSV format by recording predictions on images list
@@ -206,6 +207,8 @@ All scripts support `--help` option to list all available options.
                           The JSON file with images per sub-directory. (default:
                           None)
     --graph GRAPH         graph/model to be executed (default: None)
+    --graph_type TYPE     the type of graph/model to be loaded (default:
+                          tensorflow)
     --info INFO           name of json file with model info (dimensions,
                           layers); overrides input_height/input_width/labels/inp
                           ut_layer/output_layer options (default: None)
