@@ -1,11 +1,10 @@
 Changelog
 =========
 
-0.0.13 (????-??-??)
+0.0.13 (2021-04-16)
 -------------------
 
 - added ability to `stats.py` to output confusion matrix as well (`--output_conf_matrix` and `--conf_matrix_type`)
-- ...
 
 
 0.0.12 (2021-04-14)
