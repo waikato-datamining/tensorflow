@@ -25,3 +25,8 @@ Steps:
 * enter release notes, i.e., significant changes since last release
 * upload `wai.tfimageclass-X.Y.Z.tar.gz` previously generated with `setyp.py`
 * publish
+
+
+# Docker
+If necessary, update the docker images for CPU and GPU and deploy them
+(remove them from the local registry before deploying them).
