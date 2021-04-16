@@ -21,6 +21,7 @@ from wai.tfimageclass.utils.train_utils import load_image_list, locate_sub_dirs,
 from wai.tfimageclass.utils.prediction_utils import tf_load_model, tf_read_tensor_from_image_file, tf_tensor_to_probs, load_labels, tf_top_k_probs, load_info_file
 from wai.tfimageclass.utils.prediction_utils import tflite_load_model, tflite_read_tensor_from_image_file, tflite_tensor_to_probs, tflite_top_k_probs
 from wai.tfimageclass.utils.logging_utils import logging_level_verbosity
+from scm.matrix import ConfusionMatrix, MatrixType
 
 
 def init_counts(labels):
@@ -41,7 +42,7 @@ def init_counts(labels):
 
 
 def generate_stats(sess, graph, graph_type, input_layer, output_layer, labels, image_dir, image_file_list, height, width, mean, std,
-                   output_preds, output_stats, logging_verbosity):
+                   output_preds, output_stats, logging_verbosity, output_conf_matrix=None, conf_matrix_type=MatrixType.COUNTS):
     """
     Evaluates the built model on images form the specified directory, which can be limited to file listed
     in the image file list.
@@ -76,6 +77,10 @@ def generate_stats(sess, graph, graph_type, input_layer, output_layer, labels, i
     :type output_stats: str
     :param logging_verbosity: the level ('DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL')
     :type logging_verbosity: str
+    :param output_conf_matrix: the file to store the confusion matrix in, ignored if None
+    :type output_conf_matrix: str
+    :param conf_matrix_type: the type of confusion matrix to generate
+    :type conf_matrix_type: MatrixType
     """
 
     logging_verbosity = logging_level_verbosity(logging_verbosity)
@@ -100,6 +105,8 @@ def generate_stats(sess, graph, graph_type, input_layer, output_layer, labels, i
     total = init_counts(labels)
     correct = init_counts(labels)
     incorrect = init_counts(labels)
+    actual = []
+    predicted = []
     with open(output_preds, "w") as pf:
         pf.write("image,actual,predicted,error,probability\n")
         for label_name in sub_dirs:
@@ -118,6 +125,8 @@ def generate_stats(sess, graph, graph_type, input_layer, output_layer, labels, i
                     probs = tf_tensor_to_probs(graph, input_layer, output_layer, tensor, sess=sess)
                     for i in tf_top_k_probs(probs, 1):
                         pf.write("%s,%s,%s,%s,%f\n" %(full_name, label_name, labels[i], label_name != labels[i], probs[i]))
+                        actual.append(label_name)
+                        predicted.append(labels[i])
                         if label_name != labels[i]:
                             incorrect[''] += 1
                             incorrect[label_name] += 1
@@ -130,6 +139,8 @@ def generate_stats(sess, graph, graph_type, input_layer, output_layer, labels, i
                     top_probs = tflite_top_k_probs(probs, 1)
                     for i in range(len(top_probs)):
                         pf.write("%s,%s,%s,%s,%f\n" %(full_name, label_name, labels[top_probs[i]], label_name != labels[top_probs[i]], float(probs[0][top_probs[i]])))
+                        actual.append(label_name)
+                        predicted.append(labels[top_probs[i]])
                         if label_name != labels[i]:
                             incorrect[''] += 1
                             incorrect[label_name] += 1
@@ -163,6 +174,11 @@ def generate_stats(sess, graph, graph_type, input_layer, output_layer, labels, i
             sf.write("%s%s,%d\n" % (prefix, "number of incorrect predictions", num_incorrect))
             sf.write("%s%s,%f\n" % (prefix, "accuracy", acc))
 
+    if output_conf_matrix is not None:
+        matrix = ConfusionMatrix(actual=actual, predicted=predicted)
+        matrix_res = matrix.generate(matrix_type=conf_matrix_type)
+        matrix_res.to_csv(output_file=output_conf_matrix)
+
 
 def main(args=None):
     """
@@ -190,6 +206,8 @@ def main(args=None):
     parser.add_argument('--output_preds', type=str, required=True, help='The CSV file to store the predictions in.')
     parser.add_argument('--output_stats', type=str, required=True, help='The CSV file to store the statistics in.')
     parser.add_argument('--logging_verbosity', type=str, default='INFO', choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'], help='How much logging output should be produced.')
+    parser.add_argument('--output_conf_matrix', type=str, required=False, default=None, help='The (optional) CSV file to store the confusion matrix in.')
+    parser.add_argument('--conf_matrix_type', dest='conf_matrix_type', metavar='TYPE', required=False, default=MatrixType.COUNTS, choices=list(MatrixType), type=MatrixType.argparse, help='The type of confusion matrix to generate.')
     args = parser.parse_args(args=args)
 
     # values from options
@@ -214,13 +232,15 @@ def main(args=None):
             generate_stats(sess, graph, args.graph_type, input_layer, output_layer, labels, args.image_dir,
                            args.image_list,
                            input_height, input_width, args.input_mean, args.input_std,
-                           args.output_preds, args.output_stats, args.logging_verbosity)
+                           args.output_preds, args.output_stats, args.logging_verbosity,
+                           output_conf_matrix=args.output_conf_matrix, conf_matrix_type=args.conf_matrix_type)
     elif args.graph_type == "tflite":
         graph = tflite_load_model(args.graph)
         generate_stats(None, graph, args.graph_type, input_layer, output_layer, labels, args.image_dir,
                        args.image_list,
                        input_height, input_width, args.input_mean, args.input_std,
-                       args.output_preds, args.output_stats, args.logging_verbosity)
+                       args.output_preds, args.output_stats, args.logging_verbosity,
+                       output_conf_matrix=args.output_conf_matrix, conf_matrix_type=args.conf_matrix_type)
     else:
         raise Exception("Unhandled graph type: %s" % args.graph_type)
 

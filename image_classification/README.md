@@ -195,6 +195,8 @@ All scripts support `--help` option to list all available options.
                     [--input_std INPUT_STD] --output_preds OUTPUT_PREDS
                     --output_stats OUTPUT_STATS
                     [--logging_verbosity {DEBUG,INFO,WARN,ERROR,FATAL}]
+                    [--output_conf_matrix OUTPUT_CONF_MATRIX]
+                    [--conf_matrix_type TYPE]
 
   Generates statistics in CSV format by recording predictions on images list
   files.
@@ -234,6 +236,12 @@ All scripts support `--help` option to list all available options.
     --logging_verbosity {DEBUG,INFO,WARN,ERROR,FATAL}
                           How much logging output should be produced. (default:
                           INFO)
+    --output_conf_matrix OUTPUT_CONF_MATRIX
+                          The (optional) CSV file to store the confusion matrix
+                          in. (default: None)
+    --conf_matrix_type TYPE
+                          The type of confusion matrix to generate. (default:
+                          counts)
   ```
 
 ### Training data

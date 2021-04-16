@@ -40,6 +40,7 @@ setup(
         "numpy",
         "pillow",
         "tensorflow_hub",
+        "simple-confusion-matrix",
     ],
     entry_points={
         "console_scripts": [
