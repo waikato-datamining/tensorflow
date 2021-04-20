@@ -1,5 +1,5 @@
 # Copyright 2015 The TensorFlow Authors. All Rights Reserved.
-# Copyright 2019 University of Waikato, Hamilton, NZ.
+# Copyright 2019-2021 University of Waikato, Hamilton, NZ.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,17 +21,18 @@ import os
 import tensorflow as tf
 
 
-def dir_to_label(dir_name):
+def dir_to_label(dir_name, replace_chars="[^a-z0-9_\\-]+"):
     """
-    Turns the directory name into a label (only alphanumerc and lowercase).
+    Turns the directory name into a label (removes unwanted chars).
 
     :param dir_name: the directory to convert
     :type dir_name: str
+    :param replace_chars: the regular expression to use for replacing unwanted chars with blanks
+    :type replace_chars: str
     :return: the label name
     :rtype: str
     """
-
-    return re.sub(r'[^a-z0-9]+', ' ', dir_name.lower())
+    return re.sub(r'%s' % replace_chars, ' ', dir_name.lower())
 
 
 def save_image_list(image_lists, image_lists_dir):
@@ -69,13 +70,15 @@ def load_image_list(image_list):
     return result
 
 
-def locate_sub_dirs(image_dir):
+def locate_sub_dirs(image_dir, replace_chars="[^a-z0-9_\\-]+"):
     """
     Locates the sub directories in the specified directory and generates a dictionary with the label
     generated from the sub directory associated with the corresponding path.
 
     :param image_dir: the directory to scan for sub dirs
     :type image_dir: str
+    :param replace_chars: the regular expression to use for replacing unwanted chars with blanks
+    :type replace_chars: str
     :return: the dictionary of label -> sub-dir relation
     :rtype: dict
     """
@@ -85,7 +88,7 @@ def locate_sub_dirs(image_dir):
     for sub_dir in sub_dirs:
         if sub_dir == image_dir:
             continue
-        result[dir_to_label(os.path.basename(sub_dir))] = sub_dir
+        result[dir_to_label(os.path.basename(sub_dir), replace_chars=replace_chars)] = sub_dir
     return result
 
 

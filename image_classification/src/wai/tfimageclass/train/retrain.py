@@ -1,5 +1,5 @@
 # Copyright 2015 The TensorFlow Authors. All Rights Reserved.
-# Copyright 2019 University of Waikato, Hamilton, NZ.
+# Copyright 2019-2021 University of Waikato, Hamilton, NZ.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -145,7 +145,7 @@ FAKE_QUANT_OPS = ('FakeQuantWithMinMaxVars',
                   'FakeQuantWithMinMaxVarsPerChannel')
 
 
-def create_image_lists(image_dir, testing_percentage, validation_percentage):
+def create_image_lists(image_dir, testing_percentage, validation_percentage, replace_chars="[^a-z0-9_\\-]+"):
     """Builds a list of training images from the file system.
 
     Analyzes the sub folders in the image directory, splits them into stable
@@ -156,6 +156,7 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
       image_dir: String path to a folder containing subfolders of images.
       testing_percentage: Integer percentage of the images to reserve for tests.
       validation_percentage: Integer percentage of images reserved for validation.
+      replace_chars: String the regular expression for replacing unwanted chars with blanks
 
     Returns:
       An OrderedDict containing an entry for each label subfolder, with images
@@ -166,7 +167,7 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
         tf.compat.v1.logging.error("Image directory '" + image_dir + "' not found.")
         return None
     result = collections.OrderedDict()
-    sub_dirs = locate_sub_dirs(image_dir)
+    sub_dirs = locate_sub_dirs(image_dir, replace_chars=replace_chars)
     for label_name in sub_dirs:
         sub_dir = sub_dirs[label_name]
         if sub_dir.endswith("/"):
@@ -973,7 +974,7 @@ def run(_):
 
     # Look at the folder structure, and create lists of all the images.
     image_lists = create_image_lists(FLAGS.image_dir, FLAGS.testing_percentage,
-                                     FLAGS.validation_percentage)
+                                     FLAGS.validation_percentage, replace_chars=FLAGS.replace_chars)
     class_count = len(image_lists.keys())
     if class_count == 0:
         tf.compat.v1.logging.error('No valid folders of images found at ' + FLAGS.image_dir)
@@ -1168,6 +1169,7 @@ def main(args=None):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--image_dir', type=str, default='', help='Path to folders of labeled images.')
     parser.add_argument('--image_lists_dir', type=str, required=False, help='Where to save the lists of images used for training, validation and testing (in JSON); ignored if directory does not exist.')
+    parser.add_argument('--replace_chars', type=str, required=False, default="[^a-z0-9_\\-]+", help='The regular expression to use for replacing characters with blanks in labels.')
     parser.add_argument('--output_graph', type=str, default='/tmp/output_graph.pb', help='Where to save the trained graph.')
     parser.add_argument('--output_info', type=str, required=False, help='Whether to save the (optional) information about the graph, like image dimensions and layers, (in JSON); ignored if not supplied.')
     parser.add_argument('--intermediate_output_graphs_dir', type=str, default='/tmp/intermediate_graph/', help='Where to save the intermediate graphs.')
