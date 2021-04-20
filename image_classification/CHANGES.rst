@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.0.14 (????-??-??)
+0.0.14 (2021-04-20)
 -------------------
 
 - added `--replace_chars` option to `retrain.py` to better manage what characters get replaced with blanks in labels
