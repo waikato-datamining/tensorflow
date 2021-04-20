@@ -7,7 +7,7 @@ RUN apt-get update && \
         rm -rf /var/lib/apt/lists/* && \
         pip install Cython && \
         pip install tensorflow-hub==0.9.0 && \
-        pip install wai.tfimageclass==0.0.13 && \
+        pip install wai.tfimageclass==0.0.14 && \
         pip uninstall -y numpy && \
         pip install "numpy<=1.17.4" && \
         rm -Rf /root/.cache/pip

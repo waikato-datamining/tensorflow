@@ -18,7 +18,7 @@ RUN apt-get update && \
         ln -s /usr/bin/python3 /usr/bin/python && \
         pip install Cython && \
         pip install tensorflow-hub==0.9.0 && \
-        pip install wai.tfimageclass==0.0.13 && \
+        pip install wai.tfimageclass==0.0.14 && \
         pip uninstall -y numpy && \
         pip install "numpy<=1.17.4" && \
         pip install tensorflow==1.14.0 && \
