@@ -1178,8 +1178,8 @@ def main(args=None):
     parser.add_argument('--summaries_dir', type=str, default='/tmp/retrain_logs', help='Where to save summary logs for TensorBoard.')
     parser.add_argument('--training_steps', type=int, default=4000, help='How many training steps to run before ending.')
     parser.add_argument('--learning_rate', type=float, default=0.01, help='How large a learning rate to use when training.')
-    parser.add_argument('--testing_percentage', type=int, default=10, help='What percentage of images to use as a test set.')
-    parser.add_argument('--validation_percentage', type=int, default=10, help='What percentage of images to use as a validation set.')
+    parser.add_argument('--testing_percentage', type=int, default=10, help='What percentage of images to use as a test set (used for final evaluation).')
+    parser.add_argument('--validation_percentage', type=int, default=10, help='What percentage of images to use as a validation set (used for evaluation during training).')
     parser.add_argument('--eval_step_interval', type=int, default=10, help='How often to evaluate the training results.')
     parser.add_argument('--train_batch_size', type=int, default=100, help='How many images to train on at a time.')
     parser.add_argument('--test_batch_size', type=int, default=-1, help="""

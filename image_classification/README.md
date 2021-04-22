@@ -59,7 +59,8 @@ All scripts support `--help` option to list all available options.
 
 ### Train
 
-* For training, use module `wai.tfimageclass.train.retrain` or console script `tfic-retrain`
+* For training, use module `wai.tfimageclass.train.retrain` or console script `tfic-retrain` (validation set is
+  used during training and test set for generating a final evaluation):
 
   ```
   usage: tfic-retrain [-h] [--image_dir IMAGE_DIR]
