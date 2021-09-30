@@ -1,4 +1,3 @@
 #!/bin/bash
 
-cd /opt/image-segmentation-keras
-python predict.py "$@"
+python /opt/image-segmentation-keras/predict.py "$@"

@@ -1,4 +1,3 @@
 #!/bin/bash
 
-cd /opt/image-segmentation-keras
-python convert.py "$@"
+python /opt/image-segmentation-keras/convert.py "$@"
