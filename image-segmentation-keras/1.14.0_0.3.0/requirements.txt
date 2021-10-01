@@ -4,4 +4,6 @@ numpy<=1.17.4
 Keras<2.3.0
 keras-segmentation==0.3.0
 python-image-complete
-simple-file-poller>=0.0.8
+simple-file-poller>=0.0.9
+redis
+redis-docker-harness==0.0.1

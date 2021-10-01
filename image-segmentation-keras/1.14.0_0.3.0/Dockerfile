@@ -14,14 +14,17 @@ RUN apt-get update && \
 	pip install "python-image-complete" && \
 	pip install "simple-file-poller>=0.0.9" && \
 	rm -Rf /root/.cache/pip
-	
+RUN pip install --no-cache-dir redis "redis-docker-harness==0.0.1"
+
 COPY bash.bashrc /etc/bash.bashrc
 COPY keras_seg /usr/bin/keras_seg
 COPY keras_seg_conv /usr/bin/keras_seg_conv
 COPY keras_seg_poll /usr/bin/keras_seg_poll
+COPY keras_seg_redis /usr/bin/keras_seg_redis
 COPY keras_seg_train /usr/bin/keras_seg_train
 COPY convert.py /opt/image-segmentation-keras/convert.py
 COPY predict.py /opt/image-segmentation-keras/predict.py
+COPY predict_redis.py /opt/image-segmentation-keras/predict_redis.py
 COPY train.py /opt/image-segmentation-keras/train.py
 
 ENV PYTHONPATH=/opt/image-segmentation-keras

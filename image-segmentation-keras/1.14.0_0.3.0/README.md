@@ -130,6 +130,7 @@ map the cache directory used in the container to a directory on the host.
 * `keras_seg` - shortcut for `python -m keras_segmentation`
 * `keras_seg_conv` - converts indexed PNGs into PNG files with the indices in the blue channel 
 * `keras_seg_poll` - for continuous predictions, monitors input directory for new images to process 
+* `keras_seg_redis` - for continuous predictions via redis 
 * `keras_seg_train` - like `keras_seg train` but with more options exposed 
 
 
