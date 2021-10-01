@@ -204,7 +204,7 @@ keras_seg train \
   --model_name=resnet50_unet
 ```
 
-### Predict
+### Predict (file polling)
 
 Once trained, we can use our model to continuously process images and generate predictions. New images get picked up
 from `/predictions/in` and the generated prediction images (and original input images) get output in `/predictions/out`:
@@ -232,4 +232,20 @@ keras_seg_poll \
 Use `--use_watchdog` to react to file creation events rather than using fixed-interval polling.
 
 Using `--remove_background` (and no colors), you can output the original image with only the 
-identified segments left over (the image segmentation regions are used as a mask).  
+identified segments left over (the image segmentation regions are used as a mask).
+
+### Predict (via redis)
+
+In case of using [Redis](https://redis.io/), you have to provide the channels for listening for incoming
+image data (`--redis_in`) and for broadcasting the result of the image segmentation (`--redis_out`):
+
+```commandline
+keras_seg_redis \
+  --checkpoints_path /output/cooldataset/ \
+  --colors 0,0,0,255,0,0,0,0,255,0,255,0,204,204,204 \
+  --redis_in image_in \
+  --redis_out image_out
+```
+
+You can use [simple-redis-helper](https://pypi.org/project/simple-redis-helper/) to broadcast images 
+and listen for image segmentation results when testing.
