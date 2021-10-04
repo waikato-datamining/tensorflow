@@ -109,9 +109,7 @@ def process_image(msg_cont):
 
 
 if __name__ == '__main__':
-    parser = create_parser('Keras Image Segmentation - Prediction (Redis)\n'
-                           + "Allows continuous processing of images appearing in the input directory, storing the predictions "
-                           + "in the output directory. Input files can either be moved to the output directory or deleted.",
+    parser = create_parser('Keras Image Segmentation - Prediction (Redis)',
                            prog="keras_seg_redis", prefix="redis_")
     parser.add_argument('--checkpoints_path', help='Directory with checkpoint file(s) and _config.json (checkpoint names: ".X" with X=0..n)', required=True, default=None)
     parser.add_argument('--memory_fraction', type=float, help='Memory fraction to use by tensorflow, i.e., limiting memory usage', required=False, default=0.5)
