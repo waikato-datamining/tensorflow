@@ -44,11 +44,16 @@ setup(
         "pycocotools",
         "pyyaml",
         "opex",
+        "python-image-complete",
+        "simple-file-poller>=0.0.9",
+        "redis",
+        "redis-docker-harness==0.0.1",
     ],
     entry_points={
         "console_scripts": [
             "tmm-od-train=wai.tmm.objdet.train:sys_main",
             "tmm-od-predict=wai.tmm.objdet.predict:sys_main",
+            "tmm-od-predict-redis=wai.tmm.objdet.predict_redis:sys_main",
         ]
     }
 )

@@ -60,3 +60,33 @@ optional arguments:
   --threshold 0-1  The probability threshold to use. (default: 0.3)
   --output FILE    The JSON file to store the predictions in. (default: None)
 ```
+
+For using a Redis backend, you can use the `tmm-od-predict-redis` tool:
+
+```
+usage: tmm-od-predict-redis [-h] [--redis_host HOST] [--redis_port PORT]
+                            [--redis_db DB] --redis_in CHANNEL --redis_out
+                            CHANNEL --model FILE --labels FILE
+                            [--threshold 0-1] [--verbose]
+
+Uses a tflite object detection model to make predictions on images received
+via Redis and sends predictions back to Redis.
+
+optional arguments:
+  -h, --help           show this help message and exit
+  --redis_host HOST    The redis server to connect to (default: localhost)
+  --redis_port PORT    The port the redis server is listening on (default:
+                       6379)
+  --redis_db DB        The redis database to use (default: 0)
+  --redis_in CHANNEL   The redis channel to receive the data from (default:
+                       None)
+  --redis_out CHANNEL  The redis channel to publish the processed data on
+                       (default: None)
+  --model FILE         The tflite object detection model to use. (default:
+                       None)
+  --labels FILE        The text file with the labels (one label per line).
+                       (default: None)
+  --threshold 0-1      The probability threshold to use. (default: 0.3)
+  --verbose            Whether to output debugging information. (default:
+                       False)
+```
