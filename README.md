@@ -9,6 +9,7 @@ Currently available:
   and making predictions with them
 * [object detection](object_detection) - for building Docker images of TensorFlow's 
   object detection framework
+* [tflite_model_maker](tflite_model_maker) - library for training models and making predictions using tflite's model maker
 * [tfutils](tfutils) - library for some common TensorFlow operations
 
 For generating tfrecords, please see the [wai.annotations](https://github.com/waikato-ufdl/wai-annotations) 
