@@ -41,7 +41,7 @@ setup(
         "numpy<1.20.0",
         "tflite-model-maker>=0.3.0,<0.3.2",
         "tensorflow>=2.4.0,<2.5.0",
-        "pycocotools",
+        "wai.pycocotools",
         "pyyaml",
         "opex",
         "python-image-complete",
