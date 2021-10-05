@@ -7,7 +7,11 @@ https://github.com/tensorflow/tensorflow/blob/7d7cab61b0fe1bf8e01890fda9161c0f0c
 
 ## Installation
 
-TODO
+You can install the tools in a virtual environment as follows:
+
+```commandline
+pip install wai.tflite_model_maker
+```
 
 ## Usage
 
