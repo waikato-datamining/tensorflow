@@ -1,5 +1,5 @@
 import argparse
-import os
+import json
 import traceback
 
 import tensorflow as tf
@@ -14,9 +14,31 @@ from tflite_model_maker import object_detector
 
 from wai.tmm.common.hyper import add_hyper_parameters
 from wai.tmm.common.io import model_path_name
+from wai.tmm.common.optimize import OPTIMIZATIONS, OPTIMIZATION_NONE, configure_optimization
 
 
-def train(model_type, annotations, output, num_epochs=None, hyper_params=None, batch_size=8, evaluate=False):
+def write_labels(data, output_dir):
+    """
+    Writes the labels to disk.
+    
+    :param data: the training data to get the labels from
+    :param output_dir: the output directory to store the labels in (labels.json, labels.txt)
+    """
+    keys = list(data.label_map.keys())
+    keys.sort()
+    labels = {}
+    for k in keys:
+        labels[k] = str(data.label_map[k])
+    with open(output_dir + "/labels.json", "w") as f:
+        json.dump(labels, f)
+    with open(output_dir + "/labels.txt", "w") as f:
+        for k in keys:
+            f.write(labels[k])
+            f.write("\n")
+
+
+def train(model_type, annotations, output, num_epochs=None, hyper_params=None, batch_size=8, evaluate=False,
+          optimization=OPTIMIZATION_NONE):
     """
     Trains an object detection model.
 
@@ -34,17 +56,20 @@ def train(model_type, annotations, output, num_epochs=None, hyper_params=None, b
     :type batch_size: int
     :param evaluate: whether to evaluate the model if there is a test dataset in the data
     :type evaluate: bool
+    :param optimization: how to optimize the model when saving it
+    :type optimization: str
     """
     spec = model_spec.get(model_type)
     add_hyper_parameters(spec, hyper_params)
     if num_epochs is not None:
         spec.config.num_epochs = num_epochs
 
+    output_dir, output_name = model_path_name(output)
     train_data, validation_data, test_data = object_detector.DataLoader.from_csv(annotations)
     model = object_detector.create(train_data, model_spec=spec, batch_size=batch_size, train_whole_model=True,
                                    validation_data=validation_data)
-    output_dir, output_name = model_path_name(output)
-    model.export(export_dir=output_dir, tflite_filename=output_name)
+    model.export(export_dir=output_dir, tflite_filename=output_name, quantization_config=configure_optimization(optimization))
+    write_labels(train_data, output_dir)
     if evaluate:
         results = model.evaluate(test_data)
         for k in results:
@@ -68,12 +93,14 @@ def main(args=None):
     parser.add_argument('--hyper_params', metavar="FILE", type=str, required=False, help='The YAML file with hyper parameter settings.')
     parser.add_argument('--num_epochs', metavar="INT", type=int, default=None, help='The number of epochs to use for training (can also be supplied through hyper parameters).')
     parser.add_argument('--batch_size', metavar="INT", type=int, default=8, help='The batch size to use.')
-    parser.add_argument('--output', metavar="DIR_OR_FILE", type=str, required=True, help='The directory or filename to store the model under (uses model.tflite if dir).')
+    parser.add_argument('--output', metavar="DIR_OR_FILE", type=str, required=True, help='The directory or filename to store the model under (uses model.tflite if dir). The labels gets stored in "labels.txt" in the determined directory.')
+    parser.add_argument('--optimization', type=str, choices=OPTIMIZATIONS, default=OPTIMIZATION_NONE, help='How to optimize the model when saving it.')
     parser.add_argument('--evaluate', action="store_true", help='If test data is part of the annotations, then the resulting model can be evaluated against it.')
     parsed = parser.parse_args(args=args)
 
     train(parsed.model_type, parsed.annotations, parsed.output, num_epochs=parsed.num_epochs,
-          hyper_params=parsed.hyper_params, batch_size=parsed.batch_size, evaluate=parsed.evaluate)
+          hyper_params=parsed.hyper_params, batch_size=parsed.batch_size, evaluate=parsed.evaluate,
+          optimization=parsed.optimization)
 
 
 def sys_main() -> int:
