@@ -10,33 +10,6 @@ from absl import logging
 logging.set_verbosity(logging.ERROR)
 
 
-def load_model(model):
-    """
-    Loads the model.
-
-    :param model: the model to load
-    :type model: str
-    :return: the interpreter
-    """
-    interpreter = tf.lite.Interpreter(model_path=model)
-    interpreter.allocate_tensors()
-    return interpreter
-
-
-def load_classes(labels):
-    """
-    Loads the labels from the text file (one label per line).
-
-    :param labels: the file with the labels
-    :type labels: str
-    :return: the list of labels
-    :rtype: list
-    """
-    with open(labels, "r") as f:
-        classes = [x.strip() for x in f.readlines()]
-    return classes
-
-
 def preprocess_image(image_path, input_size):
     """
     Preprocess the input image to feed to the TFLite model.

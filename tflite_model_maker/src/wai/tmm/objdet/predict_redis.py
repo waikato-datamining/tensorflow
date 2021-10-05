@@ -2,7 +2,8 @@ import io
 import traceback
 
 from datetime import datetime
-from wai.tmm.objdet.predict_utils import load_model, load_classes, preprocess_image_bytes, detect_objects
+from wai.tmm.objdet.predict_utils import preprocess_image_bytes, detect_objects
+from wai.tmm.common.io import load_model, load_classes
 from rdh import Container, MessageContainer, create_parser, configure_redis, run_harness, log
 
 

@@ -4,8 +4,8 @@ import traceback
 from image_complete import auto
 from sfp import Poller
 
-from wai.tmm.objdet.predict_utils import load_model, load_classes, preprocess_image, detect_objects
-
+from wai.tmm.objdet.predict_utils import preprocess_image, detect_objects
+from wai.tmm.common.io import load_model, load_classes
 
 SUPPORTED_EXTS = [".jpg", ".jpeg", ".png"]
 """ supported file extensions (lower case with dot). """

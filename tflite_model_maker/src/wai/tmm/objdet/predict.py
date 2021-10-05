@@ -1,7 +1,8 @@
 import argparse
 import traceback
 
-from wai.tmm.objdet.predict_utils import load_model, load_classes, preprocess_image, detect_objects
+from wai.tmm.objdet.predict_utils import preprocess_image, detect_objects
+from wai.tmm.common.io import load_model, load_classes
 
 
 def predict(model, labels, image, threshold, output=None):
