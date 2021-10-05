@@ -13,7 +13,7 @@ You can install the tools in a virtual environment as follows:
 pip install wai.tflite_model_maker
 ```
 
-## Usage
+## Object detection
 
 ### Training
 
@@ -23,7 +23,7 @@ You can use the `tmm-od-train` tool to train an object detection model:
 usage: tmm-od-train [-h] --annotations FILE
                     [--model_type {efficientdet_lite0,efficientdet_lite1,efficientdet_lite2,efficientdet_lite3,efficientdet_lite4}]
                     [--hyper_params FILE] [--num_epochs INT]
-                    [--batch_size INT] --output_dir DIR [--evaluate]
+                    [--batch_size INT] --output DIR_OR_FILE [--evaluate]
 
 Trains an object detection model.
 
@@ -38,8 +38,8 @@ optional arguments:
   --num_epochs INT      The number of epochs to use for training (can also be
                         supplied through hyper parameters). (default: None)
   --batch_size INT      The batch size to use. (default: 8)
-  --output_dir DIR      The directory to store the trained model in. (default:
-                        None)
+  --output DIR_OR_FILE  The directory or filename to store the model under
+                        (uses model.tflite if dir). (default: None)
   --evaluate            If test data is part of the annotations, then the
                         resulting model can be evaluated against it. (default:
                         False)
