@@ -1,7 +1,6 @@
 import argparse
 import os
 import traceback
-import yaml
 
 import tensorflow as tf
 assert tf.__version__.startswith('2')
@@ -14,6 +13,7 @@ from tflite_model_maker import model_spec
 from tflite_model_maker import object_detector
 
 from wai.tmm.common.hyper import add_hyper_parameters
+from wai.tmm.common.io import model_path_name
 
 
 def train(model_type, annotations, output, num_epochs=None, hyper_params=None, batch_size=8, evaluate=False):
@@ -43,12 +43,7 @@ def train(model_type, annotations, output, num_epochs=None, hyper_params=None, b
     train_data, validation_data, test_data = object_detector.DataLoader.from_csv(annotations)
     model = object_detector.create(train_data, model_spec=spec, batch_size=batch_size, train_whole_model=True,
                                    validation_data=validation_data)
-    if os.path.isdir(output):
-        output_dir = output
-        output_name = "model.tflite"
-    else:
-        output_dir = os.path.dirname(output)
-        output_name = os.path.basename(output)
+    output_dir, output_name = model_path_name(output)
     model.export(export_dir=output_dir, tflite_filename=output_name)
     if evaluate:
         results = model.evaluate(test_data)
