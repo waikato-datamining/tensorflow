@@ -1,4 +1,5 @@
 import argparse
+import os
 import traceback
 import yaml
 
@@ -12,8 +13,10 @@ logging.set_verbosity(logging.ERROR)
 from tflite_model_maker import model_spec
 from tflite_model_maker import object_detector
 
+from wai.tmm.common.hyper import add_hyper_parameters
 
-def train(model_type, annotations, output_dir, num_epochs=None, hyper_params=None, batch_size=8, evaluate=False):
+
+def train(model_type, annotations, output, num_epochs=None, hyper_params=None, batch_size=8, evaluate=False):
     """
     Trains an object detection model.
 
@@ -21,8 +24,8 @@ def train(model_type, annotations, output_dir, num_epochs=None, hyper_params=Non
     :type model_type: str
     :param annotations: the CSV file with annotations to use for trainin/validation
     :type annotations: str
-    :param output_dir: the output directory to store the model in
-    :type output_dir: str
+    :param output: the directory or filename to store the model under (uses model.tflite if dir)
+    :type output: str
     :param num_epochs: the number of epochs to use (default is 50), overrides num_epochs in hyper_params
     :type num_epochs: int
     :param hyper_params: the hyper parameters to override model's default ones with
@@ -33,16 +36,20 @@ def train(model_type, annotations, output_dir, num_epochs=None, hyper_params=Non
     :type evaluate: bool
     """
     spec = model_spec.get(model_type)
-    if hyper_params is not None:
-        for k in hyper_params:
-            setattr(spec.config, k, hyper_params[k])
+    add_hyper_parameters(spec, hyper_params)
     if num_epochs is not None:
         spec.config.num_epochs = num_epochs
 
     train_data, validation_data, test_data = object_detector.DataLoader.from_csv(annotations)
     model = object_detector.create(train_data, model_spec=spec, batch_size=batch_size, train_whole_model=True,
                                    validation_data=validation_data)
-    model.export(export_dir=output_dir)
+    if os.path.isdir(output):
+        output_dir = output
+        output_name = "model.tflite"
+    else:
+        output_dir = os.path.dirname(output)
+        output_name = os.path.basename(output)
+    model.export(export_dir=output_dir, tflite_filename=output_name)
     if evaluate:
         results = model.evaluate(test_data)
         for k in results:
@@ -66,17 +73,12 @@ def main(args=None):
     parser.add_argument('--hyper_params', metavar="FILE", type=str, required=False, help='The YAML file with hyper parameter settings.')
     parser.add_argument('--num_epochs', metavar="INT", type=int, default=None, help='The number of epochs to use for training (can also be supplied through hyper parameters).')
     parser.add_argument('--batch_size', metavar="INT", type=int, default=8, help='The batch size to use.')
-    parser.add_argument('--output_dir', metavar="DIR", type=str, required=True, help='The directory to store the trained model in.')
+    parser.add_argument('--output', metavar="DIR_OR_FILE", type=str, required=True, help='The directory or filename to store the model under (uses model.tflite if dir).')
     parser.add_argument('--evaluate', action="store_true", help='If test data is part of the annotations, then the resulting model can be evaluated against it.')
     parsed = parser.parse_args(args=args)
 
-    hyper_params = None
-    if parsed.hyper_params is not None:
-        with open(parsed.hyper_params, "r") as f:
-            hyper_params = yaml.safe_load(f)
-
-    train(parsed.model_type, parsed.annotations, parsed.output_dir, num_epochs=parsed.num_epochs,
-          hyper_params=hyper_params, batch_size=parsed.batch_size, evaluate=parsed.evaluate)
+    train(parsed.model_type, parsed.annotations, parsed.output, num_epochs=parsed.num_epochs,
+          hyper_params=parsed.hyper_params, batch_size=parsed.batch_size, evaluate=parsed.evaluate)
 
 
 def sys_main() -> int:
