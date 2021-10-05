@@ -53,6 +53,7 @@ setup(
         "console_scripts": [
             "tmm-od-train=wai.tmm.objdet.train:sys_main",
             "tmm-od-predict=wai.tmm.objdet.predict:sys_main",
+            "tmm-od-predict-poll=wai.tmm.objdet.predict_poll:sys_main",
             "tmm-od-predict-redis=wai.tmm.objdet.predict_redis:sys_main",
         ]
     }

@@ -61,6 +61,50 @@ optional arguments:
   --output FILE    The JSON file to store the predictions in. (default: None)
 ```
 
+For using a file-polling approach for batch-processing images, you can use
+the `tmm-od-predict-poll` tool:
+
+```
+usage: tmm-od-predict-poll [-h] --model FILE --labels FILE --prediction_in
+                           PREDICTION_IN --prediction_out PREDICTION_OUT
+                           [--prediction_tmp PREDICTION_TMP]
+                           [--poll_wait POLL_WAIT] [--continuous]
+                           [--use_watchdog]
+                           [--watchdog_check_interval WATCHDOG_CHECK_INTERVAL]
+                           [--delete_input] [--threshold 0-1] [--verbose]
+                           [--quiet]
+
+Uses an object detection model to make predictions on a single image.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --model FILE          The tflite object detection model to use. (default:
+                        None)
+  --labels FILE         The text file with the labels (one label per line).
+                        (default: None)
+  --prediction_in PREDICTION_IN
+                        Path to the test images (default: None)
+  --prediction_out PREDICTION_OUT
+                        Path to the output csv files folder (default: None)
+  --prediction_tmp PREDICTION_TMP
+                        Path to the temporary csv files folder (default: None)
+  --poll_wait POLL_WAIT
+                        poll interval in seconds when not using watchdog mode
+                        (default: 1.0)
+  --continuous          Whether to continuously load test images and perform
+                        prediction (default: False)
+  --use_watchdog        Whether to react to file creation events rather than
+                        performing fixed-interval polling (default: False)
+  --watchdog_check_interval WATCHDOG_CHECK_INTERVAL
+                        check interval in seconds for the watchdog (default:
+                        10.0)
+  --delete_input        Whether to delete the input images rather than move
+                        them to --prediction_out directory (default: False)
+  --threshold 0-1       The probability threshold to use. (default: 0.3)
+  --verbose             Whether to output more logging info (default: False)
+  --quiet               Whether to suppress output (default: False)
+```
+
 For using a Redis backend, you can use the `tmm-od-predict-redis` tool:
 
 ```
