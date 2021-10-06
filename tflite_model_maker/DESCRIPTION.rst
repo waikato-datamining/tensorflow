@@ -1,6 +1,13 @@
-tflite model maker command-line utilities.
+The *wai.tflite_model_maker* library offers command-line tools for training tflite
+models and applying them.
 
-Based on Jupyter Notebook located here:
+The following domains are supported:
 
-https://github.com/tensorflow/tensorflow/blob/7d7cab61b0fe1bf8e01890fda9161c0f0c6e1a1a/tensorflow/lite/g3doc/tutorials/model_maker_object_detection.ipynb
+* image classification
+* object detection
 
+For making predictions, the following approaches are available:
+
+* single image
+* batch/continuous processing using file-polling
+* continuous processing via a Redis backend (for receiving images and sending predictions back to)
