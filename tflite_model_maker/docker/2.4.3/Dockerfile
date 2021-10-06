@@ -12,6 +12,9 @@ RUN apt-get update && \
         rm -Rf /root/.cache/pip && \
         rm -rf /var/lib/apt/lists/*
 
+# https://stackoverflow.com/questions/59290386/runtimeerror-at-cannot-cache-function-shear-dense-no-locator-available-fo
+ENV NUMBA_CACHE_DIR=/tmp
+
 COPY bash.bashrc /etc/bash.bashrc
 
 WORKDIR /
