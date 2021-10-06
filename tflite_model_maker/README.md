@@ -45,7 +45,8 @@ usage: tmm-ic-train [-h] --images DIR
                     [--optimization {none,float16,dynamic}] [--validation 0-1]
                     [--testing 0-1]
 
-Trains a tflite image classification model.
+Trains a tflite image classification model. For hyper parameters, see:
+https://www.tensorflow.org/lite/tutorials/model_maker_image_classification
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -194,7 +195,8 @@ usage: tmm-od-train [-h] --annotations FILE
                     [--batch_size INT] --output DIR_OR_FILE
                     [--optimization {none,float16,dynamic}] [--evaluate]
 
-Trains an object detection model.
+Trains a tflite object detection model. For hyper parameters, see:
+https://www.tensorflow.org/lite/tutorials/model_maker_object_detection
 
 optional arguments:
   -h, --help            show this help message and exit

@@ -85,7 +85,9 @@ def main(args=None):
     """
 
     parser = argparse.ArgumentParser(
-        description="Trains a tflite object detection model.",
+        description="Trains a tflite object detection model.\n"
+                    + "For hyper parameters, see:\n"
+                    + "https://www.tensorflow.org/lite/tutorials/model_maker_object_detection",
         prog="tmm-od-train",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--annotations', metavar="FILE", type=str, required=True, help='The CSV file with the annotations.')

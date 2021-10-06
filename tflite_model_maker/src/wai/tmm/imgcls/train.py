@@ -11,7 +11,7 @@ logging.set_verbosity(logging.ERROR)
 from tflite_model_maker import model_spec
 from tflite_model_maker import image_classifier
 
-from wai.tmm.common.hyper import add_hyper_parameters
+from wai.tmm.common.hyper import load_hyper_parameters
 from wai.tmm.common.io import model_path_name
 from wai.tmm.common.optimize import OPTIMIZATIONS, OPTIMIZATION_NONE, configure_optimization
 
@@ -53,10 +53,9 @@ def train(model_type, image_dir, output, num_epochs=None, hyper_params=None, bat
     :param optimization: how to optimize the model when saving it
     :type optimization: str
     """
-    spec = model_spec.get(model_type)
-    add_hyper_parameters(spec, hyper_params)
+    hyper_params = load_hyper_parameters(hyper_params)
     if num_epochs is not None:
-        spec.config.num_epochs = num_epochs
+        hyper_params["epochs"] = num_epochs
 
     data = image_classifier.DataLoader.from_folder(image_dir, shuffle=True)
     train_data, val_test_data = data.split(1.0 - (validation + testing))
@@ -66,7 +65,7 @@ def train(model_type, image_dir, output, num_epochs=None, hyper_params=None, bat
         validation_data = val_test_data
         test_data = None
     model = image_classifier.create(train_data, model_spec=model_spec.get(model_type), batch_size=batch_size,
-                                    validation_data=validation_data)
+                                    validation_data=validation_data, **hyper_params)
     output_dir, output_name = model_path_name(output)
     model.export(export_dir=output_dir, tflite_filename=output_name, quantization_config=configure_optimization(optimization))
     write_labels(train_data, output_dir)
@@ -86,7 +85,9 @@ def main(args=None):
     """
 
     parser = argparse.ArgumentParser(
-        description="Trains a tflite image classification model.",
+        description="Trains a tflite image classification model.\n"
+                    + "For hyper parameters, see:\n"
+                    + "https://www.tensorflow.org/lite/tutorials/model_maker_image_classification",
         prog="tmm-ic-train",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--images', metavar="DIR", type=str, required=True, help='The directory with images (with sub-dirs containing images for separate class).')
