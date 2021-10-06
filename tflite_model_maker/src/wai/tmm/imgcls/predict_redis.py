@@ -2,7 +2,7 @@ import io
 import traceback
 
 from datetime import datetime
-from wai.tmm.objdet.predict_utils import detect_objects
+from wai.tmm.imgcls.predict_utils import classify_image
 from wai.tmm.common.predict_utils import preprocess_image_bytes
 from wai.tmm.common.io import load_model, load_classes
 from rdh import Container, MessageContainer, create_parser, configure_redis, run_harness, log
@@ -19,12 +19,12 @@ def process_image(msg_cont):
 
     try:
         start_time = datetime.now()
-        _, input_height, input_width, _ = config.model.get_input_details()[0]['shape']
 
+        _, input_height, input_width, _ = config.model.get_input_details()[0]['shape']
         image = io.BytesIO(msg_cont.message['data']).getvalue()
         preprocessed_image, original_image = preprocess_image_bytes(image, (input_height, input_width))
-        image_height, image_width, _ = original_image.shape
-        results = detect_objects(config.model, preprocessed_image, (image_height, image_width), threshold=config.threshold, labels=config.labels)
+        results = classify_image(config.model, preprocessed_image, threshold=config.threshold, labels=config.labels,
+                                 mean=config.mean, stdev=config.stdev)
 
         msg_cont.params.redis.publish(msg_cont.params.channel_out, results.to_json_string())
 
@@ -48,10 +48,12 @@ def main(args=None):
     :type args: list
     """
 
-    parser = create_parser("Uses a tflite object detection model to make predictions on images received via Redis and sends predictions back to Redis.",
-                           prog="tmm-od-predict-redis", prefix="redis_")
+    parser = create_parser("Uses a tflite image classification model to make predictions on images received via Redis and sends predictions back to Redis.",
+                           prog="tmm-ic-predict-redis", prefix="redis_")
     parser.add_argument('--model', metavar="FILE", type=str, required=True, help='The tflite object detection model to use.')
     parser.add_argument('--labels', metavar="FILE", type=str, required=True, help='The text file with the labels (one label per line).')
+    parser.add_argument('--mean', metavar="NUM", type=float, required=False, default=0.0, help='The mean to use for the input image.')
+    parser.add_argument('--stdev', metavar="NUM", type=float, required=False, default=255.0, help='The stdev to use for the input image.')
     parser.add_argument('--threshold', metavar="0-1", type=float, required=False, default=0.3, help='The probability threshold to use.')
     parser.add_argument('--verbose', action="store_true", required=False, help='Whether to output debugging information.')
     parsed = parser.parse_args(args=args)
@@ -66,6 +68,8 @@ def main(args=None):
     config.model = model
     config.labels = labels
     config.threshold = parsed.threshold
+    config.mean = parsed.mean
+    config.stdev = parsed.stdev
     config.verbose = parsed.verbose
 
     params = configure_redis(parsed, config=config)

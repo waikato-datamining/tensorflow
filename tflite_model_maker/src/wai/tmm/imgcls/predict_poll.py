@@ -4,7 +4,7 @@ import traceback
 from image_complete import auto
 from sfp import Poller
 
-from wai.tmm.objdet.predict_utils import detect_objects
+from wai.tmm.imgcls.predict_utils import classify_image
 from wai.tmm.common.predict_utils import preprocess_image
 from wai.tmm.common.io import load_model, load_classes
 
@@ -44,9 +44,9 @@ def process_image(fname, output_dir, poller):
     result = []
     try:
         preprocessed_image, original_image = preprocess_image(fname, (poller.params.input_height, poller.params.input_width))
-        image_height, image_width, _ = original_image.shape
-        results = detect_objects(poller.params.model, preprocessed_image, (image_height, image_width),
-                                 threshold=poller.params.threshold, labels=poller.params.labels)
+        results = classify_image(poller.params.model, preprocessed_image,
+                                 threshold=poller.params.threshold, labels=poller.params.labels,
+                                 mean=poller.params.mean, stdev=poller.params.stdev)
         out_file = os.path.join(output_dir, os.path.splitext(os.path.basename(fname))[0] + ".json")
         with open(out_file, "w") as f:
             f.write(results.to_json_string())
@@ -60,7 +60,7 @@ def process_image(fname, output_dir, poller):
 
 def predict_on_images(model, labels, input_dir, output_dir, tmp_dir=None,
                       poll_wait=1.0, continuous=False, use_watchdog=False, watchdog_check_interval=10.0,
-                      delete_input=False, threshold=0.3, verbose=False, quiet=False):
+                      delete_input=False, threshold=0.3, verbose=False, quiet=False, mean=0.0, stdev=255.0):
     """
     Performs predictions on images found in input_dir and outputs the prediction PNG files in output_dir.
 
@@ -89,6 +89,10 @@ def predict_on_images(model, labels, input_dir, output_dir, tmp_dir=None,
     :type verbose: bool
     :param quiet: whether to suppress output
     :type quiet: bool
+    :param mean: the mean to use for the input image
+    :type mean: float
+    :param stdev: the stdev to use for the input image
+    :type stdev: float
     """
 
     if verbose:
@@ -119,6 +123,8 @@ def predict_on_images(model, labels, input_dir, output_dir, tmp_dir=None,
     poller.params.input_height = input_height
     poller.params.input_width = input_width
     poller.params.threshold = threshold
+    poller.params.mean = mean
+    poller.params.stdev = stdev
     poller.poll()
 
 
@@ -131,11 +137,13 @@ def main(args=None):
     """
 
     parser = argparse.ArgumentParser(
-        description="Uses a tflite object detection model to make predictions on a single image.",
-        prog="tmm-od-predict-poll",
+        description="Uses a tflite image classification model to make predictions on a single image.",
+        prog="tmm-ic-predict-poll",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--model', metavar="FILE", type=str, required=True, help='The tflite object detection model to use.')
     parser.add_argument('--labels', metavar="FILE", type=str, required=True, help='The text file with the labels (one label per line).')
+    parser.add_argument('--mean', metavar="NUM", type=float, required=False, default=0.0, help='The mean to use for the input image.')
+    parser.add_argument('--stdev', metavar="NUM", type=float, required=False, default=255.0, help='The stdev to use for the input image.')
     parser.add_argument('--prediction_in', help='Path to the test images', required=True, default=None)
     parser.add_argument('--prediction_out', help='Path to the output csv files folder', required=True, default=None)
     parser.add_argument('--prediction_tmp', help='Path to the temporary csv files folder', required=False, default=None)
@@ -149,9 +157,11 @@ def main(args=None):
     parser.add_argument('--quiet', action='store_true', help='Whether to suppress output', required=False, default=False)
     parsed = parser.parse_args(args=args)
 
-    predict_on_images(parsed.model, parsed.labels, parsed.prediction_in, parsed.prediction_out, parsed.prediction_tmp,
-                      parsed.poll_wait, parsed.continuous, parsed.use_watchdog, parsed.watchdog_check_interval,
-                      parsed.delete_input, parsed.threshold, parsed.verbose, parsed.quiet)
+    predict_on_images(parsed.model, parsed.labels, parsed.prediction_in, parsed.prediction_out, tmp_dir=parsed.prediction_tmp,
+                      poll_wait=parsed.poll_wait, continuous=parsed.continuous, use_watchdog=parsed.use_watchdog,
+                      watchdog_check_interval=parsed.watchdog_check_interval, delete_input=parsed.delete_input,
+                      threshold=parsed.threshold, verbose=parsed.verbose, quiet=parsed.quiet,
+                      mean=parsed.mean, stdev=parsed.stdev)
 
 
 def sys_main() -> int:

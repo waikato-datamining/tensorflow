@@ -40,7 +40,7 @@ setup(
         "argparse",
         "numpy<1.20.0",
         "tflite-model-maker>=0.3.0,<0.3.2",
-        "tensorflow>=2.4.0,<2.5.0",
+        "tensorflow>2.4.0,<2.5.0",
         "wai.pycocotools",
         "pyyaml",
         "opex",
@@ -51,6 +51,10 @@ setup(
     ],
     entry_points={
         "console_scripts": [
+            "tmm-ic-train=wai.tmm.imgcls.train:sys_main",
+            "tmm-ic-predict=wai.tmm.imgcls.predict:sys_main",
+            "tmm-ic-predict-poll=wai.tmm.imgcls.predict_poll:sys_main",
+            "tmm-ic-predict-redis=wai.tmm.imgcls.predict_redis:sys_main",
             "tmm-od-train=wai.tmm.objdet.train:sys_main",
             "tmm-od-predict=wai.tmm.objdet.predict:sys_main",
             "tmm-od-predict-poll=wai.tmm.objdet.predict_poll:sys_main",
