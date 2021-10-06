@@ -33,7 +33,7 @@ setup(
     namespace_packages=[
         "wai",
     ],
-    version="0.0.2",
+    version="0.0.3",
     author='Peter Reutemann and TensorFlow Team',
     author_email='fracpete@waikato.ac.nz',
     install_requires=[

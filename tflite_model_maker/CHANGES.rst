@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.0.3 (2021-10-06)
+------------------
+
+- handling custom hyper parameters now correctly
+
+
 0.0.2 (2021-10-06)
 ------------------
 
