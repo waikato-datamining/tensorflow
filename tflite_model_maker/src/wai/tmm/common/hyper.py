@@ -8,6 +8,22 @@ from absl import logging
 logging.set_verbosity(logging.ERROR)
 
 
+def load_hyper_parameters(hyper_params):
+    """
+    Loads the file with hyper parameters.
+
+    :param hyper_params: the YAML file with hyper parameters to load; if None returns an empty dict; if dict returns this
+    :return: the dictionary of hyper parameters
+    :rtype: dict
+    """
+    if isinstance(hyper_params, str):
+        with open(hyper_params, "r") as f:
+            return yaml.safe_load(f)
+    if isinstance(hyper_params, dict):
+        return hyper_params
+    return {}
+
+
 def add_hyper_parameters(model_spec, hyper_params, verbose=False):
     """
     Adds the hyper parameters to the model spec.
@@ -21,9 +37,7 @@ def add_hyper_parameters(model_spec, hyper_params, verbose=False):
         if verbose:
             tf.get_logger().log(logging.INFO, "No hyper parameters to set")
         return
-    if isinstance(hyper_params, str):
-        with open(hyper_params, "r") as f:
-            hyper_params = yaml.safe_load(f)
+    hyper_params = load_hyper_parameters(hyper_params)
     if isinstance(hyper_params, dict):
         for k in hyper_params:
             if verbose:
