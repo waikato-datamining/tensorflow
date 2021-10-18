@@ -221,6 +221,8 @@ optional arguments:
                         False)
 ```
 
+See [here](https://github.com/google/automl/blob/df451765d467c5ed78bbdfd632810bc1014b123e/efficientdet/hparams_config.py#L170) for efficientdet hyper parameters.
+
 ### Prediction
 
 For getting predictions for a single image, you can use the `tmm-od-predict` tool:
