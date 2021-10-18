@@ -1,6 +1,7 @@
 # Object Detection framework
 
-Allows processing of images with Tensorflow's Object Detection framework, using Tensorflow 1.15.2.
+Allows processing of images with [Tensorflow's Object Detection API](https://github.com/tensorflow/models/blob/master/research/object_detection/README.md) 
+framework, using Tensorflow 1.15.2.
 
 ## Version
 
@@ -201,3 +202,8 @@ the container):
 ```commandline
 docker run -u $(id -u):$(id -g) ...
 ```
+
+## Links
+
+* [Documentation](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf1.md)
+* [Model ZOO](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf1_detection_zoo.md)
