@@ -19,7 +19,7 @@ RUN apt-get update && \
         pip install "numpy<1.20.0" && \
         pip install wai.pycocotools && \
         pip install "tflite-model-maker>=0.3.0,<0.3.2" "tensorflow>2.4.0,<2.5.0" pyyaml opex python-image-complete "simple-file-poller>=0.0.9" redis "redis-docker-harness==0.0.1" && \
-        pip install "wai.tflite_model_maker==0.0.3" && \
+        pip install "wai.tflite_model_maker==0.0.4" && \
         rm -Rf /root/.cache/pip && \
         rm -rf /var/lib/apt/lists/*
 
