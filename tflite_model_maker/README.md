@@ -43,7 +43,7 @@ usage: tmm-ic-train [-h] --images DIR
                     [--hyper_params FILE] [--num_epochs INT]
                     [--batch_size INT] --output DIR_OR_FILE
                     [--optimization {none,float16,dynamic}] [--validation 0-1]
-                    [--testing 0-1]
+                    [--testing 0-1] [--results FILE]
 
 Trains a tflite image classification model. For hyper parameters, see:
 https://www.tensorflow.org/lite/tutorials/model_maker_image_classification
@@ -71,6 +71,8 @@ optional arguments:
                         (default: 0.15)
   --testing 0-1         The dataset percentage to use for testing. (default:
                         0.15)
+  --results FILE        The JSON file to store the evaluation results in
+                        (requires --testing). (default: None)
 ```
 
 ### Prediction
@@ -194,6 +196,7 @@ usage: tmm-od-train [-h] --annotations FILE
                     [--hyper_params FILE] [--num_epochs INT]
                     [--batch_size INT] --output DIR_OR_FILE
                     [--optimization {none,float16,dynamic}] [--evaluate]
+                    [--results FILE]
 
 Trains a tflite object detection model. For hyper parameters, see:
 https://www.tensorflow.org/lite/tutorials/model_maker_object_detection
@@ -219,6 +222,8 @@ optional arguments:
   --evaluate            If test data is part of the annotations, then the
                         resulting model can be evaluated against it. (default:
                         False)
+  --results FILE        The JSON file to store the evaluation results in.
+                        (default: None)
 ```
 
 See [here](https://github.com/google/automl/blob/df451765d467c5ed78bbdfd632810bc1014b123e/efficientdet/hparams_config.py#L170) for efficientdet hyper parameters.

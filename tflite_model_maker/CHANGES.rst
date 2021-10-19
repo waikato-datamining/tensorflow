@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.0.4 (2021-10-20)
+------------------
+
+- added ability to store results of evaluation (imgcls and objdet) in JSON file
+
+
 0.0.3 (2021-10-06)
 ------------------
 
