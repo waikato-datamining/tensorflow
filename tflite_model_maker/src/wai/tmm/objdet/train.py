@@ -38,7 +38,7 @@ def write_labels(data, output_dir):
 
 
 def train(model_type, annotations, output, num_epochs=None, hyper_params=None, batch_size=8, evaluate=False,
-          optimization=OPTIMIZATION_NONE):
+          optimization=OPTIMIZATION_NONE, results=None):
     """
     Trains an object detection model.
 
@@ -58,6 +58,8 @@ def train(model_type, annotations, output, num_epochs=None, hyper_params=None, b
     :type evaluate: bool
     :param optimization: how to optimize the model when saving it
     :type optimization: str
+    :param results: the JSON file to store the evaluation results in
+    :type results: str
     """
     spec = model_spec.get(model_type)
     add_hyper_parameters(spec, hyper_params)
@@ -71,9 +73,14 @@ def train(model_type, annotations, output, num_epochs=None, hyper_params=None, b
     model.export(export_dir=output_dir, tflite_filename=output_name, quantization_config=configure_optimization(optimization))
     write_labels(train_data, output_dir)
     if evaluate:
-        results = model.evaluate(test_data)
-        for k in results:
-            print("%s: %.2f" % (k, results[k]))
+        res = model.evaluate(test_data)
+        d = {}
+        for k in res:
+            print("%s: %.2f" % (k, res[k]))
+            d[str(k)] = float(res[k])
+        if results is not None:
+            with open(results, "w") as f:
+                json.dump(d, f, indent=2)
 
 
 def main(args=None):
@@ -98,11 +105,12 @@ def main(args=None):
     parser.add_argument('--output', metavar="DIR_OR_FILE", type=str, required=True, help='The directory or filename to store the model under (uses model.tflite if dir). The labels gets stored in "labels.txt" in the determined directory.')
     parser.add_argument('--optimization', type=str, choices=OPTIMIZATIONS, default=OPTIMIZATION_NONE, help='How to optimize the model when saving it.')
     parser.add_argument('--evaluate', action="store_true", help='If test data is part of the annotations, then the resulting model can be evaluated against it.')
+    parser.add_argument('--results', metavar="FILE", type=str, default=None, help='The JSON file to store the evaluation results in.')
     parsed = parser.parse_args(args=args)
 
     train(parsed.model_type, parsed.annotations, parsed.output, num_epochs=parsed.num_epochs,
           hyper_params=parsed.hyper_params, batch_size=parsed.batch_size, evaluate=parsed.evaluate,
-          optimization=parsed.optimization)
+          optimization=parsed.optimization, results=parsed.results)
 
 
 def sys_main() -> int:

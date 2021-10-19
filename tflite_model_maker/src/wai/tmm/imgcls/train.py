@@ -1,4 +1,5 @@
 import argparse
+import json
 import traceback
 
 import tensorflow as tf
@@ -30,7 +31,7 @@ def write_labels(data, output_dir):
 
 
 def train(model_type, image_dir, output, num_epochs=None, hyper_params=None, batch_size=8,
-          validation=0.15, testing=0.15, optimization=OPTIMIZATION_NONE):
+          validation=0.15, testing=0.15, optimization=OPTIMIZATION_NONE, results=None):
     """
     Trains an object detection model.
 
@@ -52,6 +53,8 @@ def train(model_type, image_dir, output, num_epochs=None, hyper_params=None, bat
     :type testing: float
     :param optimization: how to optimize the model when saving it
     :type optimization: str
+    :param results: the JSON file to store the evaluation results in
+    :type results: str
     """
     hyper_params = load_hyper_parameters(hyper_params)
     if num_epochs is not None:
@@ -70,10 +73,16 @@ def train(model_type, image_dir, output, num_epochs=None, hyper_params=None, bat
     model.export(export_dir=output_dir, tflite_filename=output_name, quantization_config=configure_optimization(optimization))
     write_labels(train_data, output_dir)
     if test_data is not None:
-        results = model.evaluate(test_data)
+        res = model.evaluate(test_data)
         print("Results on test data:")
-        print("- loss: %.3f" % results[0])
-        print("- accuracy: %.3f" % results[1])
+        print("- loss: %.3f" % res[0])
+        print("- accuracy: %.3f" % res[1])
+        if results is not None:
+            d = {}
+            d["loss"] = float(res[0])
+            d["accuracy"] = float(res[1])
+            with open(results, "w") as f:
+                json.dump(d, f, indent=2)
 
 
 def main(args=None):
@@ -99,11 +108,13 @@ def main(args=None):
     parser.add_argument('--optimization', type=str, choices=OPTIMIZATIONS, default=OPTIMIZATION_NONE, help='How to optimize the model when saving it.')
     parser.add_argument('--validation', metavar="0-1", type=float, default=0.15, help='The dataset percentage to use for validation.')
     parser.add_argument('--testing', metavar="0-1", type=float, default=0.15, help='The dataset percentage to use for testing.')
+    parser.add_argument('--results', metavar="FILE", type=str, default=None, help='The JSON file to store the evaluation results in (requires --testing).')
     parsed = parser.parse_args(args=args)
 
     train(parsed.model_type, parsed.images, parsed.output, num_epochs=parsed.num_epochs,
           hyper_params=parsed.hyper_params, batch_size=parsed.batch_size,
-          validation=parsed.validation, testing=parsed.testing, optimization=parsed.optimization)
+          validation=parsed.validation, testing=parsed.testing, optimization=parsed.optimization,
+          results=parsed.results)
 
 
 def sys_main() -> int:
