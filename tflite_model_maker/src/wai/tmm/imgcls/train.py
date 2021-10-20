@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import traceback
 
 import tensorflow as tf
@@ -60,6 +61,12 @@ def train(model_type, image_dir, output, num_epochs=None, hyper_params=None, bat
     if num_epochs is not None:
         hyper_params["epochs"] = num_epochs
 
+    output_dir, output_name = model_path_name(output)
+
+    # write full hyper parameters
+    with open(os.path.join(output_dir, os.path.splitext(output_name)[0] + "-hyper_params.json"), "w") as f:
+        json.dump(hyper_params, f, indent=2)
+
     data = image_classifier.DataLoader.from_folder(image_dir, shuffle=True)
     train_data, val_test_data = data.split(1.0 - (validation + testing))
     if testing > 0:
@@ -69,7 +76,6 @@ def train(model_type, image_dir, output, num_epochs=None, hyper_params=None, bat
         test_data = None
     model = image_classifier.create(train_data, model_spec=model_spec.get(model_type), batch_size=batch_size,
                                     validation_data=validation_data, **hyper_params)
-    output_dir, output_name = model_path_name(output)
     model.export(export_dir=output_dir, tflite_filename=output_name, quantization_config=configure_optimization(optimization))
     write_labels(train_data, output_dir)
     if test_data is not None:

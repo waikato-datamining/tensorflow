@@ -4,6 +4,7 @@ Changelog
 0.0.5 (????-??-??)
 ------------------
 
+- saving the full hyper-parameters now (imgcls: json, objdet: yaml)
 - ...
 
 

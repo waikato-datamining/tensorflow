@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import traceback
 
 import tensorflow as tf
@@ -67,6 +68,11 @@ def train(model_type, annotations, output, num_epochs=None, hyper_params=None, b
         spec.config.num_epochs = num_epochs
 
     output_dir, output_name = model_path_name(output)
+
+    # write full hyper parameters
+    with open(os.path.join(output_dir, os.path.splitext(output_name)[0] + "-hyper_params.yaml"), "w") as f:
+        f.write(str(spec.config))
+
     train_data, validation_data, test_data = object_detector.DataLoader.from_csv(annotations)
     model = object_detector.create(train_data, model_spec=spec, batch_size=batch_size, train_whole_model=True,
                                    validation_data=validation_data)
