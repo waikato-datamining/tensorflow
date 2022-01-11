@@ -32,7 +32,7 @@ and timestamp:
   ```commandline
   docker run --gpus=all \
     -v /local/dir:/container/dir \
-    -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2020-05-13
+    -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_object_detection:1.15.2_2020-05-13
   ```
 
   **NB:** For docker versions older than 19.03 (`docker version`), use `--runtime=nvidia` instead of `--gpus=all`.
@@ -46,7 +46,7 @@ and timestamp:
 
 ### Build local image
 
-* Build image `tf` from Docker file (from within /path_to/tensorflow/object_detection/1.15.2_2020-05-13)
+* Build image `tf` from Docker file (from within /path_to/tensorflow/tf_object_detection/1.15.2_2020-05-13)
 
   ```commandline
   docker build -t tf .
@@ -65,21 +65,21 @@ and timestamp:
 * Build
 
   ```commandline
-  docker build -t tensorflow/object_detection:1.15.2_2020-05-13 .
+  docker build -t tensorflow/tf_object_detection:1.15.2_2020-05-13 .
   ```
   
 * Tag
 
   ```commandline
   docker tag \
-    tensorflow/object_detection:1.15.2_2020-05-13 \
-    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2020-05-13
+    tensorflow/tf_object_detection:1.15.2_2020-05-13 \
+    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_object_detection:1.15.2_2020-05-13
   ```
   
 * Push
 
   ```commandline
-  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2020-05-13
+  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_object_detection:1.15.2_2020-05-13
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -92,7 +92,7 @@ and timestamp:
   If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
 
   ```commandline
-  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2020-05-13
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_object_detection:1.15.2_2020-05-13
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -103,14 +103,14 @@ and timestamp:
   
   ```commandline
   docker tag \
-    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/object_detection:1.15.2_2020-05-13 \
-    tensorflow/object_detection:1.15.2_2020-05-13
+    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_object_detection:1.15.2_2020-05-13 \
+    tensorflow/tf_object_detection:1.15.2_2020-05-13
   ```
   
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --gpus=all -v /local/dir:/container/dir -it tensorflow/object_detection:1.15.2_2020-05-13
+  docker run --gpus=all -v /local/dir:/container/dir -it tensorflow/tf_object_detection:1.15.2_2020-05-13
   ```
   `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 
