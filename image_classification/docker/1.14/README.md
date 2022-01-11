@@ -17,7 +17,7 @@ Allows labeling of images with Tensorflow's image classification capabilities, u
   ```commandline
   docker run --gpus=all \
     -v /local/dir:/container/dir \
-    -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification:1.14
+    -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_image_classification:1.14
   ```
 
   **NB:** For docker versions older than 19.03 (`docker version`), use `--runtime=nvidia` instead of `--gpus=all`.
@@ -31,7 +31,7 @@ Allows labeling of images with Tensorflow's image classification capabilities, u
 
 ### Build local image
 
-* Build the image from Docker file (from within /path_to/tensorflow/image_classification/docker/1.14)
+* Build the image from Docker file (from within /path_to/tensorflow/tf_image_classification/docker/1.14)
 
   ```commandline
   docker build -t tfic .
@@ -48,21 +48,21 @@ Allows labeling of images with Tensorflow's image classification capabilities, u
 * Build
 
   ```commandline
-  docker build -t tensorflow/image_classification:1.14 .
+  docker build -t tensorflow/tf_image_classification:1.14 .
   ```
   
 * Tag
 
   ```commandline
   docker tag \
-    tensorflow/image_classification:1.14 \
-    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification:1.14
+    tensorflow/tf_image_classification:1.14 \
+    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_image_classification:1.14
   ```
   
 * Push
 
   ```commandline
-  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification:1.14
+  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_image_classification:1.14
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -75,7 +75,7 @@ Allows labeling of images with Tensorflow's image classification capabilities, u
   If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
 
   ```commandline
-  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification:1.14
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_image_classification:1.14
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -86,14 +86,14 @@ Allows labeling of images with Tensorflow's image classification capabilities, u
   
   ```commandline
   docker tag \
-    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/image_classification:1.14 \
-    tensorflow/image_classification:1.14
+    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_image_classification:1.14 \
+    tensorflow/tf_image_classification:1.14
   ```
 
 * <a name="run">Run</a>
 
   ```commandline
-  docker run --gpus=all -v /local/dir:/container/dir -it tensorflow/image_classification:1.14
+  docker run --gpus=all -v /local/dir:/container/dir -it tensorflow/tf_image_classification:1.14
   ```
   `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 
