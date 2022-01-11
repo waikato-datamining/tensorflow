@@ -35,6 +35,14 @@ image-segmentation-keras version: 0.3.0
   docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q) && docker system prune -a
   ```
 
+### Docker hub
+
+The image is also available from [Docker hub](https://hub.docker.com/u/waikatodatamining):
+
+```
+waikatodatamining/image-segmentation-keras:1.14.0_0.3.0
+```
+
 
 ### Build local image
 

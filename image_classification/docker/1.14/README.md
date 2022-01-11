@@ -28,6 +28,14 @@ Allows labeling of images with Tensorflow's image classification capabilities, u
   docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q) && docker system prune -a
   ```
 
+### Docker hub
+
+The image is also available from [Docker hub](https://hub.docker.com/u/waikatodatamining):
+
+```
+waikatodatamining/tf_image_classification:1.14
+```
+
 
 ### Build local image
 

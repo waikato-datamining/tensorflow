@@ -43,6 +43,13 @@ Fri Aug 30 14:39:49 2019 -0700
   docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q) && docker system prune -a
   ```
 
+### Docker hub
+
+The image is also available from [Docker hub](https://hub.docker.com/u/waikatodatamining):
+
+```
+waikatodatamining/tf_object_detection:1.14.0_2019-08-31
+```
 
 ### Build local image
 

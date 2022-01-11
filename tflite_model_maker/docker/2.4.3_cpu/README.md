@@ -26,6 +26,14 @@ Offers command-line utilities for Tensorflow's [tflite model maker](https://www.
   docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q) && docker system prune -a
   ```
 
+### Docker hub
+
+The image is also available from [Docker hub](https://hub.docker.com/u/waikatodatamining):
+
+```
+waikatodatamining/tflite_model_maker:2.4.3_cpu
+```
+
 
 ### Build local image
 
