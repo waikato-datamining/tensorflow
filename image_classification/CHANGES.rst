@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.0.15 (2022-05-10)
+-------------------
+
+- added `wai/tfimageclass/predict/label_redis.py` module (console script: `tfic-label-redis`) that
+  allows making predictions via Redis backend (image bytes in, JSON predictions out).
+
+
 0.0.14 (2021-04-20)
 -------------------
 

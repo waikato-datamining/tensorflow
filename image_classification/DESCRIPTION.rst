@@ -82,5 +82,8 @@ Once you have built a model, you can use it as follows:
 
 - For making predictions for a single image, use module `wai.tfimageclass.predict.label_image` or console
   script `tfic-labelimage`
-- For polling images in a directory and making continous predictions with CSV companion files, use
+- For polling images in a directory and making continuous predictions with CSV companion files, use
   module `wai.tfimageclass.predict.poll` or console script `tfic-poll`
+- For making predictions via Redis (https://redis.io/), i.e., broadcasting the image bytes on one
+  channel and receiving the JSON predictions on another channel, use `wai.tfimageclass.predict.label_redis`
+  or console script `tfic-label-redis`

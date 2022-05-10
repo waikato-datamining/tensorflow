@@ -136,6 +136,33 @@ def tflite_read_tensor_from_image_file(file_name,
     return tensor
 
 
+def tflite_read_tensor_from_bytes(data,
+                                  input_height,
+                                  input_width,
+                                  input_mean=0,
+                                  input_std=255):
+    """
+    Reads the tensor from the image file.
+
+    :param data: the image data to load
+    :type data: bytes
+    :param input_height: the image height, use -1 for not resizing
+    :type input_height: int
+    :param input_width: the image width, use -1 for not resizing
+    :type input_width: int
+    :param input_mean: the mean to use
+    :type input_mean: int
+    :param input_std: the standard deviation to use
+    :type input_std: int
+    :return: the tensor
+    """
+
+    img = Image.open(io.BytesIO(data)).resize((input_width, input_height))
+    tensor = np.expand_dims(img, axis=0)
+    tensor = (np.float32(tensor) - input_mean) / input_std
+    return tensor
+
+
 def load_labels(label_file):
     """
     Loads the labels from the specified text file.

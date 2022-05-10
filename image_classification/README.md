@@ -379,3 +379,53 @@ Once you have built a model (Tensorflow or Tensorflow lite), you can use it as f
                           leaks. (default: 50)
     --output_format TYPE  the output format for the predictions (default: csv)
   ```
+
+* For making predictions via a [Redis](https://redis.io/) backend, you can use the console script `tfic-label-redis`: 
+
+  ```
+  usage: tfic-label-redis [-h] [--redis_host HOST] [--redis_port PORT]
+                          [--redis_db DB] --redis_in CHANNEL --redis_out CHANNEL
+                          --model MODEL [--info INFO] [--labels LABELS]
+                          [--input_height INPUT_HEIGHT]
+                          [--input_width INPUT_WIDTH]
+                          [--input_layer INPUT_LAYER]
+                          [--output_layer OUTPUT_LAYER]
+                          [--input_mean INPUT_MEAN] [--input_std INPUT_STD]
+                          [--top_x TOP_X] [--verbose]
+
+  Uses a tflite iamge classification model to make predictions on images received
+  via a Redis channel and broadcasts the predictions via another Redis channel.
+
+  optional arguments:
+    -h, --help            show this help message and exit
+    --redis_host HOST     The redis server to connect to (default: localhost)
+    --redis_port PORT     The port the redis server is listening on (default:
+                          6379)
+    --redis_db DB         The redis database to use (default: 0)
+    --redis_in CHANNEL    The redis channel to receive the data from (default:
+                          None)
+    --redis_out CHANNEL   The redis channel to publish the processed data on
+                          (default: None)
+    --model MODEL         model to be executed (default: None)
+    --info INFO           name of json file with model info (dimensions,
+                          layers); overrides input_height/input_width/labels/inp
+                          ut_layer/output_layer options (default: None)
+    --labels LABELS       name of file containing labels (default: None)
+    --input_height INPUT_HEIGHT
+                          input height (default: 299)
+    --input_width INPUT_WIDTH
+                          input width (default: 299)
+    --input_layer INPUT_LAYER
+                          name of input layer (default: Placeholder)
+    --output_layer OUTPUT_LAYER
+                          name of output layer (default: final_result)
+    --input_mean INPUT_MEAN
+                          input mean (default: 0)
+    --input_std INPUT_STD
+                          input std (default: 255)
+    --top_x TOP_X         output only the top K labels; use <1 for all (default:
+                          5)
+    --verbose             whether to output some debugging information (default:
+                          False)
+  ```
+

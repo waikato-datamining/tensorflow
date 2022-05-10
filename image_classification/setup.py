@@ -41,6 +41,8 @@ setup(
         "pillow",
         "tensorflow_hub",
         "simple-confusion-matrix",
+        "redis",
+        "redis-docker-harness",
     ],
     entry_points={
         "console_scripts": [
@@ -48,6 +50,7 @@ setup(
             "tfic-stats=wai.tfimageclass.train.stats:sys_main",
             "tfic-export=wai.tfimageclass.train.export:sys_main",
             "tfic-labelimage=wai.tfimageclass.predict.label_image:sys_main",
+            "tfic-label-redis=wai.tfimageclass.predict.label_redis:sys_main",
             "tfic-poll=wai.tfimageclass.predict.poll:sys_main",
         ]
     }
