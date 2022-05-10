@@ -104,7 +104,7 @@ ENV/
 **~
 *.swp
 *.bak
-.idea
+.idea/
 *.iml
 logs/
 *.yaml
