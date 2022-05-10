@@ -123,4 +123,4 @@ The following command-line tools are available (see [here](../../README.md) for 
 * `tfic-stats` - for generating statistics for a trained model
 * `tfic-labelimage` - labeling a single image
 * `tfic-poll` - for batch or continuous predictions
-  
+* `tfic-label-redis` - for predictions via Redis backend (use `--net=host` to get access to host's Redis instance)
