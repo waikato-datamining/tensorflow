@@ -251,7 +251,7 @@ if __name__ == '__main__':
         graph = tf.get_default_graph()
 
         # color palette
-        colors = None
+        colors = []
         if parsed.colors is not None:
             colors = parsed.colors.split(",")
             colors = [int(x) for x in colors]
