@@ -122,6 +122,7 @@ docker run -u $(id -u):$(id -g) ...
 The following command-line tools are available (see [here](../../README.md) for more details):
 
 * `tfic-retrain` - for (re)training a pre-trained model on new data
+* `tfic-export` - for exporting a graph to a tflite model
 * `tfic-stats` - for generating statistics for a trained model
 * `tfic-labelimage` - labeling a single image
 * `tfic-poll` - for batch or continuous predictions
