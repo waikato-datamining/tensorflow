@@ -13,6 +13,12 @@ RUN pip install --no-cache-dir python-image-complete "simple-file-poller>=0.0.9"
     pip install --no-cache-dir redis "opex==0.0.1" "redis-docker-harness==0.0.1"
 
 COPY bash.bashrc /etc/bash.bashrc
-COPY label_image.py /opt/tfimgcls/
-COPY label_image /usr/bin
 
+COPY label_image.py /opt/tfimgcls/
+COPY predict_poll.py /opt/tfimgcls/
+COPY predict_redis.py /opt/tfimgcls/
+COPY predict_utils.py /opt/tfimgcls/
+
+COPY label_image /usr/bin
+COPY predict_poll /usr/bin
+COPY predict_redis /usr/bin
