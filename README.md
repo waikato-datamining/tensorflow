@@ -2,7 +2,6 @@
 Customizations of tensorflow-based applications.
 
 Currently available:
-* [deepspeech](deepspeech) - Docker image for Mozilla's [DeepSpeech](https://github.com/mozilla/DeepSpeech)
 * [efficientdet](efficientdet) - Docker image for EfficientDet: Scalable and Efficient Object Detection
 * [image-segmentation-keras](image-segmentation-keras) - Docker image for image segmentation using Keras
 * [image classification](image_classification) - Docker images for training image classification models 
