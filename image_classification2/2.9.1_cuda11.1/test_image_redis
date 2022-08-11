@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python3 /opt/tfimgcls/test_image_redis.py "$@"

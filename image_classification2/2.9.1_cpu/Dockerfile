@@ -18,7 +18,9 @@ COPY label_image.py /opt/tfimgcls/
 COPY predict_poll.py /opt/tfimgcls/
 COPY predict_redis.py /opt/tfimgcls/
 COPY predict_utils.py /opt/tfimgcls/
+COPY test_image_redis.py /opt/tfimgcls/
 
 COPY label_image /usr/bin
 COPY predict_poll /usr/bin
 COPY predict_redis /usr/bin
+COPY test_image_redis /usr/bin
