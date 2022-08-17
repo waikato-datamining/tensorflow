@@ -1,5 +1,7 @@
+import io
 import numpy as np
 import tensorflow as tf
+from PIL import Image
 
 
 def load_labels(labels_file):
@@ -41,6 +43,50 @@ def load_model(model_file, num_threads=None):
         "width": width,
         "height": height,
     }
+
+
+def remove_alpha_channel(img):
+    """
+    Removes any alpha channel from the image.
+
+    :param img: the image to process
+    :return: the image without the alpha channel
+    """
+    if img.mode == "RGBA":
+        img = img.convert("RGB")
+    return img
+
+
+def load_image(fname, width, height):
+    """
+    Loads the image from the specified file.
+
+    :param fname: the name of the file to load
+    :type fname: str
+    :param width: the width of the image
+    :type width: int
+    :param height: the height of the image
+    :type height: int
+    :return: the image
+    """
+    img = Image.open(fname).resize((width, height))
+    return remove_alpha_channel(img)
+
+
+def read_image(data, width, height):
+    """
+    Reads the image from the bytes.
+
+    :param data: the bytes to read the image from
+    :type data: bytes
+    :param width: the width of the image
+    :type width: int
+    :param height: the height of the image
+    :type height: int
+    :return: the image
+    """
+    img = Image.open(io.BytesIO(data)).resize((width, height))
+    return remove_alpha_channel(img)
 
 
 def predict_image(img, model_params):

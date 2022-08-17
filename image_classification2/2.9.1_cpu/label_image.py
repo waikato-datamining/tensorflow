@@ -1,4 +1,5 @@
 # Copyright (C) Tensorflow team
+# Copyright (C) University of Waikato, Hamilton, NZ
 # License Apache 2.0
 # https://github.com/tensorflow/tensorflow/blob/950ae6aba94a46da7565d903f8b1328e32faa8fc/tensorflow/lite/examples/python/label_image.py
 import argparse
@@ -7,11 +8,7 @@ import time
 import numpy as np
 from PIL import Image
 import tensorflow as tf
-
-
-def load_labels(filename):
-    with open(filename, 'r') as f:
-        return [line.strip() for line in f.readlines()]
+from predict_utils import load_image, load_labels
 
 
 if __name__ == '__main__':
@@ -87,7 +84,7 @@ if __name__ == '__main__':
     # NxHxWxC, H:1, W:2
     height = input_details[0]['shape'][1]
     width = input_details[0]['shape'][2]
-    img = Image.open(args.image).resize((width, height))
+    img = load_image(args.image, width, height)
 
     # add N dim
     input_data = np.expand_dims(img, axis=0)

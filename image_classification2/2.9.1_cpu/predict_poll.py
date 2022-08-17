@@ -2,10 +2,9 @@ import argparse
 import json
 import os
 import traceback
-from PIL import Image
 from image_complete import auto
 from sfp import Poller
-from predict_utils import load_labels, load_model, predict_image
+from predict_utils import load_labels, load_model, predict_image, load_image
 
 
 SUPPORTED_EXTS = [".jpg", ".jpeg", ".png"]
@@ -45,7 +44,7 @@ def process_image(fname, output_dir, poller):
     model_params = poller.params.model_params
     try:
         json_path = "{}/{}{}".format(output_dir, os.path.splitext(os.path.basename(fname))[0], ".json")
-        img = Image.open(fname).resize((model_params["width"], model_params["height"]))
+        img = load_image(fname, model_params["width"], model_params["height"])
         preds = predict_image(img, model_params)
         with open(json_path, "w") as fp:
             json.dump(preds, fp, indent=2)

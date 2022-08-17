@@ -1,11 +1,9 @@
-import io
 import json
-from PIL import Image
 import traceback
 
 from datetime import datetime
 from rdh import Container, MessageContainer, create_parser, configure_redis, run_harness, log
-from predict_utils import load_labels, load_model, predict_image
+from predict_utils import load_labels, load_model, predict_image, read_image
 
 
 def process_image(msg_cont):
@@ -22,7 +20,7 @@ def process_image(msg_cont):
         start_time = datetime.now()
         if config.verbose:
             log("process_images - start processing image")
-        img = Image.open(io.BytesIO(msg_cont.message['data'])).resize((model_params["width"], model_params["height"]))
+        img = read_image(msg_cont.message["data"], model_params["width"], model_params["height"])
         preds = predict_image(img, model_params)
         preds_str = json.dumps(preds, indent=2)
         msg_cont.params.redis.publish(msg_cont.params.channel_out, preds_str)
