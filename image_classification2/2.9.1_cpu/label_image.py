@@ -6,7 +6,6 @@ import argparse
 import time
 
 import numpy as np
-from PIL import Image
 import tensorflow as tf
 from predict_utils import load_image, load_labels
 
