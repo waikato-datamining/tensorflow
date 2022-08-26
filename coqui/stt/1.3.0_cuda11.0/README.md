@@ -131,4 +131,5 @@ The following command-line tools are available:
 
 * `stt_train` - for training a STT model (calls `python -m coqui_stt_training.train`)
 * `stt_eval` - for evaluating a trained STT model (calls `python -m coqui_stt_training.evaluate`)
+* `stt_export` - for exporting a trained STT model to tflite (calls `python -m coqui_stt_training.export`)
 * `stt_infer` - for performing inference with a trained STT model (calls `python -m coqui_stt_training.training_graph_inference`)
