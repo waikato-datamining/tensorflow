@@ -1,7 +1,7 @@
 FROM ghcr.io/coqui-ai/stt-train:v1.3.0
 
 RUN pip install --no-cache-dir "stt==1.3.0" && \
-    pip install --no-cache-dir "python-image-complete" "simple-file-poller>=0.0.9" && \
+    pip install --no-cache-dir "simple-file-poller>=0.0.9" && \
     pip install --no-cache-dir redis "redis-docker-harness==0.0.1"
 
 ENV BASH_ENV=
