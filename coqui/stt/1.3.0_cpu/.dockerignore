@@ -1,0 +1,8 @@
+data/
+output/
+predictions/
+local/
+checkpoints/
+*~
+*.swp
+
