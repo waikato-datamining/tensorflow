@@ -16,8 +16,7 @@ def main():
     parser.add_argument("--beam_width", type=int, help="Beam width for the CTC decoder")
     parser.add_argument("--lm_alpha", type=float, help="Language model weight (lm_alpha). If not specified, use default from the scorer package.")
     parser.add_argument("--lm_beta", type=float, help="Word insertion bonus (lm_beta). If not specified, use default from the scorer package.")
-    parser.add_argument("--json", required=False, action="store_true", help="Output json from metadata with timestamp of each word")
-    parser.add_argument("--candidate_transcripts", type=int, default=3, help="Number of candidate transcripts to include in JSON output")
+    parser.add_argument("--candidate_transcripts", type=int, default=None, help="Number of candidate transcripts to include in JSON output")
     parser.add_argument("--hot_words", type=str, help="Hot-words and their boosts.")
     args = parser.parse_args()
 
@@ -29,10 +28,7 @@ def main():
 
     print("Running inference.", file=sys.stderr)
     inference_start = timer()
-    if args.json:
-        transcript = transcribe_audio(ds, audio, candidate_transcripts=args.candidate_transcripts)
-    else:
-        transcript = transcribe_audio(ds, audio)
+    transcript = transcribe_audio(ds, audio, candidate_transcripts=args.candidate_transcripts)
     print(transcript)
     inference_end = timer() - inference_start
     print("Inference took %0.3fs for %0.3fs audio file." % (inference_end, audio_length), file=sys.stderr)
