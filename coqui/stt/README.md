@@ -10,5 +10,4 @@ Available versions:
 
 * 1.3.0
   
-  * [CPU](1.3.0_cpu)
   * [CUDA 11.0](1.3.0_cuda11.0)

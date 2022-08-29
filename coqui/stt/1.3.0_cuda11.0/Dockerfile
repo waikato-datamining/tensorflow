@@ -8,6 +8,7 @@ ENV BASH_ENV=
 COPY bash.bashrc /etc/bash.bashrc
 COPY stt_* /usr/bin/
 COPY transcribe* /opt/coqui_ext/
+COPY test_audio* /opt/coqui_ext/
 
 ENV PYTHONPATH=$PYTHONPATH:/opt/coqui_ext
 
