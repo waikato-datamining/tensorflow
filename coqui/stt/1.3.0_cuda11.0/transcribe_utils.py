@@ -210,6 +210,7 @@ def transcribe_audio(ds, audio, candidate_transcripts=None):
     :param ds: the model to use
     :param audio: the audio clip as numpy array (with the correct sample rate)
     :param candidate_transcripts: the number of candidate transcripts to return, use None to just return text
+    :type candidate_transcripts: int
     :return: the transcript of the JSON with the candidate transcripts
     :rtype: str
     """
