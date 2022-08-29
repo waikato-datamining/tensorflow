@@ -7,6 +7,9 @@ RUN pip install --no-cache-dir "stt==1.3.0" && \
 ENV BASH_ENV=
 COPY bash.bashrc /etc/bash.bashrc
 COPY stt_* /usr/bin/
+COPY transcribe* /opt/coqui_ext/
+
+ENV PYTHONPATH=$PYTHONPATH:/opt/coqui_ext
 
 WORKDIR /workspace
 
