@@ -2,7 +2,7 @@ import argparse
 import os
 import traceback
 import tensorflow as tf
-from keras.backend.tensorflow_backend import set_session
+from keras.backend import set_session
 from keras_segmentation.predict import model_from_checkpoint_path
 from image_complete import auto
 import six
