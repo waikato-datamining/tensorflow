@@ -2,7 +2,6 @@ import argparse
 import os
 import traceback
 import tensorflow as tf
-from keras.backend import set_session
 from keras_segmentation.predict import model_from_checkpoint_path
 from image_complete import auto
 import six
@@ -57,59 +56,58 @@ def predict(model, inp, out_fname=None, colors=None, remove_background=False, ve
     :rtype: tuple
     """
 
-    with graph.as_default():
-        assert (inp is not None)
-        assert ((type(inp) is np.ndarray) or isinstance(inp, six.string_types)),\
-            "Input should be the CV image or the input file name"
+    assert (inp is not None)
+    assert ((type(inp) is np.ndarray) or isinstance(inp, six.string_types)),\
+        "Input should be the CV image or the input file name"
 
-        if colors is not None:
-            assert (len(colors) == 768), "list of colors must be 768 (256 r,g,b triplets)"
+    if colors is not None:
+        assert (len(colors) == 768), "list of colors must be 768 (256 r,g,b triplets)"
 
-        if isinstance(inp, six.string_types):
-            inp = cv2.imread(inp)
+    if isinstance(inp, six.string_types):
+        inp = cv2.imread(inp)
 
-        assert len(inp.shape) == 3, "Image should be h,w,3 "
+    assert len(inp.shape) == 3, "Image should be h,w,3 "
 
+    if remove_background:
+        inp_orig = np.copy(inp)
+
+    output_width = model.output_width
+    output_height = model.output_height
+    input_width = model.input_width
+    input_height = model.input_height
+    n_classes = model.n_classes
+
+    x = get_image_array(inp, input_width, input_height,
+                        ordering=IMAGE_ORDERING)
+    pr = model.predict(np.array([x]))[0]
+    pr = pr.reshape((output_height,  output_width, n_classes)).argmax(axis=2)
+
+    original_h = inp.shape[0]
+    original_w = inp.shape[1]
+    pr_mask = pr.astype('uint8')
+    pr_mask = cv2.resize(pr_mask, (original_w, original_h), interpolation=cv2.INTER_NEAREST)
+    if verbose:
+        unique, count = np.unique(pr_mask, return_counts=True)
+        print("  unique:", unique)
+        print("  count:", count)
+
+    if out_fname is not None:
         if remove_background:
-            inp_orig = np.copy(inp)
-
-        output_width = model.output_width
-        output_height = model.output_height
-        input_width = model.input_width
-        input_height = model.input_height
-        n_classes = model.n_classes
-
-        x = get_image_array(inp, input_width, input_height,
-                            ordering=IMAGE_ORDERING)
-        pr = model.predict(np.array([x]))[0]
-        pr = pr.reshape((output_height,  output_width, n_classes)).argmax(axis=2)
-
-        original_h = inp.shape[0]
-        original_w = inp.shape[1]
-        pr_mask = pr.astype('uint8')
-        pr_mask = cv2.resize(pr_mask, (original_w, original_h), interpolation=cv2.INTER_NEAREST)
-        if verbose:
-            unique, count = np.unique(pr_mask, return_counts=True)
-            print("  unique:", unique)
-            print("  count:", count)
-
-        if out_fname is not None:
-            if remove_background:
-                onebit_mask = np.where(pr_mask > 0, 1, 0)
-                no_background = inp_orig.copy()
-                for i in range(inp_orig.shape[2]):
-                    no_background[:,:,i] = no_background[:,:,i] * onebit_mask
-                cv2.imwrite(out_fname, no_background)
+            onebit_mask = np.where(pr_mask > 0, 1, 0)
+            no_background = inp_orig.copy()
+            for i in range(inp_orig.shape[2]):
+                no_background[:,:,i] = no_background[:,:,i] * onebit_mask
+            cv2.imwrite(out_fname, no_background)
+        else:
+            im = Image.fromarray(pr_mask)
+            im = im.convert("P")
+            if colors is not None:
+                im.putpalette(colors)
             else:
-                im = Image.fromarray(pr_mask)
-                im = im.convert("P")
-                if colors is not None:
-                    im.putpalette(colors)
-                else:
-                    im.putpalette(class_colors)
-                im.save(out_fname)
+                im.putpalette(class_colors)
+            im.save(out_fname)
 
-        return pr, pr_mask
+    return pr, pr_mask
 
 
 def check_image(fname, poller):
@@ -228,7 +226,7 @@ if __name__ == '__main__':
     parser.add_argument('--use_watchdog', action='store_true', help='Whether to react to file creation events rather than performing fixed-interval polling', required=False, default=False)
     parser.add_argument('--watchdog_check_interval', type=float, help='check interval in seconds for the watchdog', required=False, default=10.0)
     parser.add_argument('--delete_input', action='store_true', help='Whether to delete the input images rather than move them to --prediction_out directory', required=False, default=False)
-    parser.add_argument('--memory_fraction', type=float, help='Memory fraction to use by tensorflow, i.e., limiting memory usage', required=False, default=0.5)
+    parser.add_argument('--memory_growth', action='store_true', help='whether to allow memory growth', required=False)
     parser.add_argument('--colors', help='The list of colors (RGB triplets) to use for the PNG palette, e.g.: 0,0,0,255,0,0,0,0,255 for black,red,blue', required=False, default=None)
     parser.add_argument('--remove_background', action='store_true', help='Whether to use the predicted mask to remove the background and output this modified image instead of the mask', required=False, default=False)
     parser.add_argument('--verbose', action='store_true', help='Whether to output more logging info', required=False, default=False)
@@ -236,11 +234,15 @@ if __name__ == '__main__':
     parsed = parser.parse_args()
 
     try:
-        # apply memory usage
-        print("Using memory fraction: %f" % parsed.memory_fraction)
-        config = tf.ConfigProto()
-        config.gpu_options.per_process_gpu_memory_fraction = parsed.memory_fraction
-        set_session(tf.Session(config=config))
+        if parsed.memory_growth:
+            print("Enabling memory growth")
+            physical_devices = tf.config.list_physical_devices('GPU')
+            for i in range(len(physical_devices)):
+                try:
+                    tf.config.experimental.set_memory_growth(physical_devices[i], True)
+                except:
+                    # Invalid device or cannot modify virtual devices once initialized.
+                    pass
 
         # load model
         model_dir = os.path.join(parsed.checkpoints_path, '')
