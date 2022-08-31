@@ -9,18 +9,19 @@ ARG arch=x86_64
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/$distro/$arch/3bf863cc.pub
 
 RUN apt-get update && \
-	apt-get install -y --no-install-recommends git-core wget libglib2.0-0 libsm6 libxrender-dev libxext6 && \
-	rm -rf /var/lib/apt/lists/* && \
-    pip install "Cython" && \
+    apt-get install -y --no-install-recommends git-core wget libglib2.0-0 libsm6 libxrender-dev libxext6 libgl1 && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN pip install "Cython" && \
     pip install "numpy" && \
     pip install "h5py" && \
     pip install "tqdm" && \
-    pip install "keras>=2.3.0" && \
-    pip install "tensorflow>=2.2" && \
     pip install "opencv-python" && \
     pip install "tqdm" && \
     pip install "imageio>=2.5.0" && \
     pip install "imgaug>=0.4.0" && \
+    pip uninstall -y "keras" && \
+    pip install "keras==2.4.3" && \
     pip install "keras-segmentation==0.3.0" && \
     pip install "python-image-complete" && \
     pip install "simple-file-poller>=0.0.9" && \
@@ -28,7 +29,7 @@ RUN apt-get update && \
     pip install "redis-docker-harness==0.0.1" && \
     pip install "simple-file-poller>=0.0.9" && \
     pip install "redis-docker-harness==0.0.1" && \
-	rm -Rf /root/.cache/pip
+    rm -Rf /root/.cache/pip
 
 COPY bash.bashrc /etc/bash.bashrc
 COPY keras_seg /usr/bin/keras_seg
