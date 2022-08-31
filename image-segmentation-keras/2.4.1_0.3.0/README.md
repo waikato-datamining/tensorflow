@@ -1,7 +1,7 @@
 # Image Segmentation Keras
 
 [Image Segmentation Keras : Implementation of Segnet, FCN, UNet, PSPNet and other models in Keras.](https://divamgupta.com/image-segmentation/2019/06/06/deep-learning-semantic-segmentation-keras.html), 
-using Tensorflow 2.4.1.
+using Tensorflow 2.4.1, Keras 2.4.3, CUDA 11.0.
 
 Making use of the [image-segmentation-keras](https://github.com/divamgupta/image-segmentation-keras) project.
 
