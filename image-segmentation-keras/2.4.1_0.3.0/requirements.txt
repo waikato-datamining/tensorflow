@@ -1,0 +1,15 @@
+Cython
+numpy
+h5py
+tqdm
+keras>=2.3.0
+tensorflow>=2.2
+opencv-python
+tqdm
+imageio>=2.5.0
+imgaug>=0.4.0
+keras-segmentation==0.3.0
+python-image-complete
+simple-file-poller>=0.0.9
+redis
+redis-docker-harness==0.0.1

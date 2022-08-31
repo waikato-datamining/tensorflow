@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python -m keras_segmentation "$@"
