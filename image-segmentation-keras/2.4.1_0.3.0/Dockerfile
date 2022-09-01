@@ -22,7 +22,6 @@ RUN pip install "Cython" && \
     pip install "imgaug>=0.4.0" && \
     pip uninstall -y "keras" && \
     pip install "keras==2.4.3" && \
-    pip install "keras-segmentation==0.3.0" && \
     pip install "python-image-complete" && \
     pip install "simple-file-poller>=0.0.9" && \
     pip install "redis" && \
@@ -30,6 +29,8 @@ RUN pip install "Cython" && \
     pip install "simple-file-poller>=0.0.9" && \
     pip install "redis-docker-harness==0.0.1" && \
     rm -Rf /root/.cache/pip
+
+RUN pip install --no-cache-dir "git+https://github.com/waikato-datamining/image-segmentation-keras.git"
 
 COPY bash.bashrc /etc/bash.bashrc
 COPY keras_seg /usr/bin/keras_seg
