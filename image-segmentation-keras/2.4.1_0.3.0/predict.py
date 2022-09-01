@@ -249,9 +249,6 @@ if __name__ == '__main__':
         print("Loading model from %s" % model_dir)
         model = model_from_checkpoint_path(model_dir)
 
-        global graph
-        graph = tf.get_default_graph()
-
         # color palette
         colors = []
         if parsed.colors is not None:
