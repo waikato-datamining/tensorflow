@@ -9,7 +9,7 @@ from transcribe_utils import load_model, load_audio, transcribe_audio
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Running Coqui STT inference.")
+    parser = argparse.ArgumentParser(description="Running Coqui STT inference on single audio file.", prog="stt_transcribe_single")
     parser.add_argument("--model", required=True, help="Path to the model (protocol buffer binary file)")
     parser.add_argument("--scorer", required=False, help="Path to the external scorer file")
     parser.add_argument("--audio", required=True, help="Path to the audio file to run (WAV format)")
