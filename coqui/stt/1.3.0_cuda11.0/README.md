@@ -129,6 +129,7 @@ docker run -u $(id -u):$(id -g) ...
 
 The following command-line tools are available:
 
+* `stt_alphabet` - generates an alphabet.txt file from one or more transcript CSV files (calls `/opt/coqui_ext/alphabet.py`)
 * `stt_train` - for training a STT model (calls `python -m coqui_stt_training.train`)
 * `stt_eval` - for evaluating a trained STT model (calls `python -m coqui_stt_training.evaluate`)
 * `stt_export` - for exporting a trained STT model to tflite (calls `python -m coqui_stt_training.export`)

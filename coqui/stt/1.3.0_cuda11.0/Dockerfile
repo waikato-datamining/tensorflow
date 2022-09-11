@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir "stt==1.3.0" && \
 ENV BASH_ENV=
 COPY bash.bashrc /etc/bash.bashrc
 COPY stt_* /usr/bin/
+COPY alphabet* /opt/coqui_ext/
 COPY transcribe* /opt/coqui_ext/
 COPY test_audio* /opt/coqui_ext/
 
