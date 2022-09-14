@@ -8,7 +8,11 @@ https://stt.readthedocs.io/
 
 Available versions:
 
-* 1.3.0
+* CPU
+
+  * [1.4.0](1.4.0_cuda11.6)
+  * [1.3.0](1.3.0_cuda11.0)
+
+* CPU
   
-  * [CUDA 11.0](1.3.0_cuda11.0)
-  * [CPU](1.3.0_cpu)
+  * [1.3.0_cpu](1.3.0_cpu)
