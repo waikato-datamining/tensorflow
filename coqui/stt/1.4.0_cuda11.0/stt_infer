@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python -m coqui_stt_training.training_graph_inference "$@"

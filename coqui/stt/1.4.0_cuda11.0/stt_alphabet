@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python /opt/coqui_ext/alphabet.py "$@"
