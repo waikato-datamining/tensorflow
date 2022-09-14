@@ -15,4 +15,5 @@ Available versions:
 
 * CPU
   
-  * [1.3.0_cpu](1.3.0_cpu)
+  * [1.15.2_0.10.0a10_cpu](1.15.2_0.10.0a10_cpu)
+
