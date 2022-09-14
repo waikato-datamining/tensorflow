@@ -139,4 +139,4 @@ The following command-line tools are available:
 
 ## Troubleshooting
 
-* To avoid the training to hang and never exit once it finishes, use the `--skip_batch_test true` option
+* To avoid the training to hang and never exit once it finishes, use the `--skip_batch_test true` option ([issue #2195](https://github.com/coqui-ai/STT/issues/2195))
