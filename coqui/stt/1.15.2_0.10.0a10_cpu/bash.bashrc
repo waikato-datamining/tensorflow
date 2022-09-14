@@ -29,7 +29,7 @@ cat<<DBG
  \\____\\___/ \\__, |\\__,_|_| |____/ |_|   |_|  
                |_|                           
 
-CPU, TensorFlow 1.15.2
+CPU, TensorFlow 1.15.2, stt-tflite 0.10.0a10
 
 DBG
 echo -e "\e[0;33m"
