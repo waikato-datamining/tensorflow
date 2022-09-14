@@ -8,7 +8,7 @@ https://stt.readthedocs.io/
 
 Available versions:
 
-* CPU
+* GPU
 
   * [1.4.0 (CUDA 11.6)](1.4.0_cuda11.6)
   * [1.3.0 (CUDA 11.0)](1.3.0_cuda11.0)
