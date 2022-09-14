@@ -1,6 +1,6 @@
-# Coqui STT (CUDA 11.0)
+# Coqui STT (CUDA 11.6)
 
-Allows speech-to-text using Tensorflow 1.5.2 (CUDA 11.0).
+Allows speech-to-text using Tensorflow 1.15.5 (CUDA 11.6).
 
 ## Docker
 
@@ -19,7 +19,7 @@ Allows speech-to-text using Tensorflow 1.5.2 (CUDA 11.0).
     --gpu=all \
     --shm-size=1g \
     -v /local/dir:/container/dir \
-    -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_coqui_stt:1.4.0_cuda11.0
+    -it public.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_coqui_stt:1.4.0_cuda11.6
   ```
 
 * If need be, remove all containers and images from your system:
@@ -33,13 +33,13 @@ Allows speech-to-text using Tensorflow 1.5.2 (CUDA 11.0).
 The image is also available from [Docker hub](https://hub.docker.com/u/waikatodatamining):
 
 ```
-waikatodatamining/tf_coqui_stt:1.4.0_cuda11.0
+waikatodatamining/tf_coqui_stt:1.4.0_cuda11.6
 ```
 
 
 ### Build local image
 
-* Build the image from Docker file (from within /path_to/tensorflow/tf_coqui_stt/docker/1.4.0_cuda11.0)
+* Build the image from Docker file (from within /path_to/tensorflow/tf_coqui_stt/docker/1.4.0_cuda11.6)
 
   ```bash
   docker build -t stt .
@@ -60,21 +60,21 @@ waikatodatamining/tf_coqui_stt:1.4.0_cuda11.0
 * Build
 
   ```bash
-  docker build -t tensorflow/tf_coqui_stt:1.4.0_cuda11.0 .
+  docker build -t tensorflow/tf_coqui_stt:1.4.0_cuda11.6 .
   ```
   
 * Tag
 
   ```bash
   docker tag \
-    tensorflow/tf_coqui_stt:1.4.0_cuda11.0 \
-    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_coqui_stt:1.4.0_cuda11.0
+    tensorflow/tf_coqui_stt:1.4.0_cuda11.6 \
+    public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_coqui_stt:1.4.0_cuda11.6
   ```
   
 * Push
 
   ```bash
-  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_coqui_stt:1.4.0_cuda11.0
+  docker push public-push.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_coqui_stt:1.4.0_cuda11.6
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -87,7 +87,7 @@ waikatodatamining/tf_coqui_stt:1.4.0_cuda11.0
   If image is available in aml-repo and you just want to use it, you can pull using following command and then [run](#run).
 
   ```bash
-  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_coqui_stt:1.4.0_cuda11.0
+  docker pull public.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_coqui_stt:1.4.0_cuda11.6
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -98,8 +98,8 @@ waikatodatamining/tf_coqui_stt:1.4.0_cuda11.0
   
   ```bash
   docker tag \
-    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_coqui_stt:1.4.0_cuda11.0 \
-    tensorflow/tf_coqui_stt:1.4.0_cuda11.0
+    public.aml-repo.cms.waikato.ac.nz:443/tensorflow/tf_coqui_stt:1.4.0_cuda11.6 \
+    tensorflow/tf_coqui_stt:1.4.0_cuda11.6
   ```
 
 * <a name="run">Run</a>
@@ -109,7 +109,7 @@ waikatodatamining/tf_coqui_stt:1.4.0_cuda11.0
     --gpus=all \
     --shm-size=1g \
     -v /local/dir:/container/dir \
-    -it tensorflow/tf_coqui_stt:1.4.0_cuda11.0
+    -it tensorflow/tf_coqui_stt:1.4.0_cuda11.6
   ```
   `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
 

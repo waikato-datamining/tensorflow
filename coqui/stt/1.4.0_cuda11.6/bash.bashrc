@@ -29,7 +29,7 @@ cat<<DBG
  \\____\\___/ \\__, |\\__,_|_| |____/ |_|   |_|  
                |_|                           
 
-CUDA 11.0, TensorFlow 1.15.2
+CUDA 11.6, TensorFlow 1.15.5
 
 DBG
 echo -e "\e[0;33m"
