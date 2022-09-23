@@ -140,3 +140,4 @@ The following command-line tools are available:
 ## Troubleshooting
 
 * To avoid the training to hang and never exit once it finishes, use the `--skip_batch_test true` option ([issue #2195](https://github.com/coqui-ai/STT/issues/2195))
+* If you get `ValueError: Alphabet initialization failed with error code 0x1` as error message, you don't seem to have an `alphabet.txt` file present (or pointing to the wrong one)
