@@ -21,9 +21,9 @@ def analyze(input, output):
                     alphabet.update(row["transcript"])
     alphabet = list(alphabet)
     alphabet.sort()
-    alphabet.insert(0, "Alphabet generate from CSV files:")
+    alphabet.insert(0, "# Alphabet generate from CSV files:")
     for i, input_file in enumerate(input):
-        alphabet.insert(i+1, "- %s" % input_file)
+        alphabet.insert(i+1, "# - %s" % input_file)
     alphabet.append("# end of alphabet")
     with open(output, "w") as fp:
         fp.write("\n".join(alphabet))
