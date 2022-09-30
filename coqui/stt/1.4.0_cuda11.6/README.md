@@ -141,3 +141,12 @@ The following command-line tools are available:
 
 * To avoid the training to hang and never exit once it finishes, use the `--skip_batch_test true` option ([issue #2195](https://github.com/coqui-ai/STT/issues/2195))
 * If you get `ValueError: Alphabet initialization failed with error code 0x1` as error message, you don't seem to have an `alphabet.txt` file present (or pointing to the wrong one)
+
+
+## Notes
+
+* In order to use a training run as starting checkpoint for a new training run, do the following:
+
+  * remove all *train-* files
+  * remove *checkpoint*
+  * edit *best_dev_checkpoint* and remove the absolute paths

@@ -135,3 +135,12 @@ The following command-line tools are available:
 * `stt_export` - for exporting a trained STT model to tflite (calls `python -m coqui_stt_training.export`)
 * `stt_infer` - for performing inference with a trained STT model (calls `python -m coqui_stt_training.training_graph_inference`)
 * `stt_transcribe_single` - generating a transcription on a single audio file with a tflite model (calls `/opt/coqui_ext/transcribe_single.py`)
+
+
+## Notes
+
+* In order to use a training run as starting checkpoint for a new training run, do the following:
+
+  * remove all *train-* files
+  * remove *checkpoint*
+  * edit *best_dev_checkpoint* and remove the absolute paths
