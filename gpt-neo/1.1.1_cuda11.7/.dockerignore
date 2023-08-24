@@ -1,0 +1,10 @@
+test/
+cache/
+data/
+output/
+predictions/
+.idea/
+*~
+*.swp
+*.iml
+
