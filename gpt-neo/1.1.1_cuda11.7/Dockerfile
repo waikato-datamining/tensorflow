@@ -13,3 +13,15 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+WORKDIR /opt                                
+RUN git clone https://github.com/EleutherAI/gpt-neo.git && \
+    cd gpt-neo && \
+    git checkout v1.1.1 && \
+    pip install ortools==9.0.9048 && \
+    pip install -r requirements.txt
+
+COPY bash.bashrc /etc/bash.bashrc
+COPY gptneo* /usr/local/bin/
+
+ENV PYTHONPATH=/opt/gpt-neo
+
