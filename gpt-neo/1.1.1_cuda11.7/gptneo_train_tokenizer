@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python /opt/gpt-neo/data/train_tokenizer.py "$@"

@@ -128,3 +128,9 @@ the container):
 ```bash
 docker run -u $(id -u):$(id -g) -e USER=$USER ...
 ```
+
+## Scripts
+
+* `gptneo_create_tfrecords` - for turning text files into tfrecords (calls `/opt/gpt-neo/data/create_tfrecords.py`)
+* `gptneo_train_tokenizer` - for training a tokenizer on a custom alphabet (calls `/opt/gpt-neo/data/train_tokenizer.py`)
+* `gptneo_main` - training and predicting (calls `/opt/gpt-neo/main.py`)
