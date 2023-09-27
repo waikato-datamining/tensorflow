@@ -22,6 +22,7 @@ RUN git clone https://github.com/google-research/bert.git && \
     git reset --hard eedf5716ce1268e56f0a50264a88cafad334ac61
 
 COPY bash.bashrc /etc/bash.bashrc
+COPY run_classifier.py /opt/bert
 
 ENV PYTHONPATH=/opt/bert
 
