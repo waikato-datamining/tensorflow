@@ -123,6 +123,12 @@ flags.DEFINE_integer(
     "num_tpu_cores", 8,
     "Only used if `use_tpu` is True. Total number of TPU cores to use.")
 
+# taken from:
+# https://stackoverflow.com/a/52317741/4698227
+gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
+tf.Session(config=tf.ConfigProto(gpu_options=gpu_options,allow_soft_placement=True))
+
+
 
 class InputExample(object):
   """A single training/test example for simple sequence classification."""
