@@ -37,7 +37,6 @@ setup(
     author='Peter Reutemann and TensorFlow Team',
     author_email='fracpete@waikato.ac.nz',
     install_requires=[
-        "argparse",
         "numpy<1.20.0",
         "tflite-model-maker>=0.3.0,<0.3.2",
         "tensorflow>2.4.0,<2.5.0",
