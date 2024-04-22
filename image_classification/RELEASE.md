@@ -23,7 +23,7 @@ Steps:
 
 * start new release (version: `wai.tfimageclass-vX.Y.Z`)
 * enter release notes, i.e., significant changes since last release
-* upload `wai.tfimageclass-X.Y.Z.tar.gz` previously generated with `setyp.py`
+* upload `wai.tfimageclass-X.Y.Z.tar.gz` previously generated with `setup.py`
 * publish
 
 

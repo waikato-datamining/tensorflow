@@ -23,7 +23,7 @@ Steps:
 
 * start new release (version: `wai.tflite_model_maker-vX.Y.Z`)
 * enter release notes, i.e., significant changes since last release
-* upload `wai.tflite_model_maker-X.Y.Z.tar.gz` previously generated with `setyp.py`
+* upload `wai.tflite_model_maker-X.Y.Z.tar.gz` previously generated with `setup.py`
 * publish
 
 
