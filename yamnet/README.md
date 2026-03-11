@@ -4,4 +4,4 @@ Docker images for [yamnet](https://www.kaggle.com/models/google/yamnet/tensorFlo
 
 Available versions:
 
-* [2.21.0-gpu](2.21.0-gpu)
+* [2.21.0-gpu](2.21.0_gpu)
