@@ -34,7 +34,7 @@ RUN /opt/yamnet/bin/pip install --no-cache-dir \
       tf-keras==2.20.1 \
       tensorflow_hub
 RUN /opt/yamnet/bin/pip install --no-cache-dir \
-      env-doctor
+      scipy==1.15.3
 
 COPY bash.bashrc /etc/bash.bashrc
 WORKDIR /workspace

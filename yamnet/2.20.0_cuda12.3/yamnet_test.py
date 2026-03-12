@@ -1,3 +1,6 @@
+# based on:
+# https://www.kaggle.com/models/google/yamnet/tensorFlow2/yamnet/1
+
 import tensorflow as tf
 import tensorflow_hub as hub
 import numpy as np

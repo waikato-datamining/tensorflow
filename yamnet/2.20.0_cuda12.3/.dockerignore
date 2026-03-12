@@ -3,3 +3,4 @@ predictions/
 data/
 *.json
 *test.py
+*.wav
