@@ -1,7 +1,7 @@
 # yamnet
 
 [yamnet](https://www.kaggle.com/models/google/yamnet/tensorFlow2/yamnet/1), 
-uses Tensorflow 2.21.0 for GPU.
+uses Tensorflow 2.20.0 for GPU.
 
 
 ## Quick start
@@ -24,7 +24,7 @@ mkdir config
     -v `pwd`:/workspace \
     -v `pwd`/cache:/cache \
     -v `pwd`/config:/config \
-    -it harbor.cms.waikato.ac.nz/public/tensorflow/tf-yamnet:2.21.0_gpu
+    -it harbor.cms.waikato.ac.nz/public/tensorflow/tf-yamnet:2.20.0_cuda12.3
   ```
 
 ### Docker hub
@@ -36,12 +36,12 @@ mkdir config
     -v `pwd`:/workspace \
     -v `pwd`/cache:/cache \
     -v `pwd`/config:/config \
-    -it waikatodatamining/tf-yamnet:2.21.0_gpu
+    -it waikatodatamining/tf-yamnet:2.20.0_cuda12.3
   ```
 
 ### Build local image
 
-* Build the image from Docker file (from within /path_to/yamnet/2.21.0_gpu)
+* Build the image from Docker file (from within /path_to/yamnet/2.20.0_cuda12.3)
 
   ```bash
   docker build -t yamnet .
@@ -64,7 +64,7 @@ mkdir config
 ### Build
 
 ```bash
-docker build -t yamnet:2.21.0_gpu .
+docker build -t yamnet:2.20.0_cuda12.3 .
 ```
 
 ### Inhouse registry  
@@ -73,14 +73,14 @@ docker build -t yamnet:2.21.0_gpu .
 
   ```bash
   docker tag \
-    yamnet:2.21.0_gpu \
-    harbor.cms.waikato.ac.nz/public/tensorflow/tf-yamnet:2.21.0_gpu
+    yamnet:2.20.0_cuda12.3 \
+    harbor.cms.waikato.ac.nz/public/tensorflow/tf-yamnet:2.20.0_cuda12.3
   ```
   
 * Push
 
   ```bash
-  docker push harbor.cms.waikato.ac.nz/public/tensorflow/tf-yamnet:2.21.0_gpu
+  docker push harbor.cms.waikato.ac.nz/public/tensorflow/tf-yamnet:2.20.0_cuda12.3
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -94,14 +94,14 @@ docker build -t yamnet:2.21.0_gpu .
 
   ```bash
   docker tag \
-    yamnet:2.21.0_gpu \
-    waikatodatamining/tf-yamnet:2.21.0_gpu
+    yamnet:2.20.0_cuda12.3 \
+    waikatodatamining/tf-yamnet:2.20.0_cuda12.3
   ```
   
 * Push
 
   ```bash
-  docker push waikatodatamining/tf-yamnet:2.21.0_gpu
+  docker push waikatodatamining/tf-yamnet:2.20.0_cuda12.3
   ```
   If error "no basic auth credentials" occurs, then run (enter username/password when prompted):
   
@@ -114,7 +114,7 @@ docker build -t yamnet:2.21.0_gpu .
 
 ```bash
 docker run --rm --pull=always \
-  -it harbor.cms.waikato.ac.nz/public/tensorflow/tf-yamnet:2.21.0_gpu \
+  -it harbor.cms.waikato.ac.nz/public/tensorflow/tf-yamnet:2.20.0_cuda12.3 \
   pip freeze > requirements.txt
 ```
 
