@@ -132,4 +132,12 @@ docker run -u $(id -u):$(id -g) -e USER=$USER ...
 
 ## Scripts
 
-TODO
+The following additional scripts are available:
+
+* `yamnet_predict_poll` - batch-processing of audio files via file-polling
+* `yamnet_predict_redis` - making predictions via Redis backend
+
+
+### yamnet_predict_redis
+ 
+You need to start the docker container with the `--net=host` option if you are using the host's Redis server.
