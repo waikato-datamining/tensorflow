@@ -1,9 +1,18 @@
 import csv
+import json
 import scipy
 import tensorflow as tf
 import tensorflow_hub as hub
 
 from scipy.io import wavfile
+
+
+PREDICTION_FORMAT_JSON = "json"
+PREDICTION_FORMAT_TEXT = "text"   # just the class with the highest score
+PREDICTION_FORMATS = [
+    PREDICTION_FORMAT_JSON,
+    PREDICTION_FORMAT_TEXT,
+]
 
 
 def load_model(url="https://www.kaggle.com/models/google/yamnet/TensorFlow2/yamnet/1"):
@@ -76,13 +85,14 @@ def load_audio(wav, desired_sample_rate=16000):
     return sample_rate, wav_data
 
 
-def predict(model, wav, class_names):
+def predict(model, wav, class_names, prediction_format=PREDICTION_FORMAT_TEXT):
     """
     Makes a prediction on the audio.
 
     :param model: the model to use
     :param wav: the audio data to classify
     :param class_names: the class name lookup
+    :param prediction_format: the output format to generate
     :return: the predictions
     """
     # normalize audio
@@ -100,4 +110,9 @@ def predict(model, wav, class_names):
     for i, score in enumerate(scores_mean):
         result["scores"][class_names[i]] = float(score)
 
-    return result
+    if prediction_format == PREDICTION_FORMAT_JSON:
+        return json.dumps(result, indent=2)
+    elif prediction_format == PREDICTION_FORMAT_TEXT:
+        return result["class"]
+    else:
+        raise Exception("Unhandled prediction format: %s" % prediction_format)

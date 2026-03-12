@@ -1,11 +1,10 @@
 import argparse
-import json
 import os
 import traceback
 
 from sfp import Poller
 
-from predict_common import load_model, load_audio, class_names_from_model, predict
+from predict_common import load_model, load_audio, class_names_from_model, predict, PREDICTION_FORMATS, PREDICTION_FORMAT_TEXT, PREDICTION_FORMAT_JSON
 
 SUPPORTED_EXTS = [".wav"]
 """ supported file extensions (lower case with dot). """
@@ -26,11 +25,15 @@ def process_audio(fname, output_dir, poller):
     """
     result = []
     try:
-        output_path = "{}/{}{}".format(output_dir, os.path.splitext(os.path.basename(fname))[0], poller.params.suffix)
+        if poller.params.prediction_format == PREDICTION_FORMAT_JSON:
+            suffix = ".json"
+        else:
+            suffix = ".txt"
+        output_path = "{}/{}{}".format(output_dir, os.path.splitext(os.path.basename(fname))[0], suffix)
         wav = load_audio(fname)
-        preds = predict(poller.params.model, wav, poller.params.class_names)
+        preds = predict(poller.params.model, wav, poller.params.class_names, prediction_format=poller.params.prediction_format)
         with open(output_path, "w") as fp:
-            json.dump(preds, fp, indent=2)
+            fp.write(preds)
         result.append(output_path)
     except KeyboardInterrupt:
         poller.keyboard_interrupt()
@@ -39,7 +42,7 @@ def process_audio(fname, output_dir, poller):
     return result
 
 
-def predict_on_images(input_dir, output_dir, tmp_dir=None,
+def predict_on_images(input_dir, output_dir, tmp_dir=None, prediction_format=PREDICTION_FORMAT_TEXT,
                       poll_wait=1.0, continuous=False, use_watchdog=False, watchdog_check_interval=10.0,
                       delete_input=False, verbose=False, quiet=False):
     """
@@ -51,6 +54,8 @@ def predict_on_images(input_dir, output_dir, tmp_dir=None,
     :type output_dir: str
     :param tmp_dir: the temporary directory to store the predictions until finished
     :type tmp_dir: str
+    :param prediction_format: the output format to use
+    :type prediction_format: str
     :param poll_wait: the amount of seconds between polls when not in watchdog mode
     :type poll_wait: float
     :param continuous: whether to poll for files continuously
@@ -86,6 +91,7 @@ def predict_on_images(input_dir, output_dir, tmp_dir=None,
     poller.watchdog_check_interval = watchdog_check_interval
     poller.params.model = model
     poller.params.class_names = class_names_from_model(model)
+    poller.params.prediction_format = prediction_format
     poller.poll()
 
 
@@ -103,6 +109,7 @@ def main(args=None):
     parser.add_argument('--prediction_in', help='Path to the test images', required=True, default=None)
     parser.add_argument('--prediction_out', help='Path to the output csv files folder', required=True, default=None)
     parser.add_argument('--prediction_tmp', help='Path to the temporary csv files folder', required=False, default=None)
+    parser.add_argument('--prediction_format', choices=PREDICTION_FORMATS, help='The format to use for the predictions', required=False, default=PREDICTION_FORMAT_TEXT)
     parser.add_argument('--poll_wait', type=float, help='poll interval in seconds when not using watchdog mode', required=False, default=1.0)
     parser.add_argument('--continuous', action='store_true', help='Whether to continuously load test images and perform prediction', required=False, default=False)
     parser.add_argument('--use_watchdog', action='store_true', help='Whether to react to file creation events rather than performing fixed-interval polling', required=False, default=False)
@@ -112,7 +119,7 @@ def main(args=None):
     parser.add_argument('--quiet', action='store_true', help='Whether to suppress output', required=False, default=False)
     parsed = parser.parse_args(args=args)
 
-    predict_on_images(parsed.prediction_in, parsed.prediction_out, tmp_dir=parsed.prediction_tmp,
+    predict_on_images(parsed.prediction_in, parsed.prediction_out, tmp_dir=parsed.prediction_tmp, prediction_format=parsed.prediction_format,
                       poll_wait=parsed.poll_wait, continuous=parsed.continuous, use_watchdog=parsed.use_watchdog,
                       watchdog_check_interval=parsed.watchdog_check_interval, delete_input=parsed.delete_input,
                       verbose=parsed.verbose, quiet=parsed.quiet)
