@@ -100,7 +100,6 @@ def main(args=None):
         description="yamnet - Prediction (file-polling)",
         prog="yamnet_predict_poll",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--model', metavar="FILE", type=str, required=True, help='The .pt or ONNX model to use.')
     parser.add_argument('--prediction_in', help='Path to the test images', required=True, default=None)
     parser.add_argument('--prediction_out', help='Path to the output csv files folder', required=True, default=None)
     parser.add_argument('--prediction_tmp', help='Path to the temporary csv files folder', required=False, default=None)
