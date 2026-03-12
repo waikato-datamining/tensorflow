@@ -30,8 +30,8 @@ def process_audio(fname, output_dir, poller):
         else:
             suffix = ".txt"
         output_path = "{}/{}{}".format(output_dir, os.path.splitext(os.path.basename(fname))[0], suffix)
-        wav = load_audio(fname)
-        preds = predict(poller.params.model, wav, poller.params.class_names, prediction_format=poller.params.prediction_format)
+        sample_rate, wav_data = load_audio(fname)
+        preds = predict(poller.params.model, wav_data, poller.params.class_names, prediction_format=poller.params.prediction_format)
         with open(output_path, "w") as fp:
             fp.write(preds)
         result.append(output_path)

@@ -22,8 +22,8 @@ def process_audio(msg_cont):
         if config.verbose:
             log("process_audio - start processing audio")
             
-        wav = load_audio(io.BytesIO(msg_cont.message['data']))
-        preds_str = predict(config.model, wav, config.class_names, prediction_format=config.prediction_format)
+        sample_rate, wav_data = load_audio(io.BytesIO(msg_cont.message['data']))
+        preds_str = predict(config.model, wav_data, config.class_names, prediction_format=config.prediction_format)
         msg_cont.params.redis.publish(msg_cont.params.channel_out, preds_str)
         if config.verbose:
             log("process_audio - predictions string published: %s" % msg_cont.params.channel_out)
