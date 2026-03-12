@@ -1,0 +1,3 @@
+#!/bin/bash
+
+/opt/yamnet/bin/python /opt/yamnet-extra/predict_redis.py "$@"
