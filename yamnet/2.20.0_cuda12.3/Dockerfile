@@ -34,8 +34,15 @@ RUN /opt/yamnet/bin/pip install --no-cache-dir \
       tf-keras==2.20.1 \
       tensorflow_hub
 RUN /opt/yamnet/bin/pip install --no-cache-dir \
-      scipy==1.15.3
+      scipy==1.15.3 \
+      "simple-file-poller>=0.0.9" \
+      redis \
+      "redis-docker-harness==0.0.4"
 
 COPY bash.bashrc /etc/bash.bashrc
-WORKDIR /workspace
+COPY predict_*.py /opt/yamnet-extra/
+COPY yamnet_* /usr/local/bin/
 
+ENV PYTHONPATH=/opt/yamnet-extra
+
+WORKDIR /workspace
