@@ -21,9 +21,9 @@ mkdir config
 
   ```bash
   docker run --rm --gpus=all --shm-size 8G --net=host \
+    -e TFHUB_CACHE_DIR=/cache/tfhub_modules \
     -v `pwd`:/workspace \
     -v `pwd`/cache:/cache \
-    -v `pwd`/config:/config \
     -it harbor.cms.waikato.ac.nz/public/tensorflow/tf-yamnet:2.20.0_cuda12.3
   ```
 
@@ -33,9 +33,9 @@ mkdir config
 
   ```bash
   docker run --rm --gpus=all --shm-size 8G --net=host \
+    -e TFHUB_CACHE_DIR=/cache/tfhub_modules \
     -v `pwd`:/workspace \
     -v `pwd`/cache:/cache \
-    -v `pwd`/config:/config \
     -it waikatodatamining/tf-yamnet:2.20.0_cuda12.3
   ```
 
@@ -51,9 +51,9 @@ mkdir config
 
   ```bash
   docker run --rm --gpus=all --shm-size 8G --net=host \
+    -e TFHUB_CACHE_DIR=/cache/tfhub_modules \
     -v `pwd`:/workspace \
     -v `pwd`/cache:/cache \
-    -v `pwd`/config:/config \
     -it yamnet
   ```
   `/local/dir:/container/dir` maps a local disk directory into a directory inside the container
