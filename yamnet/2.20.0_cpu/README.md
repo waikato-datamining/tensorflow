@@ -115,7 +115,7 @@ docker build -t yamnet:2.20.0_cpu .
 ```bash
 docker run --rm --pull=always \
   -it harbor.cms.waikato.ac.nz/public/tensorflow/tf-yamnet:2.20.0_cpu \
-  pip freeze > requirements.txt
+  /opt/yamnet/bin/pip freeze > requirements.txt
 ```
 
 
